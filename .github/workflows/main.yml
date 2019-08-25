@@ -26,7 +26,8 @@ jobs:
           # https://help.github.com/en/articles/virtual-environments-for-github-actions#creating-and-using-secrets-encrypted-variables
           DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
           DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
-      # - name: Publish
-      #   uses: actions/docker/cli@master
-      #   with:
-      #     args: push ${{ github.repository }}:${{ github.sha }}
+      # https://github.com/actions/docker/tree/master/cli
+      - name: Publish
+        uses: actions/docker/cli@master
+        with:
+          args: push ${{ github.repository }}:${{ github.sha }}
