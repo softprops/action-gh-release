@@ -12,7 +12,7 @@ use std::{
 
 type BoxError = Box<dyn Error>;
 
-#[derive(Deserialize, Default)]
+#[derive(Deserialize, Default, Debug, PartialEq)]
 struct Config {
     // provided
     github_token: String,
@@ -166,6 +166,31 @@ mod tests {
     #[test]
     fn paths_resolves_pattern_to_file_paths() -> Result<(), BoxError> {
         assert_eq!(paths(vec!["tests/data/**/*"])?.into_iter().count(), 1);
+        Ok(())
+    }
+
+    #[test]
+    fn config_is_parsed_from_env() -> Result<(), BoxError> {
+        for (env, expect) in vec![(
+            vec![
+                ("GITHUB_TOKEN".into(), "123".into()),
+                ("GITHUB_REF".into(), "refs/tags/ref".into()),
+                ("GITHUB_REPOSITORY".into(), "foo/bar".into()),
+                ("INPUT_NAME".into(), "test release".into()),
+                ("INPUT_BODY".into(), ":)".into()),
+                ("INPUT_FILES".into(), "*.md".into()),
+            ],
+            Config {
+                github_token: "123".into(),
+                github_ref: "refs/tags/ref".into(),
+                github_repository: "foo/bar".into(),
+                input_name: Some("test release".into()),
+                input_body: Some(":)".into()),
+                input_files: Some(vec!["*.md".into()])
+            },
+        )] {
+            assert_eq!(expect, envy::from_iter::<_, Config>(env)?)
+        }
         Ok(())
     }
 }
