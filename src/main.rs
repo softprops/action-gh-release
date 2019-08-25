@@ -27,7 +27,7 @@ fn release(conf: &Config) -> Release {
         ..
     } = conf;
     Release {
-        tag_name: github_ref.clone(),
+        tag_name: github_ref.trim_start_matches("refs/tags/").into(),
         body: input_body.clone(),
         ..Release::default()
     }
