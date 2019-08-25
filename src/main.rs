@@ -1,6 +1,6 @@
 mod github;
 
-use github::{AssetUploader, Release, Releaser};
+use github::{AssetUploader, Release, ReleaseResponse, Releaser};
 use reqwest::Client;
 use serde::Deserialize;
 use std::{
@@ -57,7 +57,7 @@ fn run(
         return Ok(());
     }
 
-    let release_id = releaser.release(
+    let ReleaseResponse { id, html_url } = releaser.release(
         conf.github_token.as_str(),
         conf.github_repository.as_str(),
         release(&conf),
@@ -73,15 +73,17 @@ fn run(
                     Ok(paths)
                 });
         for path in paths? {
-            log::info!("Uploading path {}", path.display());
+            log::info!("⬆️ Uploading path {}", path.display());
             uploader.upload(
                 conf.github_token.as_str(),
                 conf.github_repository.as_str(),
-                release_id,
+                id,
                 mime_or_default(&path),
                 File::open(path)?,
             )?;
         }
+
+        println!("🎉 Release ready at {}", html_url);
     }
 
     Ok(())

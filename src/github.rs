@@ -13,13 +13,19 @@ pub struct Release {
     pub draft: Option<bool>,
 }
 
+#[derive(Deserialize)]
+pub struct ReleaseResponse {
+    pub id: usize,
+    pub html_url: String,
+}
+
 pub trait Releaser {
     fn release(
         &self,
         github_token: &str,
         github_repo: &str,
         release: Release,
-    ) -> Result<usize, Box<dyn Error>>;
+    ) -> Result<ReleaseResponse, Box<dyn Error>>;
 }
 
 pub trait AssetUploader<A: Into<Body> = File> {
@@ -33,11 +39,6 @@ pub trait AssetUploader<A: Into<Body> = File> {
     ) -> Result<(), Box<dyn Error>>;
 }
 
-#[derive(Deserialize)]
-struct ReleaseResponse {
-    id: usize,
-}
-
 impl Releaser for Client {
     // https://developer.github.com/v3/repos/releases/#create-a-release
     // https://developer.github.com/v3/repos/releases/#edit-a-release
@@ -46,7 +47,7 @@ impl Releaser for Client {
         github_token: &str,
         github_repo: &str,
         release: Release,
-    ) -> Result<usize, Box<dyn Error>> {
+    ) -> Result<ReleaseResponse, Box<dyn Error>> {
         let endpoint = format!("https://api.github.com/repos/{}/releases", github_repo);
         let mut existing = self
             .get(&format!("{}/tags/{}", endpoint, release.tag_name))
@@ -61,8 +62,7 @@ impl Releaser for Client {
                 .header("Authorization", format!("bearer {}", github_token))
                 .json(&release)
                 .send()?
-                .json::<ReleaseResponse>()?
-                .id),
+                .json()?),
             _ => Ok(self
                 .patch(&format!(
                     "https://api.github.com/repos/{}/releases/{}",
@@ -72,8 +72,7 @@ impl Releaser for Client {
                 .header("Authorization", format!("bearer {}", github_token))
                 .json(&release)
                 .send()?
-                .json::<ReleaseResponse>()?
-                .id),
+                .json()?),
         }
     }
 }
