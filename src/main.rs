@@ -3,7 +3,11 @@ mod github;
 use github::{AssetUploader, Release, Releaser};
 use reqwest::Client;
 use serde::Deserialize;
-use std::{error::Error, fs::File, path::Path};
+use std::{
+    error::Error,
+    fs::File,
+    path::{Path, PathBuf},
+};
 
 #[derive(Deserialize, Default)]
 struct Config {
@@ -60,17 +64,23 @@ fn run(
     )?;
 
     if let Some(patterns) = conf.input_files {
-        for pattern in patterns {
-            for path in glob::glob(pattern.as_str())? {
-                let resolved = path?;
-                uploader.upload(
-                    conf.github_token.as_str(),
-                    conf.github_repository.as_str(),
-                    release_id,
-                    mime_or_default(&resolved),
-                    File::open(resolved)?,
-                )?;
-            }
+        let paths: Result<Vec<PathBuf>, Box<dyn Error>> =
+            patterns
+                .into_iter()
+                .try_fold(Vec::new(), |mut paths, pattern| {
+                    let matched = glob::glob(pattern.as_str())?.filter_map(Result::ok);
+                    paths.extend(matched);
+                    Ok(paths)
+                });
+        for path in paths? {
+            log::info!("Uploading path {}", path.display());
+            uploader.upload(
+                conf.github_token.as_str(),
+                conf.github_repository.as_str(),
+                release_id,
+                mime_or_default(&path),
+                File::open(path)?,
+            )?;
         }
     }
 
