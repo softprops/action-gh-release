@@ -1,4 +1,4 @@
-use reqwest::{Body, Client};
+use reqwest::{Body, Client, StatusCode};
 use serde::{Deserialize, Serialize};
 use std::{error::Error, fs::File};
 
@@ -40,22 +40,41 @@ struct ReleaseResponse {
 
 impl Releaser for Client {
     // https://developer.github.com/v3/repos/releases/#create-a-release
+    // https://developer.github.com/v3/repos/releases/#edit-a-release
     fn release(
         &self,
         github_token: &str,
         github_repo: &str,
         release: Release,
     ) -> Result<usize, Box<dyn Error>> {
-        let response: ReleaseResponse = self
-            .post(&format!(
-                "https://api.github.com/repos/{}/releases",
-                github_repo
-            ))
+        let endpoint = format!("https://api.github.com/repos/{}/releases", github_repo);
+        let mut existing = self
+            .get(&format!("{}/tags/{}", endpoint, release.tag_name))
             .header("Authorization", format!("bearer {}", github_token))
-            .json(&release)
-            .send()?
-            .json()?;
-        Ok(response.id)
+            .send()?;
+        match existing.status() {
+            StatusCode::NOT_FOUND => Ok(self
+                .post(&format!(
+                    "https://api.github.com/repos/{}/releases",
+                    github_repo
+                ))
+                .header("Authorization", format!("bearer {}", github_token))
+                .json(&release)
+                .send()?
+                .json::<ReleaseResponse>()?
+                .id),
+            _ => Ok(self
+                .patch(&format!(
+                    "https://api.github.com/repos/{}/releases/{}",
+                    github_repo,
+                    existing.json::<ReleaseResponse>()?.id
+                ))
+                .header("Authorization", format!("bearer {}", github_token))
+                .json(&release)
+                .send()?
+                .json::<ReleaseResponse>()?
+                .id),
+        }
     }
 }
 
