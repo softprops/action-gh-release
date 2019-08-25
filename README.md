@@ -2,3 +2,5 @@
 
 
 A Github Action for creating Github Releases
+
+Doug Tangren (softprops) 2019
