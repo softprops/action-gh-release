@@ -1,6 +1,7 @@
 mod github;
 
 use github::{AssetUploader, Release, ReleaseResponse, Releaser};
+use mime::Mime;
 use reqwest::Client;
 use serde::Deserialize;
 use std::{
@@ -9,13 +10,16 @@ use std::{
     path::{Path, PathBuf},
 };
 
+type BoxError = Box<dyn Error>;
+
 #[derive(Deserialize, Default)]
 struct Config {
     // provided
     github_token: String,
-    github_ref: String, // refs/heads/..., ref/tags/...
+    github_ref: String, // refs/heads/..., refs/tags/...
     github_repository: String,
     // optional
+    input_name: Option<String>,
     input_body: Option<String>,
     input_files: Option<Vec<String>>,
 }
@@ -23,11 +27,15 @@ struct Config {
 fn release(conf: &Config) -> Release {
     let Config {
         github_ref,
+        input_name,
         input_body,
         ..
     } = conf;
+    let tag_name = github_ref.trim_start_matches("refs/tags/").to_string();
+    let name = input_name.clone().or_else(|| Some(tag_name.clone()));
     Release {
-        tag_name: github_ref.trim_start_matches("refs/tags/").into(),
+        tag_name,
+        name,
         body: input_body.clone(),
         ..Release::default()
     }
@@ -40,7 +48,7 @@ where
     gitref.as_ref().starts_with("refs/tags/")
 }
 
-fn mime_or_default<P>(path: P) -> mime::Mime
+fn mime_or_default<P>(path: P) -> Mime
 where
     P: AsRef<Path>,
 {
@@ -49,7 +57,7 @@ where
 
 fn paths<P>(
     patterns: impl IntoIterator<Item = P>
-) -> Result<impl IntoIterator<Item = PathBuf>, Box<dyn Error>>
+) -> Result<impl IntoIterator<Item = PathBuf>, BoxError>
 where
     P: AsRef<str>,
 {
@@ -68,7 +76,7 @@ fn run(
     conf: Config,
     releaser: &dyn Releaser,
     uploader: &dyn AssetUploader,
-) -> Result<(), Box<dyn Error>> {
+) -> Result<(), BoxError> {
     if !is_tag(&conf.github_ref) {
         eprintln!("⚠️ GH Releases require a tag");
         return Ok(());
@@ -98,7 +106,7 @@ fn run(
     Ok(())
 }
 
-fn main() -> Result<(), Box<dyn Error>> {
+fn main() -> Result<(), BoxError> {
     env_logger::init();
     let client = Client::new();
     run(envy::from_env()?, &client, &client)
@@ -116,8 +124,32 @@ mod tests {
     }
 
     #[test]
-    fn release_constructs_a_release_from_a_config() -> Result<(), Box<dyn Error>> {
-        for (conf, expect) in vec![(Config::default(), Release::default())] {
+    fn release_constructs_a_release_from_a_config() -> Result<(), BoxError> {
+        for (conf, expect) in vec![
+            (
+                Config {
+                    github_ref: "refs/tags/v1.0.0".into(),
+                    ..Config::default()
+                },
+                Release {
+                    tag_name: "v1.0.0".into(),
+                    name: Some("v1.0.0".into()),
+                    ..Release::default()
+                },
+            ),
+            (
+                Config {
+                    github_ref: "refs/tags/v1.0.0".into(),
+                    input_name: Some("custom".into()),
+                    ..Config::default()
+                },
+                Release {
+                    tag_name: "v1.0.0".into(),
+                    name: Some("custom".into()),
+                    ..Release::default()
+                },
+            ),
+        ] {
             assert_eq!(release(&conf), expect);
         }
         Ok(())
@@ -131,7 +163,7 @@ mod tests {
     }
 
     #[test]
-    fn paths_resolves_pattern_to_file_paths() -> Result<(), Box<dyn Error>> {
+    fn paths_resolves_pattern_to_file_paths() -> Result<(), BoxError> {
         assert_eq!(paths(vec!["tests/data/**/*"])?.into_iter().count(), 1);
         Ok(())
     }
