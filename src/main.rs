@@ -87,6 +87,7 @@ fn run(
         conf.github_repository.as_str(),
         release(&conf),
     )?;
+    println!("files {:#?}", conf.input_files);
 
     if let Some(patterns) = conf.input_files {
         for path in paths(patterns)? {
