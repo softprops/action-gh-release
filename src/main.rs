@@ -73,7 +73,7 @@ fn run(
                     Ok(paths)
                 });
         for path in paths? {
-            log::info!("⬆️ Uploading path {}", path.display());
+            log::info!("⬆️ Uploading asset {}", path.display());
             uploader.upload(
                 conf.github_token.as_str(),
                 conf.github_repository.as_str(),
