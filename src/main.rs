@@ -29,12 +29,16 @@ fn release(conf: &Config) -> Release {
     }
 }
 
+fn is_tag<R>(gitref: R) -> bool where R: AsRef<str> {
+    gitref.as_ref().starts_with("refs/tags/")
+}
+
 fn run(
     conf: Config,
     releaser: &dyn Releaser,
     uploader: &dyn AssetUploader,
 ) -> Result<(), Box<dyn Error>> {
-    if !conf.github_ref.starts_with("refs/tags/") {
+    if !is_tag(&conf.github_ref) {
         log::error!("GH Releases require a tag");
         return Ok(());
     }
@@ -80,5 +84,15 @@ mod tests {
             assert_eq!(release(&conf), expect);
         }
         Ok(())
+    }
+
+    #[test]
+    fn is_tag_checks_refs() {
+        for (gitref, expect) in &[
+            ("refs/tags/foo", true),
+            ("refs/heads/master", false)
+        ] {
+            assert_eq!(is_tag(gitref), *expect)
+        }
     }
 }
