@@ -47,6 +47,23 @@ where
     mime_guess::from_path(path).first_or(mime::APPLICATION_OCTET_STREAM)
 }
 
+fn paths<P>(
+    patterns: impl IntoIterator<Item = P>
+) -> Result<impl IntoIterator<Item = PathBuf>, Box<dyn Error>>
+where
+    P: AsRef<str>,
+{
+    patterns
+        .into_iter()
+        .try_fold(Vec::new(), |mut paths, pattern| {
+            let matched = glob::glob(pattern.as_ref())?
+                .filter_map(Result::ok)
+                .filter(|p| p.is_file());
+            paths.extend(matched);
+            Ok(paths)
+        })
+}
+
 fn run(
     conf: Config,
     releaser: &dyn Releaser,
@@ -64,15 +81,7 @@ fn run(
     )?;
 
     if let Some(patterns) = conf.input_files {
-        let paths: Result<Vec<PathBuf>, Box<dyn Error>> =
-            patterns
-                .into_iter()
-                .try_fold(Vec::new(), |mut paths, pattern| {
-                    let matched = glob::glob(pattern.as_str())?.filter_map(Result::ok);
-                    paths.extend(matched);
-                    Ok(paths)
-                });
-        for path in paths? {
+        for path in paths(patterns)? {
             log::info!("⬆️ Uploading asset {}", path.display());
             uploader.upload(
                 conf.github_token.as_str(),
@@ -119,5 +128,14 @@ mod tests {
         for (gitref, expect) in &[("refs/tags/foo", true), ("refs/heads/master", false)] {
             assert_eq!(is_tag(gitref), *expect)
         }
+    }
+
+    #[test]
+    fn paths_resolves_pattern_to_file_paths() -> Result<(), Box<dyn Error>> {
+        for p in paths(vec!["tests/data/**/*"])? {
+            println!("{}", p.display())
+        }
+        assert_eq!(paths(vec!["tests/data/**/*"])?.into_iter().count(), 1);
+        Ok(())
     }
 }
