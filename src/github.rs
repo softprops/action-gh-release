@@ -1,3 +1,4 @@
+use mime::Mime;
 use reqwest::{Body, Client, StatusCode};
 use serde::{Deserialize, Serialize};
 use std::{error::Error, fs::File};
@@ -34,7 +35,7 @@ pub trait AssetUploader<A: Into<Body> = File> {
         github_token: &str,
         github_repo: &str,
         release_id: usize,
-        mime: mime::Mime,
+        mime: Mime,
         asset: A,
     ) -> Result<(), Box<dyn Error>>;
 }
