@@ -30,4 +30,4 @@ jobs:
       - name: Publish
         uses: actions/docker/cli@master
         with:
-          args: push ${{ github.repository }}:${{ github.sha }}
+          args: push ${{ github.repository }}:latest
