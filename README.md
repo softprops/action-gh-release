@@ -16,8 +16,6 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@master
-        with:
-          fetch-depth: 1
       - name: Build
         run: echo ${{ github.sha }} > Release.txt
       - name: Release
