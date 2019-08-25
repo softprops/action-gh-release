@@ -18,8 +18,8 @@ RUN rustup target add x86_64-unknown-linux-musl
 # RUN cargo build --target x86_64-unknown-linux-musl --release
 # COPY src src
 COPY . .
-RUN cargo build --target x86_64-unknown-linux-musl --release \
-	&& strip /app/target/x86_64-unknown-linux-musl/release/action-gh-release
+RUN cargo build --target x86_64-unknown-linux-musl --release
+RUN strip /app/target/x86_64-unknown-linux-musl/release/action-gh-release
 
 FROM scratch
 
