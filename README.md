@@ -22,9 +22,9 @@ jobs:
         run: echo ${{ github.sha }} > Release.txt
       - name: Release
         uses: docker://softprops/action-gh-release
-				if: ${{ startsWith(github.ref, 'refs/tags/') }}
-				with:
-					files: Release.txt
+        if: ${{ startsWith(github.ref, 'refs/tags/') }}
+        with:
+          files: Release.txt
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 ```
