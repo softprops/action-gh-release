@@ -132,9 +132,6 @@ mod tests {
 
     #[test]
     fn paths_resolves_pattern_to_file_paths() -> Result<(), Box<dyn Error>> {
-        for p in paths(vec!["tests/data/**/*"])? {
-            println!("{}", p.display())
-        }
         assert_eq!(paths(vec!["tests/data/**/*"])?.into_iter().count(), 1);
         Ok(())
     }
