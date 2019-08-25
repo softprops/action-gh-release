@@ -1,0 +1,32 @@
+name: Main
+
+on:
+  push:
+    branches:
+      - 'master'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      # https://github.com/actions/checkout
+      - name: Checkout
+        uses: actions/checkout@master
+        with:
+          fetch-depth: 1
+      # https://github.com/actions/docker/tree/master/cli
+      - name: Package
+        uses: actions/docker/cli@master
+        with:
+          args: build -t ${{ github.repository }}:${{ github.sha }} .
+      # https://github.com/actions/docker/tree/master/login
+      - name: Publish Auth
+        uses: actions/docker/login@master
+        env:
+          # https://help.github.com/en/articles/virtual-environments-for-github-actions#creating-and-using-secrets-encrypted-variables
+          DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+          DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+      # - name: Publish
+      #   uses: actions/docker/cli@master
+      #   with:
+      #     args: push ${{ github.repository }}:${{ github.sha }}

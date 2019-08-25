@@ -1,0 +1,20 @@
+[package]
+name = "action-gh-release"
+version = "0.1.0"
+authors = ["softprops <d.tangren@gmail.com>"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+mime = "0.3"
+mime_guess = "2.0"
+env_logger = "0.6"
+log = "0.4"
+glob = "0.3"
+envy = "0.4"
+# hack https://docs.rs/openssl/0.10.24/openssl/#vendored
+openssl = { version = "0.10", features = ["vendored"] }
+reqwest = { version = "0.9", features = ["rustls-tls"] }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
