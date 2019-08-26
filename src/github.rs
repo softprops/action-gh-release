@@ -90,7 +90,7 @@ impl<A: Into<Body>> AssetUploader<A> for Client {
     ) -> Result<StatusCode, Box<dyn Error>> {
         Ok(self
             .post(&format!(
-                "http://uploads.github.com/repos/{}/releases/{}",
+                "http://uploads.github.com/repos/{}/releases/{}/assets",
                 github_repo, release_id
             ))
             .header("Authorization", format!("bearer {}", github_token))
