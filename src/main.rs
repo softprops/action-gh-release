@@ -6,6 +6,7 @@ use reqwest::Client;
 use serde::Deserialize;
 use std::{
     error::Error,
+    ffi::OsStr,
     fs::File,
     path::{Path, PathBuf},
 };
@@ -95,17 +96,17 @@ fn run(
 
     if let Some(patterns) = conf.input_files {
         for path in paths(patterns)? {
-            println!(
-                "⬆️ Uploading {} asset {}",
-                mime_or_default(&path),
-                path.display()
-            );
+            println!("⬆️ Uploading asset {}", path.display());
             let status = uploader.upload(
                 conf.github_token.as_str(),
                 conf.github_repository.as_str(),
                 id,
+                &path
+                    .file_name()
+                    .and_then(OsStr::to_str)
+                    .unwrap_or_else(|| "Unknown file"),
                 mime_or_default(&path),
-                File::open(path)?,
+                File::open(&path)?,
             )?;
             println!("uploaded with status {}", status);
         }
