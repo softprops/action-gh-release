@@ -65,9 +65,10 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 ```
+
 ### 💅 Customizing
 
-## inputs
+#### inputs
 
 The following are optional as `step.with` keys
 
@@ -78,7 +79,7 @@ The following are optional as `step.with` keys
 | `files` | String  | Comma-delimited globs of paths to assets to upload for release|
 | `name`  | String  | Name of the release. defaults to tag name                     |
 
-## environment variables
+#### environment variables
 
 The following are *required* as `step.env` keys
 
