@@ -1,7 +1,7 @@
 # action gh-release [![](https://github.com/softprops/action-gh-release/workflows/Main/badge.svg)](https://github.com/softprops/action-gh-release/actions)
 
 
-A Github Action for creating Github Releases
+A GitHub Action for creating GitHub Releases
 
 ## Usage
 
@@ -31,10 +31,10 @@ jobs:
 
 | Name    | Type    | Description                                                   |
 |---------|---------|---------------------------------------------------------------|
-| `body`  | String  | text communicating notable changes in this release            |
-| `draft` | Boolean | indicator of whether or not this release is a draft           |
-| `files` | String  | comma-delimited globs of paths to assets to upload for release|
-| `name`  | String  | name of the release. defaults to tag name                     |
+| `body`  | String  | Text communicating notable changes in this release            |
+| `draft` | Boolean | Indicator of whether or not this release is a draft           |
+| `files` | String  | Comma-delimited globs of paths to assets to upload for release|
+| `name`  | String  | Name of the release. defaults to tag name                     |
 
 ## environment variables
 

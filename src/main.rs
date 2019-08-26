@@ -96,19 +96,22 @@ fn run(
 
     if let Some(patterns) = conf.input_files {
         for path in paths(patterns)? {
-            println!("⬆️ Uploading asset {}", path.display());
+            let name = &path
+                .file_name()
+                .and_then(OsStr::to_str)
+                .unwrap_or_else(|| "UnknownFile");
+            println!("⬆️ Uploading {}...", name);
             let status = uploader.upload(
                 conf.github_token.as_str(),
                 conf.github_repository.as_str(),
                 id,
-                &path
-                    .file_name()
-                    .and_then(OsStr::to_str)
-                    .unwrap_or_else(|| "Unknown file"),
+                name,
                 mime_or_default(&path),
                 File::open(&path)?,
             )?;
-            println!("uploaded with status {}", status);
+            if !status.is_success() {
+                println!("⚠️ Failed uploading {} with error {}", name, status);
+            }
         }
     }
 
