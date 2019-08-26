@@ -14,14 +14,15 @@ type BoxError = Box<dyn Error>;
 
 #[derive(Deserialize, Default, Debug, PartialEq)]
 struct Config {
-    // provided
+    // github provided
     github_token: String,
-    github_ref: String, // refs/heads/..., refs/tags/...
+    github_ref: String,
     github_repository: String,
-    // optional
+    // user provided
     input_name: Option<String>,
     input_body: Option<String>,
     input_files: Option<Vec<String>>,
+    input_draft: Option<bool>,
 }
 
 fn release(conf: &Config) -> Release {
@@ -29,15 +30,17 @@ fn release(conf: &Config) -> Release {
         github_ref,
         input_name,
         input_body,
+        input_draft,
         ..
     } = conf;
     let tag_name = github_ref.trim_start_matches("refs/tags/").to_string();
     let name = input_name.clone().or_else(|| Some(tag_name.clone()));
+    let draft = input_draft.clone();
     Release {
         tag_name,
         name,
         body: input_body.clone(),
-        ..Release::default()
+        draft,
     }
 }
 
