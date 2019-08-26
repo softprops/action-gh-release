@@ -27,4 +27,19 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 ```
 
+## inputs
+
+| Name    | Type    | Description                                                   |
+|---------|---------|---------------------------------------------------------------|
+| `body`  | String  | text communicating notable changes in this release            |
+| `draft` | Boolean | indicator of whether or not this release is a draft           |
+| `files` | String  | comma-delimited globs of paths to assets to upload for release|
+| `name`  | String  | name of the release. defaults to tag name                     |
+
+## environment variables
+
+| Name           | Description                          |
+|----------------|--------------------------------------|
+| `GITHUB_TOKEN` | GITHUB_TOKEN as provided by `secrets`|
+
 Doug Tangren (softprops) 2019
