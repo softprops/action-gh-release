@@ -37,7 +37,7 @@ pub trait AssetUploader<A: Into<Body> = File> {
         release_id: usize,
         mime: Mime,
         asset: A,
-    ) -> Result<(), Box<dyn Error>>;
+    ) -> Result<StatusCode, Box<dyn Error>>;
 }
 
 impl Releaser for Client {
@@ -87,16 +87,17 @@ impl<A: Into<Body>> AssetUploader<A> for Client {
         release_id: usize,
         mime: mime::Mime,
         asset: A,
-    ) -> Result<(), Box<dyn Error>> {
-        self.post(&format!(
-            "http://uploads.github.com/repos/{}/releases/{}",
-            github_repo, release_id
-        ))
-        .header("Authorization", format!("bearer {}", github_token))
-        .header("Content-Type", mime.to_string())
-        .body(asset)
-        .send()?;
-        Ok(())
+    ) -> Result<StatusCode, Box<dyn Error>> {
+        Ok(self
+            .post(&format!(
+                "http://uploads.github.com/repos/{}/releases/{}",
+                github_repo, release_id
+            ))
+            .header("Authorization", format!("bearer {}", github_token))
+            .header("Content-Type", mime.to_string())
+            .body(asset)
+            .send()?
+            .status())
     }
 }
 

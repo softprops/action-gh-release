@@ -87,23 +87,22 @@ fn run(
         conf.github_repository.as_str(),
         release(&conf),
     )?;
-    println!("name {:#?}", conf.input_name);
-    println!("files {:#?}", conf.input_files);
 
     if let Some(patterns) = conf.input_files {
         for path in paths(patterns)? {
             println!("⬆️ Uploading asset {}", path.display());
-            uploader.upload(
+            let status = uploader.upload(
                 conf.github_token.as_str(),
                 conf.github_repository.as_str(),
                 id,
                 mime_or_default(&path),
                 File::open(path)?,
             )?;
+            println!("uploaded with status {}", status);
         }
-
-        println!("🎉 Release ready at {}", html_url);
     }
+
+    println!("🎉 Release ready at {}", html_url);
 
     Ok(())
 }
@@ -187,7 +186,7 @@ mod tests {
                 github_repository: "foo/bar".into(),
                 input_name: Some("test release".into()),
                 input_body: Some(":)".into()),
-                input_files: Some(vec!["*.md".into()])
+                input_files: Some(vec!["*.md".into()]),
             },
         )] {
             assert_eq!(expect, envy::from_iter::<_, Config>(env)?)
