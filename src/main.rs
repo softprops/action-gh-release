@@ -12,7 +12,7 @@ use std::{
 
 type BoxError = Box<dyn Error>;
 
-#[derive(Deserialize, Default, Debug, PartialEq)]
+#[derive(Deserialize, Default, Debug, PartialEq, Clone)]
 struct Config {
     // github provided
     github_token: String,
@@ -25,22 +25,24 @@ struct Config {
     input_draft: Option<bool>,
 }
 
-fn release(conf: &Config) -> Release {
-    let Config {
-        github_ref,
-        input_name,
-        input_body,
-        input_draft,
-        ..
-    } = conf;
-    let tag_name = github_ref.trim_start_matches("refs/tags/").to_string();
-    let name = input_name.clone().or_else(|| Some(tag_name.clone()));
-    let draft = *input_draft;
-    Release {
-        tag_name,
-        name,
-        body: input_body.clone(),
-        draft,
+impl Into<Release> for Config {
+    fn into(self) -> Release {
+        let Config {
+            github_ref,
+            input_name,
+            input_body,
+            input_draft,
+            ..
+        } = self;
+        let tag_name = github_ref.trim_start_matches("refs/tags/").to_string();
+        let name = input_name.clone().or_else(|| Some(tag_name.clone()));
+        let draft = input_draft;
+        Release {
+            tag_name,
+            name,
+            body: input_body.clone(),
+            draft,
+        }
     }
 }
 
@@ -88,12 +90,16 @@ fn run(
     let ReleaseResponse { id, html_url } = releaser.release(
         conf.github_token.as_str(),
         conf.github_repository.as_str(),
-        release(&conf),
+        conf.clone().into(),
     )?;
 
     if let Some(patterns) = conf.input_files {
         for path in paths(patterns)? {
-            println!("⬆️ Uploading {} asset {}", mime_or_default(&path), path.display());
+            println!(
+                "⬆️ Uploading {} asset {}",
+                mime_or_default(&path),
+                path.display()
+            );
             let status = uploader.upload(
                 conf.github_token.as_str(),
                 conf.github_repository.as_str(),
@@ -154,7 +160,7 @@ mod tests {
                 },
             ),
         ] {
-            assert_eq!(release(&conf), expect);
+            assert_eq!(expect, conf.into());
         }
         Ok(())
     }
@@ -182,6 +188,7 @@ mod tests {
                 ("INPUT_NAME".into(), "test release".into()),
                 ("INPUT_BODY".into(), ":)".into()),
                 ("INPUT_FILES".into(), "*.md".into()),
+                ("INPUT_DRAFT".into(), "true".into()),
             ],
             Config {
                 github_token: "123".into(),
@@ -190,6 +197,7 @@ mod tests {
                 input_name: Some("test release".into()),
                 input_body: Some(":)".into()),
                 input_files: Some(vec!["*.md".into()]),
+                input_draft: Some(true),
             },
         )] {
             assert_eq!(expect, envy::from_iter::<_, Config>(env)?)
