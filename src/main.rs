@@ -187,7 +187,7 @@ mod tests {
         for (env, expect) in vec![(
             vec![
                 ("GITHUB_TOKEN".into(), "123".into()),
-                ("GITHUB_REF".into(), "refs/tags/ref".into()),
+                ("GITHUB_REF".into(), "refs/tags/v1.0.0".into()),
                 ("GITHUB_REPOSITORY".into(), "foo/bar".into()),
                 ("INPUT_NAME".into(), "test release".into()),
                 ("INPUT_BODY".into(), ":)".into()),
@@ -196,7 +196,7 @@ mod tests {
             ],
             Config {
                 github_token: "123".into(),
-                github_ref: "refs/tags/ref".into(),
+                github_ref: "refs/tags/v1.0.0".into(),
                 github_repository: "foo/bar".into(),
                 input_name: Some("test release".into()),
                 input_body: Some(":)".into()),
