@@ -84,7 +84,7 @@ fn run(
     uploader: &dyn AssetUploader,
 ) -> Result<(), BoxError> {
     if !is_tag(&conf.github_ref) {
-        eprintln!("⚠️ GH Releases require a tag");
+        eprintln!("⚠️ GitHub Releases requires a tag");
         return Ok(());
     }
 
