@@ -79,17 +79,6 @@ impl Releaser for Client {
     }
 }
 
-fn asset_url(
-    github_repo: &str,
-    release_id: usize,
-    name: &str,
-) -> String {
-    format!(
-        "http://uploads.github.com/repos/{}/releases/{}/assets?name={}",
-        github_repo, release_id, name
-    )
-}
-
 impl<A: Into<Body>> AssetUploader<A> for Client {
     // https://developer.github.com/v3/repos/releases/#upload-a-release-asset
     fn upload(
@@ -102,9 +91,13 @@ impl<A: Into<Body>> AssetUploader<A> for Client {
         asset: A,
     ) -> Result<StatusCode, Box<dyn Error>> {
         Ok(self
-            .post(&asset_url(github_repo, release_id, name))
+            .post(&format!(
+                "http://uploads.github.com/repos/{}/releases/{}/assets",
+                github_repo, release_id
+            ))
             .header("Authorization", format!("bearer {}", github_token))
             .header("Content-Type", mime.to_string())
+            .query(&[("name", name)])
             .body(asset)
             .send()?
             .status())
@@ -113,12 +106,6 @@ impl<A: Into<Body>> AssetUploader<A> for Client {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     #[test]
-    fn asset_url_formats_urls() {
-        assert_eq!(
-            "http://uploads.github.com/repos/foo/bar/releases/1/assets?name=release.txt",
-            asset_url("foo/bar", 1, "release.txt")
-        )
-    }
+    fn it_works() {}
 }
