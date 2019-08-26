@@ -4,7 +4,7 @@ description: 'Github Action for creating Github Releases'
 author: 'softprops'
 inputs:
   body:
-    description: 'Note-worthy description of release'
+    description: 'Note-worthy description of changes in release'
     required: false
     default: 'empty'
   name:
