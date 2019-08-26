@@ -93,7 +93,7 @@ fn run(
 
     if let Some(patterns) = conf.input_files {
         for path in paths(patterns)? {
-            println!("⬆️ Uploading asset {}", path.display());
+            println!("⬆️ Uploading {} asset {}", mime_or_default(&path), path.display());
             let status = uploader.upload(
                 conf.github_token.as_str(),
                 conf.github_repository.as_str(),
