@@ -7,6 +7,10 @@ inputs:
     description: 'Note-worthy description of changes in release'
     required: false
     default: 'empty'
+  body-path:
+    description: 'Path to load note-worthy description of changes in release from'
+    required: false
+    default: 'empty'
   name:
     description: 'Gives the release a custom name'
     required: false

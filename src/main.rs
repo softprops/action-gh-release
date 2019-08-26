@@ -7,7 +7,7 @@ use serde::Deserialize;
 use std::{
     error::Error,
     ffi::OsStr,
-    fs::File,
+    fs::{read_to_string, File},
     path::{Path, PathBuf},
 };
 
@@ -22,6 +22,7 @@ struct Config {
     // user provided
     input_name: Option<String>,
     input_body: Option<String>,
+    input_body_path: Option<PathBuf>,
     input_files: Option<Vec<String>>,
     input_draft: Option<bool>,
 }
@@ -32,16 +33,20 @@ impl Into<Release> for Config {
             github_ref,
             input_name,
             input_body,
+            input_body_path,
             input_draft,
             ..
         } = self;
         let tag_name = github_ref.trim_start_matches("refs/tags/").to_string();
         let name = input_name.clone().or_else(|| Some(tag_name.clone()));
         let draft = input_draft;
+        let body = input_body_path
+            .and_then(|path| read_to_string(path).ok())
+            .or_else(|| input_body.clone());
         Release {
             tag_name,
             name,
-            body: input_body.clone(),
+            body,
             draft,
         }
     }
@@ -163,6 +168,20 @@ mod tests {
                     ..Release::default()
                 },
             ),
+            (
+                Config {
+                    github_ref: "refs/tags/v1.0.0".into(),
+                    input_body: Some("fallback".into()),
+                    input_body_path: Some("tests/data/foo/bar.txt".into()),
+                    ..Config::default()
+                },
+                Release {
+                    tag_name: "v1.0.0".into(),
+                    name: Some("v1.0.0".into()),
+                    body: Some("release me".into()),
+                    ..Release::default()
+                },
+            ),
         ] {
             assert_eq!(expect, conf.into());
         }
@@ -193,6 +212,7 @@ mod tests {
                 ("INPUT_BODY".into(), ":)".into()),
                 ("INPUT_FILES".into(), "*.md".into()),
                 ("INPUT_DRAFT".into(), "true".into()),
+                ("INPUT_BODY_PATH".into(), "tests/data/foo/bar.txt".into()),
             ],
             Config {
                 github_token: "123".into(),
@@ -200,6 +220,7 @@ mod tests {
                 github_repository: "foo/bar".into(),
                 input_name: Some("test release".into()),
                 input_body: Some(":)".into()),
+                input_body_path: Some("tests/data/foo/bar.txt".into()),
                 input_files: Some(vec!["*.md".into()]),
                 input_draft: Some(true),
             },
