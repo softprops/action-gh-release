@@ -35,7 +35,7 @@ fn release(conf: &Config) -> Release {
     } = conf;
     let tag_name = github_ref.trim_start_matches("refs/tags/").to_string();
     let name = input_name.clone().or_else(|| Some(tag_name.clone()));
-    let draft = input_draft.clone();
+    let draft = *input_draft;
     Release {
         tag_name,
         name,
