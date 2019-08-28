@@ -1,8 +1,9 @@
 
 # action gh-release [![](https://github.com/softprops/action-gh-release/workflows/Main/badge.svg)](https://github.com/softprops/action-gh-release/actions)
 
+> A GitHub Action for creating GitHub Releases
 
-A GitHub Action for creating GitHub Releases
+> **⚠️ Note:** To use this action, you must have access to the [GitHub Actions](https://github.com/features/actions) feature. GitHub Actions are currently only available in public beta. You can [apply for the GitHub Actions beta here](https://github.com/features/actions/signup/).
 
 ## 🤸 Usage
 
@@ -36,7 +37,7 @@ jobs:
 ### ⬆️ Uploading release assets
 
 You can can configure a number of options for your
-GitHub release and all are optional. 
+GitHub release and all are optional.
 
 A common case for GitHub releases is to upload your binary after its been validated and packaged.
 Use the `with.files` input to declare a comma-separated list of glob expressions matching the files
@@ -71,7 +72,7 @@ jobs:
 ### 📝 External release notes
 
 Many systems exist that can help generate release notes for you. This action supports
-loading release notes from a path in your repository's build to allow for the flexibility 
+loading release notes from a path in your repository's build to allow for the flexibility
 of using any changelog generator for your releases, including a human 👩‍💻
 
 ```yaml
