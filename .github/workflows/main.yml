@@ -1,9 +1,6 @@
 name: Main
 
 on: [pull_request, push]
-  # push:
-  #   branches:
-  #     - 'master'
 
 jobs:
   build:
@@ -27,20 +24,3 @@ jobs:
           || (echo "##[error] found changed files after build. please 'npm run build && npm run format'" \
                   "and check in all changes" \
               && exit 1)
-      # https://github.com/actions/docker/tree/master/cli
-      # - name: Package
-      #   uses: actions/docker/cli@master
-      #   with:
-      #     args: build -t ${{ github.repository }}:latest -t ${{ github.repository }}:${{ github.sha }} .
-      # # https://github.com/actions/docker/tree/master/login
-      # - name: Publish Auth
-      #   uses: actions/docker/login@master
-      #   env:
-      #     # https://help.github.com/en/articles/virtual-environments-for-github-actions#creating-and-using-secrets-encrypted-variables
-      #     DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
-      #     DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
-      # # https://github.com/actions/docker/tree/master/cli
-      # - name: Publish
-      #   uses: actions/docker/cli@master
-      #   with:
-      #     args: push ${{ github.repository }}:latest
