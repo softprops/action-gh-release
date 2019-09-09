@@ -1,0 +1,39 @@
+{
+  "name": "action-gh-release",
+  "version": "0.1.1",
+  "private": true,
+  "description": "GitHub Action for creating GitHub Releases",
+  "main": "lib/main.js",
+  "scripts": {
+    "build": "tsc",
+    "test": "jest",
+    "fmt": "prettier --write 'src/**/*.ts' '__tests__/**/*.ts'"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/softprops/action-gh-template.git"
+  },
+  "keywords": [
+    "actions"
+  ],
+  "author": "softprops",
+  "license": "MIT",
+  "dependencies": {
+    "@actions/core": "^1.1.0",
+    "@actions/github": "^1.1.0",
+    "glob": "^7.1.4",
+    "mime": "^2.4.4"
+  },
+  "devDependencies": {
+    "@types/glob": "^7.1.1",
+    "@types/jest": "^24.0.13",
+    "@types/mime": "^2.0.1",
+    "@types/node": "^12.7.4",
+    "jest": "^24.8.0",
+    "jest-circus": "^24.7.1",
+    "prettier": "1.18.2",
+    "ts-jest": "^24.0.2",
+    "typescript": "^3.5.1",
+    "typescript-formatter": "^7.2.2"
+  }
+}
