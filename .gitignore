@@ -1,4 +1,2 @@
-/target
-**/*.rs.bk
 node_modules/
 __tests__/runner/*
