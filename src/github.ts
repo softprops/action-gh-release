@@ -1,19 +1,19 @@
-import { GitHub } from '@actions/github';
-import { Config } from './util';
-import { lstatSync, readFileSync } from 'fs';
-import { getType } from 'mime';
-import { basename } from 'path';
+import { GitHub } from "@actions/github";
+import { Config } from "./util";
+import { lstatSync, readFileSync } from "fs";
+import { getType } from "mime";
+import { basename } from "path";
 
 export interface ReleaseAsset {
-  name: string,
-  mime: string,
-  size: number,
-  file: Buffer
+  name: string;
+  mime: string;
+  size: number;
+  file: Buffer;
 }
 
 export interface Release {
-	upload_url: string,
-	html_url: string
+  upload_url: string;
+  html_url: string;
 }
 
 export const asset = (path: string): ReleaseAsset => {
@@ -23,39 +23,31 @@ export const asset = (path: string): ReleaseAsset => {
     size: lstatSync(path).size,
     file: readFileSync(path)
   };
-}
+};
 
 export const mimeOrDefault = (path: string): string => {
   return getType(path) || "application/octet-stream";
-}
+};
 
 export const upload = async (
   gh: GitHub,
   url: string,
   path: string
 ): Promise<any> => {
-  let {
-    name,
-    size,
-    mime,
-    file
-  } = asset(path);
+  let { name, size, mime, file } = asset(path);
   console.log(`⬆️ Uploading ${name}...`);
   return await gh.repos.uploadReleaseAsset({
     url,
-    headers:  {
+    headers: {
       "content-length": size,
       "content-type": mime
     },
     name,
     file
   });
-}
+};
 
-export const release = async (
-  config: Config,
-  gh: GitHub
-): Promise<Release> => {
+export const release = async (config: Config, gh: GitHub): Promise<Release> => {
   const [owner, repo] = config.github_repository.split("/");
   const tag = config.github_ref.replace("refs/tags/", "");
   try {
@@ -88,8 +80,10 @@ export const release = async (
         return release(config, gh);
       }
     } else {
-      console.log(`Unexpected error fetching GitHub release for tag ${config.github_ref}: ${error}`);
+      console.log(
+        `Unexpected error fetching GitHub release for tag ${config.github_ref}: ${error}`
+      );
       throw error;
     }
   }
-}
+};

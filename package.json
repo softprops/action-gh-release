@@ -6,7 +6,8 @@
   "main": "lib/main.js",
   "scripts": {
     "build": "tsc",
-    "test": "jest"
+    "test": "jest",
+    "fmt": "prettier --write 'src/**/*.ts' '__tests__/**/*.ts'"
   },
   "repository": {
     "type": "git",
@@ -30,7 +31,9 @@
     "@types/node": "^12.7.4",
     "jest": "^24.8.0",
     "jest-circus": "^24.7.1",
+    "prettier": "1.18.2",
     "ts-jest": "^24.0.2",
-    "typescript": "^3.5.1"
+    "typescript": "^3.5.1",
+    "typescript-formatter": "^7.2.2"
   }
 }
