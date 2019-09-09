@@ -19,7 +19,7 @@ jobs:
       - name: Build
         run: npm run build
       - name: Test
-        run: npm rust test
+        run: npm run test
       - name: "check for uncommitted changes"
         # Ensure no changes, but ignore node_modules dir since dev/fresh ci deps installed.
         run: |
