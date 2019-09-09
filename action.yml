@@ -6,23 +6,18 @@ inputs:
   body:
     description: 'Note-worthy description of changes in release'
     required: false
-    default: 'empty'
   body-path:
     description: 'Path to load note-worthy description of changes in release from'
     required: false
-    default: 'empty'
   name:
     description: 'Gives the release a custom name'
     required: false
-    default: 'Name of tag'
   draft:
     description: 'Creates a draft release'
     required: false
-    default: 'false'
   files:
     description: 'Comma-delimited list of path globs for asset files to upload'
     required: false
-    default: 'empty'
 env:
   'GITHUB_TOKEN': 'As provided by Github Actions'
 runs:
