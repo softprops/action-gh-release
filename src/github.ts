@@ -56,22 +56,23 @@ export const release = async (
   config: Config,
   gh: GitHub
 ): Promise<Release> => {
-  let [owner, repo] = config.github_repository.split("/");
+  const [owner, repo] = config.github_repository.split("/");
+  const tag = config.github_ref.replace("refs/tags/", "");
   try {
     let release = await gh.repos.getReleaseByTag({
       owner,
       repo,
-      tag: config.github_ref
+      tag
     });
     return release.data;
   } catch (error) {
     if (error.status === 404) {
-      console.log("Creating new release...");
       try {
-        const tag_name = config.github_ref.replace("refs/tags/", "");
-        const name = config.input_name || tag_name;
+        const tag_name = tag;
+        const name = config.input_name || tag;
         const body = config.input_body;
         const draft = config.input_draft;
+        console.log(`👩‍🏭 Creating new GitHub release for tag ${tag_name}...`);
         let release = await gh.repos.createRelease({
           owner,
           repo,
@@ -82,11 +83,12 @@ export const release = async (
         });
         return release.data;
       } catch (error) {
-        console.log(`created failed with status: ${error.status}`);
+        // presume a race with competing metrix runs
+        console.log(`GitHub release failed with status: ${error.status}`);
         return release(config, gh);
       }
     } else {
-      console.log(`Unexpected error fetching github release for tag ${config.github_ref}: ${error}`);
+      console.log(`Unexpected error fetching GitHub release for tag ${config.github_ref}: ${error}`);
       throw error;
     }
   }
