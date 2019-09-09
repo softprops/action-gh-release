@@ -1,9 +1,9 @@
 name: Main
 
-on:
-  push:
-    branches:
-      - 'master'
+on: [pull_request, push]
+  # push:
+  #   branches:
+  #     - 'master'
 
 jobs:
   build:
@@ -14,20 +14,33 @@ jobs:
         uses: actions/checkout@master
         with:
           fetch-depth: 1
+      - name: Install
+        run: npm ci
+      - name: Build
+        run: npm run build
+      - name: Test
+        run: npm rust test
+      - name: "check for uncommitted changes"
+        # Ensure no changes, but ignore node_modules dir since dev/fresh ci deps installed.
+        run: |
+          git diff --exit-code --stat -- . ':!node_modules' \
+          || (echo "##[error] found changed files after build. please 'npm run build && npm run format'" \
+                  "and check in all changes" \
+              && exit 1)
       # https://github.com/actions/docker/tree/master/cli
-      - name: Package
-        uses: actions/docker/cli@master
-        with:
-          args: build -t ${{ github.repository }}:latest -t ${{ github.repository }}:${{ github.sha }} .
-      # https://github.com/actions/docker/tree/master/login
-      - name: Publish Auth
-        uses: actions/docker/login@master
-        env:
-          # https://help.github.com/en/articles/virtual-environments-for-github-actions#creating-and-using-secrets-encrypted-variables
-          DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
-          DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
-      # https://github.com/actions/docker/tree/master/cli
-      - name: Publish
-        uses: actions/docker/cli@master
-        with:
-          args: push ${{ github.repository }}:latest
+      # - name: Package
+      #   uses: actions/docker/cli@master
+      #   with:
+      #     args: build -t ${{ github.repository }}:latest -t ${{ github.repository }}:${{ github.sha }} .
+      # # https://github.com/actions/docker/tree/master/login
+      # - name: Publish Auth
+      #   uses: actions/docker/login@master
+      #   env:
+      #     # https://help.github.com/en/articles/virtual-environments-for-github-actions#creating-and-using-secrets-encrypted-variables
+      #     DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+      #     DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+      # # https://github.com/actions/docker/tree/master/cli
+      # - name: Publish
+      #   uses: actions/docker/cli@master
+      #   with:
+      #     args: push ${{ github.repository }}:latest

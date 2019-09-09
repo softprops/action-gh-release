@@ -24,10 +24,12 @@ inputs:
     required: false
     default: 'empty'
 runs:
-  using: 'docker'
-  image: 'docker://softprops:action-gh-action'
+  #using: 'docker'
+  #image: 'docker://softprops:action-gh-action'
+  using: 'node12'
+  main: 'lib/main.js'
   env:
     'GITHUB_TOKEN': 'As provided by Github Actions'
 branding:
-  color: 'green' 
+  color: 'green'
   icon: 'package'
