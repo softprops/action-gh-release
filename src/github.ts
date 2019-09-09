@@ -67,19 +67,24 @@ export const release = async (
   } catch (error) {
     if (error.status === 404) {
       console.log("Creating new release...");
-      const tag_name = config.github_ref.replace("refs/tags/", "");
-      const name = config.input_name || tag_name;
-      const body = config.input_body;
-      const draft = config.input_draft;
-      let release = await gh.repos.createRelease({
-        owner,
-        repo,
-        tag_name,
-        name,
-        body,
-        draft
-      });
-      return release.data;
+      try {
+        const tag_name = config.github_ref.replace("refs/tags/", "");
+        const name = config.input_name || tag_name;
+        const body = config.input_body;
+        const draft = config.input_draft;
+        let release = await gh.repos.createRelease({
+          owner,
+          repo,
+          tag_name,
+          name,
+          body,
+          draft
+        });
+        return release.data;
+      } catch (error) {
+        console.log(`created failed with status: ${error.status}`);
+        return release(config, gh);
+      }
     } else {
       console.log(`Unexpected error fetching github release for tag ${config.github_ref}: ${error}`);
       throw error;
