@@ -1,7 +1,8 @@
-import { setFailed } from '@actions/core';
-import { GitHub } from '@actions/github';
+
 import { paths, parseConfig, isTag } from './util';
 import { release, upload } from './github';
+import { setFailed } from '@actions/core';
+import { GitHub } from '@actions/github';
 
 async function run() {
   try {
