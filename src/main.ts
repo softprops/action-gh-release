@@ -1,5 +1,5 @@
 import * as fs from 'fs';
-import * as core from '@actions/core';
+import { setFailed } from '@actions/core';
 import { GitHub } from '@actions/github';
 import { paths, parseConfig, isTag } from './util';
 import { release, upload } from './github';
@@ -20,7 +20,7 @@ async function run() {
     }
     console.log(`🎉 Release ready at ${rel.html_url}`)
   } catch (error) {
-    core.setFailed(error.message);
+    setFailed(error.message);
   }
 }
 
