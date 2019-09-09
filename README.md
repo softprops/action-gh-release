@@ -1,7 +1,7 @@
 
 # action gh-release [![](https://github.com/softprops/action-gh-release/workflows/Main/badge.svg)](https://github.com/softprops/action-gh-release/actions)
 
-> A GitHub Action for creating GitHub Releases
+> A GitHub Action for creating GitHub Releases on Linux, Windows, and OSX virtual environments
 
 > **⚠️ Note:** To use this action, you must have access to the [GitHub Actions](https://github.com/features/actions) feature. GitHub Actions are currently only available in public beta. You can [apply for the GitHub Actions beta here](https://github.com/features/actions/signup/).
 
