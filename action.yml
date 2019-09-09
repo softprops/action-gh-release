@@ -23,8 +23,8 @@ inputs:
     description: 'Comma-delimited list of path globs for asset files to upload'
     required: false
     default: 'empty'
-  env:
-    'GITHUB_TOKEN': 'As provided by Github Actions'
+env:
+  'GITHUB_TOKEN': 'As provided by Github Actions'
 runs:
   #using: 'docker'
   #image: 'docker://softprops:action-gh-action'
