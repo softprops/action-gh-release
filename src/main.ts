@@ -9,7 +9,6 @@ async function run() {
     if (!isTag(config.github_ref)) {
       throw new Error(`⚠️ GitHub Releases requires a tag`);
     }
-    // todo: validate github_ref is a tag
     const gh = new GitHub(config.github_token);
     let rel = await release(config, gh);
     if (config.input_files) {
