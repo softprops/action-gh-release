@@ -1,4 +1,3 @@
-import * as fs from 'fs';
 import { setFailed } from '@actions/core';
 import { GitHub } from '@actions/github';
 import { paths, parseConfig, isTag } from './util';
