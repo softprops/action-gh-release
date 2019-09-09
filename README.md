@@ -27,8 +27,30 @@ jobs:
       - name: Checkout
         uses: actions/checkout@master
       - name: Release
-        uses: docker://softprops/action-gh-release
+        uses: softprops/action-gh-release
         if: startsWith(github.ref, 'refs/tags/')
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+```
+
+You can also use push config tag filter
+
+```yaml
+name: Main
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@master
+      - name: Release
+        uses: softprops/action-gh-release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 ```
@@ -61,7 +83,7 @@ jobs:
       - name: Test
         run: cat Release.txt
       - name: Release
-        uses: docker://softprops/action-gh-release
+        uses: softprops/action-gh-release
         if: startsWith(github.ref, 'refs/tags/')
         with:
           files: Release.txt
@@ -89,7 +111,7 @@ jobs:
       - name: Generate Changelog
         run: echo "# Good things have arrived" > ${{ github.workflow }}-CHANGELOG.txt
       - name: Release
-        uses: docker://softprops/action-gh-release
+        uses: softprops/action-gh-release
         if: startsWith(github.ref, 'refs/tags/')
         with:
           body_path: ${{ github.workflow }}-CHANGELOG.txt
