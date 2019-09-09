@@ -3,10 +3,11 @@ import { paths, parseConfig, isTag } from './util';
 import { release, upload } from './github';
 import { setFailed } from '@actions/core';
 import { GitHub } from '@actions/github';
+import { env } from 'process';
 
 async function run() {
   try {
-    const config = parseConfig(process.env);
+    const config = parseConfig(env);
     if (!isTag(config.github_ref)) {
       throw new Error(`⚠️ GitHub Releases requires a tag`);
     }

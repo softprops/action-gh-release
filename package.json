@@ -27,7 +27,7 @@
     "@types/glob": "^7.1.1",
     "@types/jest": "^24.0.13",
     "@types/mime": "^2.0.1",
-    "@types/node": "^12.0.4",
+    "@types/node": "^12.7.4",
     "jest": "^24.8.0",
     "jest-circus": "^24.7.1",
     "ts-jest": "^24.0.2",
