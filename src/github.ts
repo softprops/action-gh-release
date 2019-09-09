@@ -76,12 +76,14 @@ export const release = async (config: Config, gh: GitHub): Promise<Release> => {
         return release.data;
       } catch (error) {
         // presume a race with competing metrix runs
-        console.log(`GitHub release failed with status: ${error.status}`);
+        console.log(
+          `⚠️ GitHub release failed with status: ${error.status}, retrying...`
+        );
         return release(config, gh);
       }
     } else {
       console.log(
-        `Unexpected error fetching GitHub release for tag ${config.github_ref}: ${error}`
+        `⚠️ Unexpected error fetching GitHub release for tag ${config.github_ref}: ${error}`
       );
       throw error;
     }

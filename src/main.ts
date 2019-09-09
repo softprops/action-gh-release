@@ -19,7 +19,6 @@ async function run() {
     }
     console.log(`🎉 Release ready at ${rel.html_url}`);
   } catch (error) {
-    console.log(`Error: ${error}`);
     setFailed(error.message);
   }
 }
