@@ -21,8 +21,6 @@ inputs:
 env:
   'GITHUB_TOKEN': 'As provided by Github Actions'
 runs:
-  #using: 'docker'
-  #image: 'docker://softprops:action-gh-action'
   using: 'node12'
   main: 'lib/main.js'
 branding:
