@@ -14,6 +14,64 @@ export interface ReleaseAsset {
 export interface Release {
   upload_url: string;
   html_url: string;
+  tag_name: string;
+}
+
+export interface Releaser {
+  getReleaseByTag(params: {
+    owner: string;
+    repo: string;
+    tag: string;
+  }): Promise<{ data: Release }>;
+
+  createRelease(params: {
+    owner: string;
+    repo: string;
+    tag_name: string;
+    name: string;
+    body: string | undefined;
+    draft: boolean | undefined;
+  }): Promise<{ data: Release }>;
+
+  allReleases(params: {
+    owner: string;
+    repo: string;
+  }): AsyncIterableIterator<{ data: Release }>;
+}
+
+export class GitHubReleaseer {
+  github: GitHub;
+  constructor(github: GitHub) {
+    this.github = github;
+  }
+
+  getReleaseByTag(params: {
+    owner: string;
+    repo: string;
+    tag: string;
+  }): Promise<{ data: Release }> {
+    return this.github.repos.getReleaseByTag(params);
+  }
+
+  createRelease(params: {
+    owner: string;
+    repo: string;
+    tag_name: string;
+    name: string;
+    body: string | undefined;
+    draft: boolean | undefined;
+  }): Promise<{ data: Release }> {
+    return this.github.repos.createRelease(params);
+  }
+
+  allReleases(params: {
+    owner: string;
+    repo: string;
+  }): AsyncIterableIterator<{ data: Release }> {
+    return this.github.paginate.iterator(
+      this.github.repos.listReleases.endpoint.merge(params)
+    );
+  }
 }
 
 export const asset = (path: string): ReleaseAsset => {
@@ -47,11 +105,26 @@ export const upload = async (
   });
 };
 
-export const release = async (config: Config, gh: GitHub): Promise<Release> => {
+export const release = async (
+  config: Config,
+  releaser: Releaser
+): Promise<Release> => {
   const [owner, repo] = config.github_repository.split("/");
   const tag = config.github_ref.replace("refs/tags/", "");
   try {
-    let release = await gh.repos.getReleaseByTag({
+    // you can't get a an existing draft by tag
+    // so we must find one in the list of all releases
+    if (config.input_draft) {
+      for await (const release of releaser.allReleases({
+        owner,
+        repo
+      })) {
+        if (tag == release.data.tag_name) {
+          return release.data;
+        }
+      }
+    }
+    let release = await releaser.getReleaseByTag({
       owner,
       repo,
       tag
@@ -65,7 +138,7 @@ export const release = async (config: Config, gh: GitHub): Promise<Release> => {
         const body = config.input_body;
         const draft = config.input_draft;
         console.log(`👩‍🏭 Creating new GitHub release for tag ${tag_name}...`);
-        let release = await gh.repos.createRelease({
+        let release = await releaser.createRelease({
           owner,
           repo,
           tag_name,
@@ -79,7 +152,7 @@ export const release = async (config: Config, gh: GitHub): Promise<Release> => {
         console.log(
           `⚠️ GitHub release failed with status: ${error.status}, retrying...`
         );
-        return release(config, gh);
+        return release(config, releaser);
       }
     } else {
       console.log(
