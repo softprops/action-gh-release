@@ -36,7 +36,7 @@ export interface Releaser {
   allReleases(params: {
     owner: string;
     repo: string;
-  }): AsyncIterableIterator<{ data: Release }>;
+  }): AsyncIterableIterator<{ data: Release[] }>;
 }
 
 export class GitHubReleaseer {
@@ -67,7 +67,7 @@ export class GitHubReleaseer {
   allReleases(params: {
     owner: string;
     repo: string;
-  }): AsyncIterableIterator<{ data: Release }> {
+  }): AsyncIterableIterator<{ data: Release[] }> {
     return this.github.paginate.iterator(
       this.github.repos.listReleases.endpoint.merge(params)
     );
@@ -115,17 +115,14 @@ export const release = async (
     // you can't get a an existing draft by tag
     // so we must find one in the list of all releases
     if (config.input_draft) {
-      for await (const release of releaser.allReleases({
+      for await (const response of releaser.allReleases({
         owner,
         repo
       })) {
-        console.log(`release`);
-        console.log(release);
-        console.log(release.data);
-        if (tag == release.data.tag_name) {
-          return release.data;
+        let release = response.data.find(release => release.tag_name === tag);
+        if (release) {
+          return release;
         }
-        console.log(`release '${release.data.tag_name}' not equal to target tag '${tag}'`);
       }
     }
     let release = await releaser.getReleaseByTag({
