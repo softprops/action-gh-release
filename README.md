@@ -8,8 +8,6 @@
 
 > **⚠️ Note:** To use this action, you must have access to the [GitHub Actions](https://github.com/features/actions) feature. GitHub Actions are currently only available in public beta. You can [apply for the GitHub Actions beta here](https://github.com/features/actions/signup/).
 
-> **⚠️ Note:** This action was previously implemented as a docker container, limiting its use to GitHub Actions Linux virtual environments only. With recent releases, we now support cross platform usage. You'll need to remove the `docker://` prefix in these versions
-
 ## 🤸 Usage
 
 ### 🚥 Limit releases to pushes to tags
@@ -147,5 +145,8 @@ The following are *required* as `step.env` keys
 | Name           | Description                          |
 |----------------|--------------------------------------|
 | `GITHUB_TOKEN` | GITHUB_TOKEN as provided by `secrets`|
+
+
+> **⚠️ Note:** This action was previously implemented as a docker container, limiting its use to GitHub Actions Linux virtual environments only. With recent releases, we now support cross platform usage. You'll need to remove the `docker://` prefix in these versions
 
 Doug Tangren (softprops) 2019
