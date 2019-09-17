@@ -25,6 +25,7 @@ describe("util", () => {
         input_body: undefined,
         input_body_path: undefined,
         input_draft: false,
+        input_prerelease: false,
         input_files: [],
         input_name: undefined
       });

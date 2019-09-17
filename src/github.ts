@@ -31,6 +31,7 @@ export interface Releaser {
     name: string;
     body: string | undefined;
     draft: boolean | undefined;
+    prerelease: boolean | undefined;
   }): Promise<{ data: Release }>;
 
   allReleases(params: {
@@ -60,6 +61,7 @@ export class GitHubReleaser implements Releaser {
     name: string;
     body: string | undefined;
     draft: boolean | undefined;
+    prerelease: boolean | undefined;
   }): Promise<{ data: Release }> {
     return this.github.repos.createRelease(params);
   }
@@ -138,6 +140,7 @@ export const release = async (
         const name = config.input_name || tag;
         const body = config.input_body;
         const draft = config.input_draft;
+        const prerelease = config.input_prerelease;
         console.log(`👩‍🏭 Creating new GitHub release for tag ${tag_name}...`);
         let release = await releaser.createRelease({
           owner,
@@ -145,7 +148,8 @@ export const release = async (
           tag_name,
           name,
           body,
-          draft
+          draft,
+          prerelease
         });
         return release.data;
       } catch (error) {
