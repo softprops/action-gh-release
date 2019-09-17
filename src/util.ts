@@ -15,6 +15,17 @@ export interface Config {
 
 type Env = { [key: string]: string | undefined };
 
+export const parseInputFiles = (files: string): string[] => {
+  return files.split(/\r?\n/).reduce<string[]>(
+    (acc, line) =>
+      acc
+        .concat(line.split(","))
+        .filter(pat => pat)
+        .map(pat => pat.trim()),
+    []
+  );
+};
+
 export const parseConfig = (env: Env): Config => {
   return {
     github_token: env.GITHUB_TOKEN || "",
@@ -23,7 +34,7 @@ export const parseConfig = (env: Env): Config => {
     input_name: env.INPUT_NAME,
     input_body: env.INPUT_BODY,
     input_body_path: env.INPUT_BODY_PATH,
-    input_files: (env.INPUT_FILES || "").split(","),
+    input_files: parseInputFiles(env.INPUT_FILES || ""),
     input_draft: env.INPUT_DRAFT === "true"
   };
 };

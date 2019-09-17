@@ -65,7 +65,7 @@ You can can configure a number of options for your
 GitHub release and all are optional.
 
 A common case for GitHub releases is to upload your binary after its been validated and packaged.
-Use the `with.files` input to declare a comma-separated list of glob expressions matching the files
+Use the `with.files` input to declare a newline-delimited list of glob expressions matching the files
 you wish to upload to GitHub releases. If you'd like you can just list the files by name directly.
 
 Below is an example of uploading a single asset named `Release.txt`
@@ -93,6 +93,36 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 ```
+
+Below is an example of uploading more than one asset with a GitHub release
+
+```yaml
+name: Main
+
+on: push
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@master
+      - name: Build
+        run: echo ${{ github.sha }} > Release.txt
+      - name: Test
+        run: cat Release.txt
+      - name: Release
+        uses: softprops/action-gh-release@v1
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          files: |
+            Release.txt
+            LICENSE
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+```
+
+> **⚠️ Note:** Notice the `|` in the yaml syntax above ☝️. That let's you effectively declare a multi-line yaml string. You can learn more about multi-line yaml syntax [here](https://yaml-multiline.info)
 
 ### 📝 External release notes
 
@@ -133,7 +163,7 @@ The following are optional as `step.with` keys
 | `body`      | String  | Text communicating notable changes in this release              |
 | `body_path` | String  | Path to load text communicating notable changes in this release |
 | `draft`     | Boolean | Indicator of whether or not this release is a draft             |
-| `files`     | String  | Comma-delimited globs of paths to assets to upload for release  |
+| `files`     | String  | Newline-delimited globs of paths to assets to upload for release  |
 | `name`      | String  | Name of the release. defaults to tag name                       |
 
 💡When providing a `body` and `body_path` at the same time, `body_path` will be attempted first, then falling back on `body` if the path can not be read from.
