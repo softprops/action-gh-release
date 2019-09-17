@@ -94,7 +94,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 ```
 
-Below is an example of uploading more than one asset.
+Below is an example of uploading more than one asset with a GitHub release
 
 ```yaml
 name: Main
@@ -115,7 +115,7 @@ jobs:
         uses: softprops/action-gh-release@v1
         if: startsWith(github.ref, 'refs/tags/')
         with:
-          files: |-
+          files: |
             Release.txt
             LICENSE
         env:
