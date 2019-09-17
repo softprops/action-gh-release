@@ -39,7 +39,7 @@ export interface Releaser {
   }): AsyncIterableIterator<{ data: Release[] }>;
 }
 
-export class GitHubReleaseer {
+export class GitHubReleaser {
   github: GitHub;
   constructor(github: GitHub) {
     this.github = github;
