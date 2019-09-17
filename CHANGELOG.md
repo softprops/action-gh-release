@@ -10,16 +10,16 @@ This is now fixed.
 GitHub actions inputs don't inherently support lists of things and one might like to append a list of files to include in a release. Previously this was possible using a comma-delimited list of asset path patterns to upload. You can now provide these as a newline delimieted list for better readability
 
 ```yaml
-	- name: Release
-		uses: softprops/action-gh-release@v1
-		if: startsWith(github.ref, 'refs/tags/')
-		with:
-			files: |
-				filea.txt
-				fileb.txt
-				filec.txt
-		env:
-			GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  - name: Release
+    uses: softprops/action-gh-release@v1
+    if: startsWith(github.ref, 'refs/tags/')
+    with:
+      files: |
+        filea.txt
+        fileb.txt
+        filec.txt
+    env:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 ```
 
 ---
