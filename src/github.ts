@@ -119,6 +119,9 @@ export const release = async (
         owner,
         repo
       })) {
+        console.log(`release`);
+        console.log(release);
+        console.log(release.data);
         if (tag == release.data.tag_name) {
           return release.data;
         }
