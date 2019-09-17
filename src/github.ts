@@ -122,6 +122,7 @@ export const release = async (
         if (tag == release.data.tag_name) {
           return release.data;
         }
+        console.log(`release '${release.data.tag_name}' not equal to target tag '${tag}'`);
       }
     }
     let release = await releaser.getReleaseByTag({
