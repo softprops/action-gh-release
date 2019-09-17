@@ -163,7 +163,8 @@ The following are optional as `step.with` keys
 | `body`      | String  | Text communicating notable changes in this release              |
 | `body_path` | String  | Path to load text communicating notable changes in this release |
 | `draft`     | Boolean | Indicator of whether or not this release is a draft             |
-| `files`     | String  | Newline-delimited globs of paths to assets to upload for release  |
+| `prerelease`| Boolean | Indicator of whether or not is a prerelease                     |
+| `files`     | String  | Newline-delimited globs of paths to assets to upload for release|
 | `name`      | String  | Name of the release. defaults to tag name                       |
 
 💡When providing a `body` and `body_path` at the same time, `body_path` will be attempted first, then falling back on `body` if the path can not be read from.
