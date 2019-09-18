@@ -22,7 +22,7 @@ GitHub actions inputs don't inherently support lists of things and one might lik
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 ```
 
-* Add support for prerelease annotated GitHub releases with the new input field `with.prerelease: true`
+* Add support for prerelease annotated GitHub releases with the new input field `with.prerelease: true` [#19](https://github.com/softprops/action-gh-release/pull/19)
 
 ---
 
