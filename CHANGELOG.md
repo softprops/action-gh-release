@@ -1,6 +1,6 @@
 ## 0.1.3
 
-* Fixed where `with: body-path` was not being used in generated GitHub releases
+* Fixed where `with: body_path` was not being used in generated GitHub releases
 
 ## 0.1.2
 
