@@ -1,3 +1,7 @@
+## 0.1.3
+
+* Fixed where `with: body-path` was not being used in generated GitHub releases
+
 ## 0.1.2
 
 * Add support for merging draft releases [#16](https://github.com/softprops/action-gh-release/pull/16)
