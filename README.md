@@ -1,9 +1,28 @@
 
-# action gh-release [![](https://github.com/softprops/action-gh-release/workflows/Main/badge.svg)](https://github.com/softprops/action-gh-release/actions)
+<div align="center">
+  📦 :octocat:
+</div>
+<h1 align="center">
+  action gh-release
+</h1>
 
-> A GitHub Action for creating GitHub Releases on Linux, Windows, and OSX virtual environments
+<p align="center">
+   A GitHub Action for creating GitHub Releases on Linux, Windows, and OSX virtual environments
+</p>
 
-![Screenshot](demo.png)
+<div align="center">
+  <img src="demo.png"/>
+</div>
+
+<div align="center">
+  <a href="https://github.com/softprops/action-gh-release/actions">
+		<img src="https://github.com/softprops/action-gh-release/workflows/Main/badge.svg"/>
+	</a>
+</div>
+
+
+<br />
+
 
 
 > **⚠️ Note:** To use this action, you must have access to the [GitHub Actions](https://github.com/features/actions) feature. GitHub Actions are currently only available in public beta. You can [apply for the GitHub Actions beta here](https://github.com/features/actions/signup/).
