@@ -1,5 +1,5 @@
 import { GitHub } from "@actions/github";
-import { Config } from "./util";
+import { Config, releaseBody } from "./util";
 import { lstatSync, readFileSync } from "fs";
 import { getType } from "mime";
 import { basename } from "path";
@@ -138,7 +138,7 @@ export const release = async (
       try {
         const tag_name = tag;
         const name = config.input_name || tag;
-        const body = config.input_body;
+        const body = releaseBody(config);
         const draft = config.input_draft;
         const prerelease = config.input_prerelease;
         console.log(`👩‍🏭 Creating new GitHub release for tag ${tag_name}...`);
