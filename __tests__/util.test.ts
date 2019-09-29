@@ -1,4 +1,10 @@
-import { isTag, paths, parseConfig, parseInputFiles } from "../src/util";
+import {
+  releaseBody,
+  isTag,
+  paths,
+  parseConfig,
+  parseInputFiles
+} from "../src/util";
 import * as assert from "assert";
 
 describe("util", () => {
@@ -13,6 +19,56 @@ describe("util", () => {
       assert.deepStrictEqual(
         parseInputFiles("foo,bar\nbaz,boom,\n\ndoom,loom "),
         ["foo", "bar", "baz", "boom", "doom", "loom"]
+      );
+    });
+  });
+  describe("releaseBody", () => {
+    it("uses input body", () => {
+      assert.equal(
+        "foo",
+        releaseBody({
+          github_ref: "",
+          github_repository: "",
+          github_token: "",
+          input_body: "foo",
+          input_body_path: undefined,
+          input_draft: false,
+          input_prerelease: false,
+          input_files: [],
+          input_name: undefined
+        })
+      );
+    });
+    it("uses input body path", () => {
+      assert.equal(
+        "bar",
+        releaseBody({
+          github_ref: "",
+          github_repository: "",
+          github_token: "",
+          input_body: undefined,
+          input_body_path: "__tests__/release.txt",
+          input_draft: false,
+          input_prerelease: false,
+          input_files: [],
+          input_name: undefined
+        })
+      );
+    });
+    it("defaults to body when both body and body path are provided", () => {
+      assert.equal(
+        "foo",
+        releaseBody({
+          github_ref: "",
+          github_repository: "",
+          github_token: "",
+          input_body: "foo",
+          input_body_path: "__tests__/release.txt",
+          input_draft: false,
+          input_prerelease: false,
+          input_files: [],
+          input_name: undefined
+        })
       );
     });
   });

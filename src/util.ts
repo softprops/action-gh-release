@@ -1,5 +1,5 @@
 import * as glob from "glob";
-import { lstatSync } from "fs";
+import { lstatSync, readFileSync } from "fs";
 
 export interface Config {
   github_token: string;
@@ -13,6 +13,14 @@ export interface Config {
   input_draft?: boolean;
   input_prerelease?: boolean;
 }
+
+export const releaseBody = (config: Config): string | undefined => {
+  return (
+    config.input_body ||
+    (config.input_body_path &&
+      readFileSync(config.input_body_path).toString("utf8"))
+  );
+};
 
 type Env = { [key: string]: string | undefined };
 
