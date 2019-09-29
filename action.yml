@@ -6,7 +6,7 @@ inputs:
   body:
     description: 'Note-worthy description of changes in release'
     required: false
-  body-path:
+  body_path:
     description: 'Path to load note-worthy description of changes in release from'
     required: false
   name:
