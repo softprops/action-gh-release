@@ -23,6 +23,9 @@ inputs:
     required: false
 env:
   'GITHUB_TOKEN': 'As provided by Github Actions'
+outputs:
+  url:
+    description: 'URL to the Release HTML Page'
 runs:
   using: 'node12'
   main: 'lib/main.js'

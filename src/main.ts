@@ -1,6 +1,6 @@
 import { paths, parseConfig, isTag } from "./util";
 import { release, upload, GitHubReleaser } from "./github";
-import { setFailed } from "@actions/core";
+import { setFailed, setOutput } from "@actions/core";
 import { GitHub } from "@actions/github";
 import { env } from "process";
 
@@ -36,6 +36,7 @@ async function run() {
       });
     }
     console.log(`🎉 Release ready at ${rel.html_url}`);
+    setOutput('url', rel.html_url);
   } catch (error) {
     setFailed(error.message);
   }
