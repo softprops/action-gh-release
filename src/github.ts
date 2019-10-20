@@ -70,8 +70,9 @@ export class GitHubReleaser implements Releaser {
     owner: string;
     repo: string;
   }): AsyncIterableIterator<{ data: Release[] }> {
+    const updatedParams = { per_page: 100, ...params };
     return this.github.paginate.iterator(
-      this.github.repos.listReleases.endpoint.merge(params)
+      this.github.repos.listReleases.endpoint.merge(updatedParams)
     );
   }
 }
