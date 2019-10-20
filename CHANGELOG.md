@@ -1,3 +1,8 @@
+## 0.1.4
+
+* Steps can now access the url of releases with the `url` output of this Action [#28](https://github.com/softprops/action-gh-release/pull/28)
+* Added basic GitHub API retry support to manage API turbulance [#26](https://github.com/softprops/action-gh-release/pull/26)
+
 ## 0.1.3
 
 * Fixed where `with: body_path` was not being used in generated GitHub releases
