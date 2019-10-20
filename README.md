@@ -77,7 +77,6 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 ```
 
-
 ### ⬆️ Uploading release assets
 
 You can can configure a number of options for your
@@ -187,6 +186,17 @@ The following are optional as `step.with` keys
 | `name`      | String  | Name of the release. defaults to tag name                       |
 
 💡When providing a `body` and `body_path` at the same time, `body_path` will be attempted first, then falling back on `body` if the path can not be read from.
+
+#### outputs
+
+The following outputs can be accessed via `${{ steps.<step-id>.outputs }}` from this action
+
+| Name        | Type    | Description                                                     |
+|-------------|---------|-----------------------------------------------------------------|
+| `url`       | String  | Github.com URL for the release                                  |
+
+
+
 
 #### environment variables
 
