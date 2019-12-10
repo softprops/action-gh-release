@@ -136,13 +136,13 @@ export const release = async (
     return release.data;
   } catch (error) {
     if (error.status === 404) {
+      const tag_name = tag;
+      const name = config.input_name || tag;
+      const body = releaseBody(config);
+      const draft = config.input_draft;
+      const prerelease = config.input_prerelease;
+      console.log(`👩‍🏭 Creating new GitHub release for tag ${tag_name}...`);
       try {
-        const tag_name = tag;
-        const name = config.input_name || tag;
-        const body = releaseBody(config);
-        const draft = config.input_draft;
-        const prerelease = config.input_prerelease;
-        console.log(`👩‍🏭 Creating new GitHub release for tag ${tag_name}...`);
         let release = await releaser.createRelease({
           owner,
           repo,
