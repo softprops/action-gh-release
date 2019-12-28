@@ -33,7 +33,7 @@ async function run() {
     if (config.input_files) {
       const files = paths(config.input_files)
       if (files.length == 0) {
-        console.warn(`⚠️ ${config.input_files} not include valid file.`)
+        console.warn(`🤔 ${config.input_files} not include valid file.`)
       }
       files.forEach(async path => {
         await upload(gh, rel.upload_url, path);
