@@ -12,6 +12,6 @@ git checkout -b releases/$1 # If this branch already exists, omit the -b flag
 rm -rf node_modules
 sed -i '/node_modules/d' .gitignore # Bash command that removes node_modules from .gitignore
 npm install --production
-git add node_modules .gitignore
+git add node_modules -f .gitignore
 git commit -m node_modules
 git push origin releases/$1
