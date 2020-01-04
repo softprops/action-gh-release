@@ -12,9 +12,12 @@ export interface ReleaseAsset {
 }
 
 export interface Release {
+  id: number;
   upload_url: string;
   html_url: string;
   tag_name: string;
+  body: string;
+  target_commitish: string;
 }
 
 export interface Releaser {
@@ -28,6 +31,18 @@ export interface Releaser {
     owner: string;
     repo: string;
     tag_name: string;
+    name: string;
+    body: string | undefined;
+    draft: boolean | undefined;
+    prerelease: boolean | undefined;
+  }): Promise<{ data: Release }>;
+
+  updateRelease(params: {
+    owner: string;
+    repo: string;
+    release_id: number;
+    tag_name: string;
+    target_commitish: string;
     name: string;
     body: string | undefined;
     draft: boolean | undefined;
@@ -64,6 +79,20 @@ export class GitHubReleaser implements Releaser {
     prerelease: boolean | undefined;
   }): Promise<{ data: Release }> {
     return this.github.repos.createRelease(params);
+  }
+
+  updateRelease(params: {
+    owner: string;
+    repo: string;
+    release_id: number;
+    tag_name: string;
+    target_commitish: string;
+    name: string;
+    body: string | undefined;
+    draft: boolean | undefined;
+    prerelease: boolean | undefined;
+  }): Promise<{ data: Release }> {
+    return this.github.repos.updateRelease(params);
   }
 
   allReleases(params: {
@@ -128,10 +157,30 @@ export const release = async (
         }
       }
     }
-    let release = await releaser.getReleaseByTag({
+    let existingRelease = await releaser.getReleaseByTag({
       owner,
       repo,
       tag
+    });
+
+    const release_id = existingRelease.data.id;
+    const target_commitish = existingRelease.data.target_commitish;
+    const tag_name = tag;
+    const name = config.input_name || tag;
+    const body = `${existingRelease.data.body}\n${releaseBody(config)}`;
+    const draft = config.input_draft;
+    const prerelease = config.input_prerelease;
+
+    const release = await releaser.updateRelease({
+      owner,
+      repo,
+      release_id,
+      tag_name,
+      target_commitish,
+      name,
+      body,
+      draft,
+      prerelease
     });
     return release.data;
   } catch (error) {

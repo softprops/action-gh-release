@@ -21,6 +21,6 @@ jobs:
         # Ensure no changes, but ignore node_modules dir since dev/fresh ci deps installed.
         run: |
           git diff --exit-code --stat -- . ':!node_modules' \
-          || (echo "##[error] found changed files after build. please 'npm run build && npm run format'" \
+          || (echo "##[error] found changed files after build. please 'npm run build && npm run fmt'" \
                   "and check in all changes" \
               && exit 1)
