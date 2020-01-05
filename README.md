@@ -43,7 +43,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v1
+        uses: actions/checkout@v2
       - name: Release
         uses: softprops/action-gh-release@v1
         if: startsWith(github.ref, 'refs/tags/')
@@ -66,7 +66,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v1
+        uses: actions/checkout@v2
       - name: Release
         uses: softprops/action-gh-release@v1
         env:
@@ -94,7 +94,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v1
+        uses: actions/checkout@v2
       - name: Build
         run: echo ${{ github.sha }} > Release.txt
       - name: Test
@@ -120,7 +120,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v1
+        uses: actions/checkout@v2
       - name: Build
         run: echo ${{ github.sha }} > Release.txt
       - name: Test
@@ -154,7 +154,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v1
+        uses: actions/checkout@v2
       - name: Generate Changelog
         run: echo "# Good things have arrived" > ${{ github.workflow }}-CHANGELOG.txt
       - name: Release
@@ -190,8 +190,6 @@ The following outputs can be accessed via `${{ steps.<step-id>.outputs }}` from 
 | Name        | Type    | Description                                                     |
 |-------------|---------|-----------------------------------------------------------------|
 | `url`       | String  | Github.com URL for the release                                  |
-
-
 
 
 #### environment variables
