@@ -5,9 +5,10 @@
   "description": "GitHub Action for creating GitHub Releases",
   "main": "lib/main.js",
   "scripts": {
-    "build": "tsc",
+    "build": "ncc build src/main.ts --minify",
     "test": "jest",
-    "fmt": "prettier --write 'src/**/*.ts' '__tests__/**/*.ts'"
+    "fmt": "prettier --write 'src/**/*.ts' '__tests__/**/*.ts'",
+    "fmtcheck": "prettier --check 'src/**/*.ts' '__tests__/**/*.ts'"
   },
   "repository": {
     "type": "git",
@@ -19,22 +20,23 @@
   "author": "softprops",
   "license": "MIT",
   "dependencies": {
-    "@actions/core": "^1.1.0",
-    "@actions/github": "^1.1.0",
-    "@octokit/plugin-throttling": "^2.6.0",
-    "glob": "^7.1.4",
+    "@actions/core": "^1.2.0",
+    "@actions/github": "^2.0.0",
+    "@octokit/plugin-throttling": "^2.7.1",
+    "glob": "^7.1.6",
     "mime": "^2.4.4"
   },
   "devDependencies": {
     "@types/glob": "^7.1.1",
-    "@types/jest": "^24.0.18",
+    "@types/jest": "^24.0.25",
     "@types/mime": "^2.0.1",
-    "@types/node": "^12.7.4",
+    "@types/node": "^12.12.24",
+    "@zeit/ncc": "^0.21.0",
     "jest": "^24.9.0",
     "jest-circus": "^24.9.0",
-    "prettier": "1.18.2",
-    "ts-jest": "^24.1.0",
-    "typescript": "^3.6.3",
+    "prettier": "1.19.1",
+    "ts-jest": "^24.2.0",
+    "typescript": "^3.7.4",
     "typescript-formatter": "^7.2.2"
   }
 }
