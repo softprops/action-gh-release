@@ -16,11 +16,11 @@ jobs:
       - name: Test
         run: npm run test
       - name: Format
-        run: npm run fmt
-      - name: "check for uncommitted changes"
-        # Ensure no changes, but ignore node_modules dir since dev/fresh ci deps installed.
-        run: |
-          git diff --exit-code --stat -- . ':!node_modules' \
-          || (echo "##[error] found changed files after build. please 'npm run build && npm run fmt'" \
-                  "and check in all changes" \
-              && exit 1)
+        run: npm run fmtcheck
+      # - name: "check for uncommitted changes"
+      #   # Ensure no changes, but ignore node_modules dir since dev/fresh ci deps installed.
+      #   run: |
+      #     git diff --exit-code --stat -- . ':!node_modules' \
+      #     || (echo "##[error] found changed files after build. please 'npm run build && npm run fmt'" \
+      #             "and check in all changes" \
+      #         && exit 1)
