@@ -142,7 +142,8 @@ export const release = async (
   releaser: Releaser
 ): Promise<Release> => {
   const [owner, repo] = config.github_repository.split("/");
-  const tag = config.github_ref.replace("refs/tags/", "");
+  const tag =
+    config.input_tag_name || config.github_ref.replace("refs/tags/", "");
   try {
     // you can't get a an existing draft by tag
     // so we must find one in the list of all releases
