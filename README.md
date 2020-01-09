@@ -180,7 +180,7 @@ The following are optional as `step.with` keys
 | `prerelease`| Boolean | Indicator of whether or not is a prerelease                     |
 | `files`     | String  | Newline-delimited globs of paths to assets to upload for release|
 | `name`      | String  | Name of the release. defaults to tag name                       |
-| `tag_name`  | String  | Name of a tag. defaults to github.GITHUB_REF                    |
+| `tag_name`  | String  | Name of a tag. defaults to `github.ref`                         |
 
 💡When providing a `body` and `body_path` at the same time, `body_path` will be attempted first, then falling back on `body` if the path can not be read from.
 
