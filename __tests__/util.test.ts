@@ -35,7 +35,8 @@ describe("util", () => {
           input_draft: false,
           input_prerelease: false,
           input_files: [],
-          input_name: undefined
+          input_name: undefined,
+          input_tag_name: undefined
         })
       );
     });
@@ -51,7 +52,8 @@ describe("util", () => {
           input_draft: false,
           input_prerelease: false,
           input_files: [],
-          input_name: undefined
+          input_name: undefined,
+          input_tag_name: undefined
         })
       );
     });
@@ -67,7 +69,8 @@ describe("util", () => {
           input_draft: false,
           input_prerelease: false,
           input_files: [],
-          input_name: undefined
+          input_name: undefined,
+          input_tag_name: undefined
         })
       );
     });
@@ -83,7 +86,8 @@ describe("util", () => {
         input_draft: false,
         input_prerelease: false,
         input_files: [],
-        input_name: undefined
+        input_name: undefined,
+        input_tag_name: undefined
       });
     });
   });

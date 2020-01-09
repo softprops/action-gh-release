@@ -12,6 +12,9 @@ inputs:
   name:
     description: 'Gives the release a custom name. Defaults to tag name'
     required: false
+  tag_name:
+    description: 'Gives a tag name. Defaults to github.GITHUB_REF'
+    required: false
   draft:
     description: 'Creates a draft release. Defaults to false'
     required: false
