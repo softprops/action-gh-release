@@ -5,9 +5,6 @@
 ## 0.1.4
 
 * Added support for updating releases body [#36](https://github.com/softprops/action-gh-release/pull/36)
-
-## 0.1.4
-
 * Steps can now access the url of releases with the `url` output of this Action [#28](https://github.com/softprops/action-gh-release/pull/28)
 * Added basic GitHub API retry support to manage API turbulance [#26](https://github.com/softprops/action-gh-release/pull/26)
 
