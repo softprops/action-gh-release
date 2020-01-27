@@ -1,3 +1,7 @@
+## 0.1.5
+
+* Added support for specifying tag name [#39](https://github.com/softprops/action-gh-release/pull/39)
+
 ## 0.1.4
 
 * Added support for updating releases body [#36](https://github.com/softprops/action-gh-release/pull/36)
