@@ -7,7 +7,7 @@
 </h1>
 
 <p align="center">
-   A GitHub Action for creating GitHub Releases on Linux, Windows, and OSX virtual environments
+   A GitHub Action for creating GitHub Releases on Linux, Windows, and macOS virtual environments
 </p>
 
 <div align="center">
@@ -29,7 +29,7 @@
 
 Typically usage of this action involves adding a step to a build that
 is gated pushes to git tags. You may find `step.if` field helpful in accomplishing this
-as it maximizes the resuse value of your workflow for non-tag pushes.
+as it maximizes the reuse value of your workflow for non-tag pushes.
 
 Below is a simple example of `step.if` tag gating
 
@@ -75,7 +75,7 @@ jobs:
 
 ### ⬆️ Uploading release assets
 
-You can can configure a number of options for your
+You can configure a number of options for your
 GitHub release and all are optional.
 
 A common case for GitHub releases is to upload your binary after its been validated and packaged.
@@ -202,6 +202,6 @@ The following are *required* as `step.env` keys
 | `GITHUB_TOKEN` | GITHUB_TOKEN as provided by `secrets`|
 
 
-> **⚠️ Note:** This action was previously implemented as a docker container, limiting its use to GitHub Actions Linux virtual environments only. With recent releases, we now support cross platform usage. You'll need to remove the `docker://` prefix in these versions
+> **⚠️ Note:** This action was previously implemented as a Docker container, limiting its use to GitHub Actions Linux virtual environments only. With recent releases, we now support cross platform usage. You'll need to remove the `docker://` prefix in these versions
 
 Doug Tangren (softprops) 2019
