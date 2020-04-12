@@ -7,7 +7,7 @@
 </h1>
 
 <p align="center">
-   A GitHub Action for creating GitHub Releases on Linux, Windows, and OSX virtual environments
+   A GitHub Action for creating GitHub Releases on Linux, Windows, and macOS virtual environments
 </p>
 
 <div align="center">
