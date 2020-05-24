@@ -22,7 +22,8 @@
   "dependencies": {
     "@actions/core": "^1.2.0",
     "@actions/github": "^2.0.0",
-    "@octokit/plugin-throttling": "^2.7.1",
+    "@octokit/plugin-retry": "^3.0.2",
+    "@octokit/plugin-throttling": "^3.2.1",
     "glob": "^7.1.6",
     "mime": "^2.4.4"
   },
