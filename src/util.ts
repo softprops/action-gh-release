@@ -13,6 +13,7 @@ export interface Config {
   input_files?: string[];
   input_draft?: boolean;
   input_prerelease?: boolean;
+  input_fail_on_unmatched_files?: boolean;
 }
 
 export const releaseBody = (config: Config): string | undefined => {
@@ -47,7 +48,8 @@ export const parseConfig = (env: Env): Config => {
     input_body_path: env.INPUT_BODY_PATH,
     input_files: parseInputFiles(env.INPUT_FILES || ""),
     input_draft: env.INPUT_DRAFT === "true",
-    input_prerelease: env.INPUT_PRERELEASE == "true"
+    input_prerelease: env.INPUT_PRERELEASE == "true",
+    input_fail_on_unmatched_files: env.INPUT_FAIL_ON_UNMATCHED_FILES == "true"
   };
 };
 
@@ -55,6 +57,16 @@ export const paths = (patterns: string[]): string[] => {
   return patterns.reduce((acc: string[], pattern: string): string[] => {
     return acc.concat(
       glob.sync(pattern).filter(path => lstatSync(path).isFile())
+    );
+  }, []);
+};
+
+export const unmatchedPatterns = (patterns: string[]): string[] => {
+  return patterns.reduce((acc: string[], pattern: string): string[] => {
+    return acc.concat(
+      glob.sync(pattern).filter(path => lstatSync(path).isFile()).length == 0
+        ? [pattern]
+        : []
     );
   }, []);
 };

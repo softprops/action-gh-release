@@ -3,7 +3,8 @@ import {
   isTag,
   paths,
   parseConfig,
-  parseInputFiles
+  parseInputFiles,
+  unmatchedPatterns
 } from "../src/util";
 import * as assert from "assert";
 
@@ -87,7 +88,8 @@ describe("util", () => {
         input_prerelease: false,
         input_files: [],
         input_name: undefined,
-        input_tag_name: undefined
+        input_tag_name: undefined,
+        input_fail_on_unmatched_files: false
       });
     });
   });
@@ -102,9 +104,19 @@ describe("util", () => {
 
   describe("paths", () => {
     it("resolves files given a set of paths", async () => {
-      assert.deepStrictEqual(paths(["tests/data/**/*"]), [
-        "tests/data/foo/bar.txt"
-      ]);
+      assert.deepStrictEqual(
+        paths(["tests/data/**/*", "tests/data/does/not/exist/*"]),
+        ["tests/data/foo/bar.txt"]
+      );
+    });
+  });
+
+  describe("unmatchedPatterns", () => {
+    it("returns the patterns that don't match any files", async () => {
+      assert.deepStrictEqual(
+        unmatchedPatterns(["tests/data/**/*", "tests/data/does/not/exist/*"]),
+        ["tests/data/does/not/exist/*"]
+      );
     });
   });
 });
