@@ -24,6 +24,9 @@ inputs:
   files:
     description: 'Newline-delimited list of path globs for asset files to upload'
     required: false
+  fail_on_unmatched_files:
+    description: 'Fails if any of the `files` globs match nothing. Defaults to false'
+    required: false
 env:
   'GITHUB_TOKEN': 'As provided by Github Actions'
 outputs:
