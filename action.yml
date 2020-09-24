@@ -32,6 +32,8 @@ env:
 outputs:
   url:
     description: 'URL to the Release HTML Page'
+  id:
+    description: 'Release ID'
 runs:
   using: 'node12'
   main: 'dist/index.js'
