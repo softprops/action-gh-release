@@ -181,6 +181,7 @@ The following are optional as `step.with` keys
 | `files`                   | String  | Newline-delimited globs of paths to assets to upload for release      |
 | `name`                    | String  | Name of the release. defaults to tag name                             |
 | `tag_name`                | String  | Name of a tag. defaults to `github.ref`                               |
+| `repository`                | String  | Name of a target repository in `<owner>/<repo>` format. defaults to the current repository
 | `fail_on_unmatched_files` | Boolean | Indicator of whether to fail if any of the `files` globs match nothing|
 
 💡When providing a `body` and `body_path` at the same time, `body_path` will be attempted first, then falling back on `body` if the path can not be read from.
