@@ -207,7 +207,7 @@ export const release = async (
       const target_commitish = config.input_target_commitish;
       let commitMessage: string = "";
       if (target_commitish) {
-        commitMessage = ` using "${target_commitish}"`;
+        commitMessage = ` using commit "${target_commitish}"`;
       }
       console.log(
         `👩‍🏭 Creating new GitHub release for tag ${tag_name}${commitMessage}...`
