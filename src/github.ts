@@ -168,7 +168,13 @@ export const release = async (
 
     const release_id = existingRelease.data.id;
     let target_commitish: string;
-    if (config.input_target_commitish) {
+    if (
+      config.input_target_commitish &&
+      config.input_target_commitish !== existingRelease.data.target_commitish
+    ) {
+      console.log(
+        `Updating commit from "${existingRelease.data.target_commitish}" to "${config.input_target_commitish}"`
+      );
       target_commitish = config.input_target_commitish;
     } else {
       target_commitish = existingRelease.data.target_commitish;
@@ -199,7 +205,13 @@ export const release = async (
       const draft = config.input_draft;
       const prerelease = config.input_prerelease;
       const target_commitish = config.input_target_commitish;
-      console.log(`👩‍🏭 Creating new GitHub release for tag ${tag_name}...`);
+      let commitMessage: string = "";
+      if (target_commitish) {
+        commitMessage = ` using "${target_commitish}"`;
+      }
+      console.log(
+        `👩‍🏭 Creating new GitHub release for tag ${tag_name}${commitMessage}...`
+      );
       try {
         let release = await releaser.createRelease({
           owner,
