@@ -167,7 +167,12 @@ export const release = async (
     });
 
     const release_id = existingRelease.data.id;
-    const target_commitish = existingRelease.data.target_commitish;
+    let target_commitish: string;
+    if (config.input_target_commitish) {
+      target_commitish = config.input_target_commitish;
+    } else {
+      target_commitish = existingRelease.data.target_commitish;
+    }
     const tag_name = tag;
     const name = config.input_name || tag;
     const body = `${existingRelease.data.body}\n${releaseBody(config)}`;

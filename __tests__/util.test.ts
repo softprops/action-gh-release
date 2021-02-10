@@ -99,20 +99,25 @@ describe("util", () => {
   });
   describe("parseConfig", () => {
     it("parses basic config with commitish", () => {
-      assert.deepStrictEqual(parseConfig({INPUT_TARGET_COMMITISH: "affa18ef97bc9db20076945705aba8c516139abd"}), {
-        github_ref: "",
-        github_repository: "",
-        github_token: "",
-        input_body: undefined,
-        input_body_path: undefined,
-        input_draft: false,
-        input_prerelease: false,
-        input_files: [],
-        input_name: undefined,
-        input_tag_name: undefined,
-        input_fail_on_unmatched_files: false,
-        input_target_commitish: "affa18ef97bc9db20076945705aba8c516139abd"
-      });
+      assert.deepStrictEqual(
+        parseConfig({
+          INPUT_TARGET_COMMITISH: "affa18ef97bc9db20076945705aba8c516139abd"
+        }),
+        {
+          github_ref: "",
+          github_repository: "",
+          github_token: "",
+          input_body: undefined,
+          input_body_path: undefined,
+          input_draft: false,
+          input_prerelease: false,
+          input_files: [],
+          input_name: undefined,
+          input_tag_name: undefined,
+          input_fail_on_unmatched_files: false,
+          input_target_commitish: "affa18ef97bc9db20076945705aba8c516139abd"
+        }
+      );
     });
   });
   describe("isTag", () => {
