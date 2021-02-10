@@ -147,8 +147,6 @@ export const release = async (
   const tag =
     config.input_tag_name || config.github_ref.replace("refs/tags/", "");
   try {
-    let existingRelease;
-
     // you can't get a an existing draft by tag
     // so we must find one in the list of all releases
     if (config.input_draft) {
@@ -158,18 +156,15 @@ export const release = async (
       })) {
         let release = response.data.find(release => release.tag_name === tag);
         if (release) {
-          existingRelease = release;
-          break;
+          return release;
         }
       }
     }
-    if (!existingRelease) {
-      existingRelease = await releaser.getReleaseByTag({
-        owner,
-        repo,
-        tag
-      });
-    }
+    let existingRelease = await releaser.getReleaseByTag({
+      owner,
+      repo,
+      tag
+    });
 
     const release_id = existingRelease.data.id;
     let target_commitish: string;
