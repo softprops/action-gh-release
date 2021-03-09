@@ -164,6 +164,7 @@ jobs:
           body_path: ${{ github.workflow }}-CHANGELOG.txt
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+	  GITHUB_REPOSITORY: my_gh_org/my_gh_repo
 ```
 
 ### 💅 Customizing
@@ -181,7 +182,6 @@ The following are optional as `step.with` keys
 | `files`                   | String  | Newline-delimited globs of paths to assets to upload for release      |
 | `name`                    | String  | Name of the release. defaults to tag name                             |
 | `tag_name`                | String  | Name of a tag. defaults to `github.ref`                               |
-| `repository`                | String  | Name of a target repository in `<owner>/<repo>` format. defaults to the current repository
 | `fail_on_unmatched_files` | Boolean | Indicator of whether to fail if any of the `files` globs match nothing|
 
 💡When providing a `body` and `body_path` at the same time, `body_path` will be attempted first, then falling back on `body` if the path can not be read from.
@@ -202,6 +202,7 @@ The following are *required* as `step.env` keys
 | Name           | Description                          |
 |----------------|--------------------------------------|
 | `GITHUB_TOKEN` | GITHUB_TOKEN as provided by `secrets`|
+| `GITHUB_REPOSITORY` | Name of a target repository in `<owner>/<repo>` format. defaults to the current repository|
 
 
 > **⚠️ Note:** This action was previously implemented as a Docker container, limiting its use to GitHub Actions Linux virtual environments only. With recent releases, we now support cross platform usage. You'll need to remove the `docker://` prefix in these versions
