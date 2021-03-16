@@ -47,8 +47,6 @@ jobs:
       - name: Release
         uses: softprops/action-gh-release@v1
         if: startsWith(github.ref, 'refs/tags/')
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 ```
 
 You can also use push config tag filter
@@ -69,8 +67,6 @@ jobs:
         uses: actions/checkout@v2
       - name: Release
         uses: softprops/action-gh-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 ```
 
 ### ⬆️ Uploading release assets
@@ -104,8 +100,6 @@ jobs:
         if: startsWith(github.ref, 'refs/tags/')
         with:
           files: Release.txt
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 ```
 
 Below is an example of uploading more than one asset with a GitHub release
@@ -132,8 +126,6 @@ jobs:
           files: |
             Release.txt
             LICENSE
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 ```
 
 > **⚠️ Note:** Notice the `|` in the yaml syntax above ☝️. That let's you effectively declare a multi-line yaml string. You can learn more about multi-line yaml syntax [here](https://yaml-multiline.info)
@@ -162,8 +154,6 @@ jobs:
         if: startsWith(github.ref, 'refs/tags/')
         with:
           body_path: ${{ github.workflow }}-CHANGELOG.txt
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 ```
 
 ### 💅 Customizing
@@ -172,17 +162,18 @@ jobs:
 
 The following are optional as `step.with` keys
 
-| Name                      | Type    | Description                                                           |
-|---------------------------|---------|-----------------------------------------------------------------------|
-| `body`                    | String  | Text communicating notable changes in this release                    |
-| `body_path`               | String  | Path to load text communicating notable changes in this release       |
-| `draft`                   | Boolean | Indicator of whether or not this release is a draft                   |
-| `prerelease`              | Boolean | Indicator of whether or not is a prerelease                           |
-| `files`                   | String  | Newline-delimited globs of paths to assets to upload for release      |
-| `name`                    | String  | Name of the release. defaults to tag name                             |
-| `tag_name`                | String  | Name of a tag. defaults to `github.ref`                               |
-| `repository`                | String  | Name of a target repository in `<owner>/<repo>` format. defaults to the current repository
-| `fail_on_unmatched_files` | Boolean | Indicator of whether to fail if any of the `files` globs match nothing|
+| Name                      | Type    | Description                                                                                 |
+|---------------------------|---------|---------------------------------------------------------------------------------------------|
+| `body`                    | String  | Text communicating notable changes in this release                                          |
+| `body_path`               | String  | Path to load text communicating notable changes in this release                             |
+| `draft`                   | Boolean | Indicator of whether or not this release is a draft                                         |
+| `prerelease`              | Boolean | Indicator of whether or not is a prerelease                                                 |
+| `files`                   | String  | Newline-delimited globs of paths to assets to upload for release                            |
+| `name`                    | String  | Name of the release. defaults to tag name                                                   |
+| `tag_name`                | String  | Name of a tag. defaults to `github.ref`                                                     |
+| `repository`              | String  | Name of a target repository in `<owner>/<repo>` format. Defaults to the current repository. |
+| `fail_on_unmatched_files` | Boolean | Indicator of whether to fail if any of the `files` globs match nothing                      |
+| `token`                   | String  | Secret GitHub Personal Access Token. Defaults to `${{ github.token }}`                      |
 
 💡When providing a `body` and `body_path` at the same time, `body_path` will be attempted first, then falling back on `body` if the path can not be read from.
 
@@ -190,18 +181,18 @@ The following are optional as `step.with` keys
 
 The following outputs can be accessed via `${{ steps.<step-id>.outputs }}` from this action
 
-| Name        | Type    | Description                                                     |
-|-------------|---------|-----------------------------------------------------------------|
-| `url`       | String  | Github.com URL for the release                                  |
+| Name        | Type    | Description                    |
+|-------------|---------|--------------------------------|
+| `url`       | String  | Github.com URL for the release |
 
 
 #### environment variables
 
-The following are *required* as `step.env` keys
+The following `step.env` keys are allowed as a fallback but deprecated in favor of using inputs.
 
-| Name           | Description                          |
-|----------------|--------------------------------------|
-| `GITHUB_TOKEN` | GITHUB_TOKEN as provided by `secrets`|
+| Name           | Description                           |
+|----------------|---------------------------------------|
+| `GITHUB_TOKEN` | GITHUB_TOKEN as provided by `secrets` |
 
 
 > **⚠️ Note:** This action was previously implemented as a Docker container, limiting its use to GitHub Actions Linux virtual environments only. With recent releases, we now support cross platform usage. You'll need to remove the `docker://` prefix in these versions
