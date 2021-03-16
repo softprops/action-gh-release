@@ -30,6 +30,10 @@ inputs:
   repository:
     description: 'Repository to make releases against, in <owner>/<repo> format'
     required: false
+  token:
+    description: 'Authorized secret GitHub Personal Access Token. Defaults to github.token'
+    required: false
+    default: ${{ github.token }}
 env:
   'GITHUB_TOKEN': 'As provided by Github Actions'
 outputs:
