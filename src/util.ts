@@ -19,9 +19,9 @@ export interface Config {
 
 export const releaseBody = (config: Config): string | undefined => {
   return (
-    config.input_body ||
     (config.input_body_path &&
-      readFileSync(config.input_body_path).toString("utf8"))
+      readFileSync(config.input_body_path).toString("utf8")) ||
+    config.input_body
   );
 };
 
