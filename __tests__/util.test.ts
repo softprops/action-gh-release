@@ -58,9 +58,9 @@ describe("util", () => {
         })
       );
     });
-    it("defaults to body when both body and body path are provided", () => {
+    it("defaults to body path when both body and body path are provided", () => {
       assert.equal(
-        "foo",
+        "bar",
         releaseBody({
           github_ref: "",
           github_repository: "",
