@@ -35,6 +35,8 @@ env:
 outputs:
   url:
     description: 'URL to the Release HTML Page'
+  upload_url:
+    description: 'URL for uploading assets to the release'
 runs:
   using: 'node12'
   main: 'dist/index.js'
