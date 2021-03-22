@@ -1,4 +1,3 @@
-
 <div align="center">
   📦 :octocat:
 </div>
@@ -19,7 +18,6 @@
 		<img src="https://github.com/softprops/action-gh-release/workflows/Main/badge.svg"/>
 	</a>
 </div>
-
 
 <br />
 
@@ -57,7 +55,7 @@ name: Main
 on:
   push:
     tags:
-      - 'v*.*.*'
+      - "v*.*.*"
 
 jobs:
   build:
@@ -164,17 +162,17 @@ jobs:
 
 The following are optional as `step.with` keys
 
-| Name                      | Type    | Description                                                           |
-|---------------------------|---------|-----------------------------------------------------------------------|
-| `body`                    | String  | Text communicating notable changes in this release                    |
-| `body_path`               | String  | Path to load text communicating notable changes in this release       |
-| `draft`                   | Boolean | Indicator of whether or not this release is a draft                   |
-| `prerelease`              | Boolean | Indicator of whether or not is a prerelease                           |
-| `files`                   | String  | Newline-delimited globs of paths to assets to upload for release      |
-| `name`                    | String  | Name of the release. defaults to tag name                             |
-| `tag_name`                | String  | Name of a tag. defaults to `github.ref`                               |
-| `fail_on_unmatched_files` | Boolean | Indicator of whether to fail if any of the `files` globs match nothing|
-| `token`                   | String  | Secret GitHub Personal Access Token. Defaults to `${{ github.token }}`|
+| Name                      | Type    | Description                                                            |
+| ------------------------- | ------- | ---------------------------------------------------------------------- |
+| `body`                    | String  | Text communicating notable changes in this release                     |
+| `body_path`               | String  | Path to load text communicating notable changes in this release        |
+| `draft`                   | Boolean | Indicator of whether or not this release is a draft                    |
+| `prerelease`              | Boolean | Indicator of whether or not is a prerelease                            |
+| `files`                   | String  | Newline-delimited globs of paths to assets to upload for release       |
+| `name`                    | String  | Name of the release. defaults to tag name                              |
+| `tag_name`                | String  | Name of a tag. defaults to `github.ref`                                |
+| `fail_on_unmatched_files` | Boolean | Indicator of whether to fail if any of the `files` globs match nothing |
+| `token`                   | String  | Secret GitHub Personal Access Token. Defaults to `${{ github.token }}` |
 
 💡When providing a `body` and `body_path` at the same time, `body_path` will be attempted first, then falling back on `body` if the path can not be read from.
 
@@ -182,21 +180,20 @@ The following are optional as `step.with` keys
 
 The following outputs can be accessed via `${{ steps.<step-id>.outputs }}` from this action
 
-| Name        | Type    | Description                                                     |
-|-------------|---------|-----------------------------------------------------------------|
-| `url`       | String  | Github.com URL for the release                                  |
-| `upload_url`| String  | URL for uploading assets to the release                         |
-
+| Name         | Type   | Description                             |
+| ------------ | ------ | --------------------------------------- |
+| `url`        | String | Github.com URL for the release          |
+| `id`         | String | Release ID                              |
+| `upload_url` | String | URL for uploading assets to the release |
 
 #### environment variables
 
 The following `step.env` keys are allowed as a fallback but deprecated in favor of using inputs.
 
-| Name           | Description                                                                                    |
-|----------------|------------------------------------------------------------------------------------------------|
-| `GITHUB_TOKEN` | GITHUB_TOKEN as provided by `secrets`                                                          |
-| `GITHUB_REPOSITORY` | Name of a target repository in `<owner>/<repo>` format. defaults to the current repository|
-
+| Name                | Description                                                                                |
+| ------------------- | ------------------------------------------------------------------------------------------ |
+| `GITHUB_TOKEN`      | GITHUB_TOKEN as provided by `secrets`                                                      |
+| `GITHUB_REPOSITORY` | Name of a target repository in `<owner>/<repo>` format. defaults to the current repository |
 
 > **⚠️ Note:** This action was previously implemented as a Docker container, limiting its use to GitHub Actions Linux virtual environments only. With recent releases, we now support cross platform usage. You'll need to remove the `docker://` prefix in these versions
 
