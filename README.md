@@ -164,7 +164,7 @@ jobs:
           body_path: ${{ github.workflow }}-CHANGELOG.txt
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-	  GITHUB_REPOSITORY: my_gh_org/my_gh_repo
+          GITHUB_REPOSITORY: my_gh_org/my_gh_repo
 ```
 
 ### 💅 Customizing
