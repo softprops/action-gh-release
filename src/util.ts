@@ -8,6 +8,7 @@ export interface Config {
   // user provided
   input_name?: string;
   input_tag_name?: string;
+  input_repository?: string;
   input_body?: string;
   input_body_path?: string;
   input_files?: string[];
@@ -18,9 +19,9 @@ export interface Config {
 
 export const releaseBody = (config: Config): string | undefined => {
   return (
-    config.input_body ||
     (config.input_body_path &&
-      readFileSync(config.input_body_path).toString("utf8"))
+      readFileSync(config.input_body_path).toString("utf8")) ||
+    config.input_body
   );
 };
 
@@ -41,7 +42,7 @@ export const parseConfig = (env: Env): Config => {
   return {
     github_token: env.GITHUB_TOKEN || "",
     github_ref: env.GITHUB_REF || "",
-    github_repository: env.GITHUB_REPOSITORY || "",
+    github_repository: env.INPUT_REPOSITORY || env.GITHUB_REPOSITORY || "",
     input_name: env.INPUT_NAME,
     input_tag_name: env.INPUT_TAG_NAME,
     input_body: env.INPUT_BODY,

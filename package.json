@@ -20,7 +20,7 @@
   "author": "softprops",
   "license": "MIT",
   "dependencies": {
-    "@actions/core": "^1.2.0",
+    "@actions/core": "^1.2.6",
     "@actions/github": "^2.0.0",
     "@octokit/plugin-retry": "^3.0.2",
     "@octokit/plugin-throttling": "^3.2.1",
