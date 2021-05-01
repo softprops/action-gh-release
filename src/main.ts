@@ -59,6 +59,7 @@ async function run() {
     }
     console.log(`🎉 Release ready at ${rel.html_url}`);
     setOutput("url", rel.html_url);
+    setOutput("id", rel.id.toString());
     setOutput("upload_url", rel.upload_url);
   } catch (error) {
     setFailed(error.message);
