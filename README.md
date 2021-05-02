@@ -194,6 +194,7 @@ The following outputs can be accessed via `${{ steps.<step-id>.outputs }}` from 
 | Name        | Type    | Description                                                     |
 |-------------|---------|-----------------------------------------------------------------|
 | `url`       | String  | Github.com URL for the release                                  |
+| `id`        | String  | Release ID                                                      |
 | `upload_url`| String  | URL for uploading assets to the release                         |
 
 

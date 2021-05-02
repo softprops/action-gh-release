@@ -38,6 +38,8 @@ env:
 outputs:
   url:
     description: 'URL to the Release HTML Page'
+  id:
+    description: 'Release ID'
   upload_url:
     description: 'URL for uploading assets to the release'
 runs:
