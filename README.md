@@ -181,6 +181,9 @@ attempted first, then falling back on `body` if the path can not be read from.
 💡 When the release info keys (such as `name`, `body`, `draft`, `prerelease`, etc.)
 are not explicitly set and there is already an existing release for the tag, the
 release will retain its original info.
+=======
+
+💡When providing a `body` and `body_path` at the same time, `body_path` will be attempted first, then falling back on `body` if the path can not be read from.
 
 #### outputs
 
