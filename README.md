@@ -173,16 +173,17 @@ jobs:
 
 The following are optional as `step.with` keys
 
-| Name                      | Type    | Description                                                           |
-|---------------------------|---------|-----------------------------------------------------------------------|
-| `body`                    | String  | Text communicating notable changes in this release                    |
-| `body_path`               | String  | Path to load text communicating notable changes in this release       |
-| `draft`                   | Boolean | Indicator of whether or not this release is a draft                   |
-| `prerelease`              | Boolean | Indicator of whether or not is a prerelease                           |
-| `files`                   | String  | Newline-delimited globs of paths to assets to upload for release      |
-| `name`                    | String  | Name of the release. defaults to tag name                             |
-| `tag_name`                | String  | Name of a tag. defaults to `github.ref`                               |
-| `fail_on_unmatched_files` | Boolean | Indicator of whether to fail if any of the `files` globs match nothing|
+| Name                      | Type    | Description                                                                                         |
+|---------------------------|---------|-----------------------------------------------------------------------------------------------------|
+| `body`                    | String  | Text communicating notable changes in this release                                                  |
+| `body_path`               | String  | Path to load text communicating notable changes in this release                                     |
+| `draft`                   | Boolean | Indicator of whether or not this release is a draft                                                 |
+| `prerelease`              | Boolean | Indicator of whether or not is a prerelease                                                         |
+| `files`                   | String  | Newline-delimited globs of paths to assets to upload for release                                    |
+| `name`                    | String  | Name of the release. defaults to tag name                                                           |
+| `tag_name`                | String  | Name of a tag. defaults to `github.ref`                                                             |
+| `fail_on_unmatched_files` | Boolean | Indicator of whether to fail if any of the `files` globs match nothing                              |
+| `target_commitish`        | String  | Commitish value that determines where the Git tag is created from. Can be any branch or commit SHA. |
 
 💡When providing a `body` and `body_path` at the same time, `body_path` will be attempted first, then falling back on `body` if the path can not be read from.
 
