@@ -181,7 +181,11 @@ export const release = async (
     }
     const tag_name = tag;
     const name = config.input_name || tag;
-    const body = `${existingRelease.data.body}\n${releaseBody(config)}`;
+    let body: string = "";
+    if (existingRelease.data.body != null) {
+      body += `${existingRelease.data.body}\n`;
+    }
+    body += releaseBody(config);
     const draft = config.input_draft;
     const prerelease = config.input_prerelease;
 
