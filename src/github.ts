@@ -116,7 +116,7 @@ export const asset = (path: string): ReleaseAsset => {
     name: basename(path),
     mime: mimeOrDefault(path),
     size: lstatSync(path).size,
-    file: readFileSync(path)
+    file: readFileSync(path),
   };
 };
 
@@ -135,10 +135,10 @@ export const upload = async (
     url,
     headers: {
       "content-length": size,
-      "content-type": mime
+      "content-type": mime,
     },
     name,
-    file
+    file,
   });
 };
 
@@ -164,9 +164,9 @@ export const release = async (
     if (config.input_draft) {
       for await (const response of releaser.allReleases({
         owner,
-        repo
+        repo,
       })) {
-        let release = response.data.find(release => release.tag_name === tag);
+        let release = response.data.find((release) => release.tag_name === tag);
         if (release) {
           return release;
         }
@@ -175,7 +175,7 @@ export const release = async (
     let existingRelease = await releaser.getReleaseByTag({
       owner,
       repo,
-      tag
+      tag,
     });
 
     const release_id = existingRelease.data.id;
@@ -219,7 +219,7 @@ export const release = async (
       name,
       body,
       draft,
-      prerelease
+      prerelease,
     });
     return release.data;
   } catch (error) {
@@ -246,7 +246,7 @@ export const release = async (
           body,
           draft,
           prerelease,
-          target_commitish
+          target_commitish,
         });
         return release.data;
       } catch (error) {
