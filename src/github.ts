@@ -148,10 +148,8 @@ export const release = async (
   maxRetries: number = 3
 ): Promise<Release> => {
   if (maxRetries <= 0) {
-    console.log(
-      `❌ Too many retries. Aborting...`
-    );
-    throw new Error("Too many retries.")
+    console.log(`❌ Too many retries. Aborting...`);
+    throw new Error("Too many retries.");
   }
 
   const [owner, repo] = config.github_repository.split("/");
@@ -251,7 +249,9 @@ export const release = async (
       } catch (error) {
         // presume a race with competing metrix runs
         console.log(
-          `⚠️ GitHub release failed with status: ${error.status}, retrying... (${maxRetries - 1} retries remaining)`
+          `⚠️ GitHub release failed with status: ${
+            error.status
+          }, retrying... (${maxRetries - 1} retries remaining)`
         );
         return release(config, releaser, maxRetries - 1);
       }
