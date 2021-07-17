@@ -16,8 +16,11 @@ export interface Release {
   upload_url: string;
   html_url: string;
   tag_name: string;
+  name: string;
   body: string;
   target_commitish: string;
+  draft: boolean;
+  prerelease: boolean;
 }
 
 export interface Releaser {
@@ -187,11 +190,24 @@ export const release = async (
     } else {
       target_commitish = existingRelease.data.target_commitish;
     }
+
     const tag_name = tag;
-    const name = config.input_name || tag;
-    const body = `${existingRelease.data.body}\n${releaseBody(config)}`;
-    const draft = config.input_draft;
-    const prerelease = config.input_prerelease;
+    const name = config.input_name || existingRelease.data.name || tag;
+
+    let body: string = "";
+    if (existingRelease.data.body) body += existingRelease.data.body;
+    let workflowBody = releaseBody(config);
+    if (existingRelease.data.body && workflowBody) body += "\n";
+    if (workflowBody) body += workflowBody;
+
+    const draft =
+      config.input_draft !== undefined
+        ? config.input_draft
+        : existingRelease.data.draft;
+    const prerelease =
+      config.input_prerelease !== undefined
+        ? config.input_prerelease
+        : existingRelease.data.prerelease;
 
     const release = await releaser.updateRelease({
       owner,
