@@ -87,8 +87,8 @@ describe("util", () => {
         github_token: "",
         input_body: undefined,
         input_body_path: undefined,
-        input_draft: false,
-        input_prerelease: false,
+        input_draft: undefined,
+        input_prerelease: undefined,
         input_files: [],
         input_name: undefined,
         input_tag_name: undefined,
@@ -109,13 +109,35 @@ describe("util", () => {
           github_token: "",
           input_body: undefined,
           input_body_path: undefined,
-          input_draft: false,
-          input_prerelease: false,
+          input_draft: undefined,
+          input_prerelease: undefined,
           input_files: [],
           input_name: undefined,
           input_tag_name: undefined,
           input_fail_on_unmatched_files: false,
           input_target_commitish: "affa18ef97bc9db20076945705aba8c516139abd"
+        }
+      );
+    });
+    it("parses basic config with draft and prerelease", () => {
+      assert.deepStrictEqual(
+        parseConfig({
+          INPUT_DRAFT: "false",
+          INPUT_PRERELEASE: "true"
+        }),
+        {
+          github_ref: "",
+          github_repository: "",
+          github_token: "",
+          input_body: undefined,
+          input_body_path: undefined,
+          input_draft: false,
+          input_prerelease: true,
+          input_files: [],
+          input_name: undefined,
+          input_tag_name: undefined,
+          input_fail_on_unmatched_files: false,
+          input_target_commitish: undefined
         }
       );
     });

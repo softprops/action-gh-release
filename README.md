@@ -175,7 +175,12 @@ The following are optional as `step.with` keys
 | `target_commitish`        | String  | Commitish value that determines where the Git tag is created from. Can be any branch or commit SHA. |
 | `token`                   | String  | Secret GitHub Personal Access Token. Defaults to `${{ github.token }}`                              |
 
-💡When providing a `body` and `body_path` at the same time, `body_path` will be attempted first, then falling back on `body` if the path can not be read from.
+💡 When providing a `body` and `body_path` at the same time, `body_path` will be
+attempted first, then falling back on `body` if the path can not be read from.
+
+💡 When the release info keys (such as `name`, `body`, `draft`, `prerelease`, etc.)
+are not explicitly set and there is already an existing release for the tag, the
+release will retain its original info.
 
 #### outputs
 
