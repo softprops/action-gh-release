@@ -3,6 +3,7 @@ import { Config, releaseBody } from "./util";
 import { lstatSync, readFileSync } from "fs";
 import { getType } from "mime";
 import { basename } from "path";
+import { time } from "console";
 
 export interface ReleaseAsset {
   name: string;
@@ -145,7 +146,7 @@ export const upload = async (
 export const release = async (
   config: Config,
   releaser: Releaser,
-  maxRetries: number = 3
+  maxRetries: number = 10
 ): Promise<Release> => {
   if (maxRetries <= 0) {
     console.log(`❌ Too many retries. Aborting...`);
@@ -259,7 +260,9 @@ export const release = async (
       console.log(
         `⚠️ Unexpected error fetching GitHub release for tag ${config.github_ref}: ${error}`
       );
-      throw error;
+      // throw error;
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      return release(config, releaser, maxRetries - 1);
     }
   }
 };
