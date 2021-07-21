@@ -1,0 +1,41 @@
+{
+  "name": "btoa-lite",
+  "version": "1.0.0",
+  "description": "Smallest/simplest possible means of using btoa with both Node and browserify",
+  "main": "btoa-node.js",
+  "browser": "btoa-browser.js",
+  "license": "MIT",
+  "scripts": {
+    "test": "npm run test-node && npm run test-browser",
+    "test-node": "node test | tap-spec",
+    "test-browser": "browserify test | smokestack | tap-spec"
+  },
+  "author": {
+    "name": "Hugh Kennedy",
+    "email": "hughskennedy@gmail.com",
+    "url": "http://hughsk.io/"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "browserify": "^10.2.4",
+    "smokestack": "^3.3.0",
+    "tap-spec": "^4.0.0",
+    "tape": "^4.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/hughsk/btoa-lite.git"
+  },
+  "keywords": [
+    "btoa",
+    "base64",
+    "isomorphic",
+    "browser",
+    "node",
+    "shared"
+  ],
+  "homepage": "https://github.com/hughsk/btoa-lite",
+  "bugs": {
+    "url": "https://github.com/hughsk/btoa-lite/issues"
+  }
+}
