@@ -1,5 +1,5 @@
 import { GitHub } from "@actions/github";
-import { Config, releaseBody } from "./util";
+import { Config, isTag, releaseBody } from "./util";
 import { lstatSync, readFileSync } from "fs";
 import { getType } from "mime";
 import { basename } from "path";
@@ -154,7 +154,10 @@ export const release = async (
 
   const [owner, repo] = config.github_repository.split("/");
   const tag =
-    config.input_tag_name || config.github_ref.replace("refs/tags/", "");
+    config.input_tag_name ||
+    (isTag(config.github_ref)
+      ? config.github_ref.replace("refs/tags/", "")
+      : "");
   try {
     // you can't get a an existing draft by tag
     // so we must find one in the list of all releases
