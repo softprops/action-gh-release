@@ -1,3 +1,7 @@
+# 0.1.7
+
+- allow creating draft releases without a tag [#95](https://github.com/softprops/action-gh-release/pull/95)
+
 ## 0.1.6
 
 This is a release catch up have a hiatus. Future releases will happen more frequently
