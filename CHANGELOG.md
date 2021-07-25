@@ -1,4 +1,4 @@
-## 0.1.6 (unreleased)
+## 0.1.6
 
 This is a release catch up have a hiatus. Future releases will happen more frequently
 
