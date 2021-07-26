@@ -146,12 +146,12 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
       - name: Generate Changelog
-        run: echo "# Good things have arrived" > ${{ github.workflow }}-CHANGELOG.txt
+        run: echo "# Good things have arrived" > ${{ github.workspace }}-CHANGELOG.txt
       - name: Release
         uses: softprops/action-gh-release@v1
         if: startsWith(github.ref, 'refs/tags/')
         with:
-          body_path: ${{ github.workflow }}-CHANGELOG.txt
+          body_path: ${{ github.workspace }}-CHANGELOG.txt
         env:
           GITHUB_REPOSITORY: my_gh_org/my_gh_repo
 ```
