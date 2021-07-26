@@ -37,12 +37,6 @@ inputs:
   target_commitish:
     description: "Commitish value that determines where the Git tag is created from. Can be any branch or commit SHA."
     required: false
-  target_commitish:
-    description: 'Commitish value that determines where the Git tag is created from. Can be any branch or commit SHA.'
-    required: false
-  target_commitish:
-    description: 'Commitish value that determines where the Git tag is created from. Can be any branch or commit SHA.'
-    required: false
 env:
   "GITHUB_TOKEN": "As provided by Github Actions"
 outputs:
