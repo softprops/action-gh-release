@@ -1,6 +1,7 @@
-# 0.1.7
+## 0.1.7 (unreleased)
 
 - allow creating draft releases without a tag [#95](https://github.com/softprops/action-gh-release/pull/95)
+- Set default token for simpler setup [#83](https://github.com/softprops/action-gh-release/pull/83)
 
 ## 0.1.6
 
