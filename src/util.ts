@@ -1,4 +1,3 @@
-import { getInput } from "@actions/core";
 import * as glob from "glob";
 import { lstatSync, readFileSync } from "fs";
 
@@ -42,7 +41,7 @@ export const parseInputFiles = (files: string): string[] => {
 
 export const parseConfig = (env: Env): Config => {
   return {
-    github_token: getInput("token") || env.GITHUB_TOKEN || "",
+    github_token: env.GITHUB_TOKEN || env.INPUT_TOKEN || "",
     github_ref: env.GITHUB_REF || "",
     github_repository: env.INPUT_REPOSITORY || env.GITHUB_REPOSITORY || "",
     input_name: env.INPUT_NAME,

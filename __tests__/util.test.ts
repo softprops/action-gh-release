@@ -96,8 +96,7 @@ describe("util", () => {
         input_target_commitish: undefined
       });
     });
-  });
-  describe("parseConfig", () => {
+
     it("parses basic config with commitish", () => {
       assert.deepStrictEqual(
         parseConfig({
@@ -116,6 +115,53 @@ describe("util", () => {
           input_tag_name: undefined,
           input_fail_on_unmatched_files: false,
           input_target_commitish: "affa18ef97bc9db20076945705aba8c516139abd"
+        }
+      );
+    });
+    it("prefers GITHUB_TOKEN over token input for backwards compatibility", () => {
+      assert.deepStrictEqual(
+        parseConfig({
+          INPUT_DRAFT: "false",
+          INPUT_PRERELEASE: "true",
+          GITHUB_TOKEN: "env-token",
+          INPUT_TOKEN: "input-token"
+        }),
+        {
+          github_ref: "",
+          github_repository: "",
+          github_token: "env-token",
+          input_body: undefined,
+          input_body_path: undefined,
+          input_draft: false,
+          input_prerelease: true,
+          input_files: [],
+          input_name: undefined,
+          input_tag_name: undefined,
+          input_fail_on_unmatched_files: false,
+          input_target_commitish: undefined
+        }
+      );
+    });
+    it("uses input token as the source of GITHUB_TOKEN by default", () => {
+      assert.deepStrictEqual(
+        parseConfig({
+          INPUT_DRAFT: "false",
+          INPUT_PRERELEASE: "true",
+          INPUT_TOKEN: "input-token"
+        }),
+        {
+          github_ref: "",
+          github_repository: "",
+          github_token: "input-token",
+          input_body: undefined,
+          input_body_path: undefined,
+          input_draft: false,
+          input_prerelease: true,
+          input_files: [],
+          input_name: undefined,
+          input_tag_name: undefined,
+          input_fail_on_unmatched_files: false,
+          input_target_commitish: undefined
         }
       );
     });
