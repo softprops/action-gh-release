@@ -15,11 +15,11 @@ describe("github", () => {
 
   describe("asset", () => {
     it("derives asset info from a path", async () => {
-      const { name, mime, size, file } = asset("tests/data/foo/bar.txt");
+      const { name, mime, size, data } = asset("tests/data/foo/bar.txt");
       assert.equal(name, "bar.txt");
       assert.equal(mime, "text/plain");
       assert.equal(size, 10);
-      assert.equal(file.toString(), "release me");
+      assert.equal(data.toString(), "release me");
     });
   });
 });

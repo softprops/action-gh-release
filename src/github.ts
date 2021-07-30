@@ -8,7 +8,7 @@ export interface ReleaseAsset {
   name: string;
   mime: string;
   size: number;
-  file: Buffer;
+  data: Buffer;
 }
 
 export interface Release {
@@ -116,7 +116,7 @@ export const asset = (path: string): ReleaseAsset => {
     name: basename(path),
     mime: mimeOrDefault(path),
     size: lstatSync(path).size,
-    file: readFileSync(path)
+    data: readFileSync(path)
   };
 };
 
@@ -129,7 +129,7 @@ export const upload = async (
   url: string,
   path: string
 ): Promise<any> => {
-  let { name, size, mime, file } = asset(path);
+  let { name, size, mime, data } = asset(path);
   console.log(`⬆️ Uploading ${name}...`);
   return await gh.repos.uploadReleaseAsset({
     url,
@@ -138,7 +138,7 @@ export const upload = async (
       "content-type": mime
     },
     name,
-    file
+    data
   });
 };
 
