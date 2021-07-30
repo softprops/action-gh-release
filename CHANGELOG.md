@@ -1,6 +1,7 @@
 ## 0.1.8
 
 - fix backwards compatibility with `GITHUB_TOKEN` resolution. `GITHUB_TOKEN` is no resolved first from an env varibale and then from and input [#133](https://github.com/softprops/action-gh-release/pull/133)
+- trim white space in provided `tag_name` [#130](https://github.com/softprops/action-gh-release/pull/130)
 
 ## 0.1.7
 
