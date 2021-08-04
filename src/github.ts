@@ -1,8 +1,11 @@
-import { GitHub } from "@actions/github";
+import fetch from "node-fetch";
+import { GitHub } from "@actions/github/lib/utils";
 import { Config, isTag, releaseBody } from "./util";
 import { lstatSync, readFileSync } from "fs";
 import { getType } from "mime";
 import { basename } from "path";
+
+type GitHub = InstanceType<typeof GitHub>;
 
 export interface ReleaseAsset {
   name: string;
@@ -16,8 +19,8 @@ export interface Release {
   upload_url: string;
   html_url: string;
   tag_name: string;
-  name: string;
-  body: string;
+  name: string | null;
+  body?: string | null | undefined;
   target_commitish: string;
   draft: boolean;
   prerelease: boolean;
@@ -70,7 +73,7 @@ export class GitHubReleaser implements Releaser {
     repo: string;
     tag: string;
   }): Promise<{ data: Release }> {
-    return this.github.repos.getReleaseByTag(params);
+    return this.github.rest.repos.getReleaseByTag(params);
   }
 
   createRelease(params: {
@@ -83,7 +86,7 @@ export class GitHubReleaser implements Releaser {
     prerelease: boolean | undefined;
     target_commitish: string | undefined;
   }): Promise<{ data: Release }> {
-    return this.github.repos.createRelease(params);
+    return this.github.rest.repos.createRelease(params);
   }
 
   updateRelease(params: {
@@ -97,7 +100,7 @@ export class GitHubReleaser implements Releaser {
     draft: boolean | undefined;
     prerelease: boolean | undefined;
   }): Promise<{ data: Release }> {
-    return this.github.repos.updateRelease(params);
+    return this.github.rest.repos.updateRelease(params);
   }
 
   allReleases(params: {
@@ -106,7 +109,7 @@ export class GitHubReleaser implements Releaser {
   }): AsyncIterableIterator<{ data: Release[] }> {
     const updatedParams = { per_page: 100, ...params };
     return this.github.paginate.iterator(
-      this.github.repos.listReleases.endpoint.merge(updatedParams)
+      this.github.rest.repos.listReleases.endpoint.merge(updatedParams)
     );
   }
 }
@@ -129,17 +132,29 @@ export const upload = async (
   url: string,
   path: string
 ): Promise<any> => {
-  let { name, size, mime, data } = asset(path);
+  let { name, size, mime, data: body } = asset(path);
   console.log(`⬆️ Uploading ${name}...`);
-  return await gh.repos.uploadReleaseAsset({
-    url,
+  const endpoint = new URL(url);
+  endpoint.searchParams.append("name", name);
+  const resp = await fetch(endpoint, {
     headers: {
-      "content-length": size,
+      "content-length": `${size}`,
       "content-type": mime
     },
-    name,
-    data
+    method: "POST",
+    body
   });
+  return resp.json();
+
+  // return await gh.rest.repos.uploadReleaseAsset({
+  //   url,
+  //   headers: {
+  //     "content-length": size,
+  //     "content-type": mime,
+  //   },
+  //   name,
+  //   file,
+  // });
 };
 
 export const release = async (
