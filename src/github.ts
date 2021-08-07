@@ -136,6 +136,7 @@ export const upload = async (
   console.log(`⬆️ Uploading ${name}...`);
   const endpoint = new URL(url);
   endpoint.searchParams.append("name", name);
+  console.log(`url`, endpoint);
   const resp = await fetch(endpoint, {
     headers: {
       "content-length": `${size}`,
