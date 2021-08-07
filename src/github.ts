@@ -144,7 +144,10 @@ export const upload = async (
     method: "POST",
     body
   });
-  return resp.json();
+  console.log(`resp`, resp);
+  const json = await resp.json();
+  console.log(`body`, json);
+  return json;
 
   // return await gh.rest.repos.uploadReleaseAsset({
   //   url,
