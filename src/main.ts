@@ -1,5 +1,6 @@
 import { paths, parseConfig, isTag, unmatchedPatterns } from "./util";
 import { release, upload, GitHubReleaser } from "./github";
+import { getOctokit } from "@actions/github";
 import { setFailed, setOutput } from "@actions/core";
 import { GitHub, getOctokitOptions } from "@actions/github/lib/utils";
 
@@ -24,33 +25,34 @@ async function run() {
         throw new Error(`⚠️ There were unmatched files`);
       }
     }
+
     const oktokit = GitHub.plugin(
       require("@octokit/plugin-throttling"),
       require("@octokit/plugin-retry")
     );
 
-    const gh = new oktokit(
-      getOctokitOptions(config.github_token, {
-        throttle: {
-          onRateLimit: (retryAfter, options) => {
-            console.warn(
-              `Request quota exhausted for request ${options.method} ${options.url}`
-            );
-            if (options.request.retryCount === 0) {
-              // only retries once
-              console.log(`Retrying after ${retryAfter} seconds!`);
-              return true;
-            }
-          },
-          onAbuseLimit: (retryAfter, options) => {
-            // does not retry, only logs a warning
-            console.warn(
-              `Abuse detected for request ${options.method} ${options.url}`
-            );
+    const gh = getOctokit(config.github_token, {
+      //new oktokit(
+      throttle: {
+        onRateLimit: (retryAfter, options) => {
+          console.warn(
+            `Request quota exhausted for request ${options.method} ${options.url}`
+          );
+          if (options.request.retryCount === 0) {
+            // only retries once
+            console.log(`Retrying after ${retryAfter} seconds!`);
+            return true;
           }
+        },
+        onAbuseLimit: (retryAfter, options) => {
+          // does not retry, only logs a warning
+          console.warn(
+            `Abuse detected for request ${options.method} ${options.url}`
+          );
         }
-      })
-    );
+      }
+    });
+    //);
     let rel = await release(config, new GitHubReleaser(gh));
     if (config.input_files) {
       const files = paths(config.input_files);
