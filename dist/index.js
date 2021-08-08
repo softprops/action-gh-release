@@ -2507,12 +2507,14 @@ exports.upload = (gh, url, path) => __awaiter(void 0, void 0, void 0, function* 
     const resp = yield node_fetch_1.default(endpoint, {
         headers: {
             "content-length": `${size}`,
-            "content-type": mime
+            "content-type": mime,
+            authorization: `${gh.auth}`
         },
         method: "POST",
         body
     });
-    console.log(`resp`, resp);
+    console.log(`resp headers`, resp.headers);
+    console.log(resp.status);
     const json = yield resp.json();
     console.log(`body`, json);
     return json;

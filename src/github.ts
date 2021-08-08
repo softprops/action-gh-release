@@ -140,12 +140,14 @@ export const upload = async (
   const resp = await fetch(endpoint, {
     headers: {
       "content-length": `${size}`,
-      "content-type": mime
+      "content-type": mime,
+      authorization: `${gh.auth}`
     },
     method: "POST",
     body
   });
-  console.log(`resp`, resp);
+  console.log(`resp headers`, resp.headers);
+  console.log(resp.status);
   const json = await resp.json();
   console.log(`body`, json);
   return json;
