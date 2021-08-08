@@ -141,7 +141,7 @@ export const upload = async (
     ({ name: currentName }) => currentName == name
   );
   if (currentAsset) {
-    console.log(`Deleting previously uploadeed asset ${name}...`);
+    console.log(`♻️ Deleting previously uploaded asset ${name}...`);
     await github.rest.repos.deleteReleaseAsset({
       asset_id: currentAsset.id || 1,
       owner,
@@ -151,7 +151,6 @@ export const upload = async (
   console.log(`⬆️ Uploading ${name}...`);
   const endpoint = new URL(url);
   endpoint.searchParams.append("name", name);
-  console.log(`url`, endpoint);
   const resp = await fetch(endpoint, {
     headers: {
       "content-length": `${size}`,
@@ -162,7 +161,6 @@ export const upload = async (
     body
   });
   const json = await resp.json();
-  console.log(`body`, json);
   if (resp.status !== 201) {
     throw new Error(
       "Failed to upload release asset ${name}. recieved status code ${resp.status}\n${json.message}\n${json.errors}"
