@@ -37,13 +37,16 @@ inputs:
   target_commitish:
     description: "Commitish value that determines where the Git tag is created from. Can be any branch or commit SHA."
     required: false
+  discussion_category_name:
+    description: "If specified, a discussion of the specified category is created and linked to the release. The value must be a category that already exists in the repository. If there is already a discussion linked to the release, this parameter is ignored."
+    required: false
 env:
   "GITHUB_TOKEN": "As provided by Github Actions"
 outputs:
   url:
-    description: 'URL to the Release HTML Page'
+    description: "URL to the Release HTML Page"
   id:
-    description: 'Release ID'
+    description: "Release ID"
   upload_url:
     description: "URL for uploading assets to the release"
 runs:
