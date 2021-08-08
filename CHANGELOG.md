@@ -1,3 +1,7 @@
+## 0.1.9
+
+- add support for linking release to GitHub discussion [#136](https://github.com/softprops/action-gh-release/pull/136)
+
 ## 0.1.8
 
 - address recent warnings in assert upload api as well as introduce asset upload overrides, allowing for multiple runs for the same release with the same named asserts [#134](https://github.com/softprops/action-gh-release/pull/134)
