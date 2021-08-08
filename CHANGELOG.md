@@ -1,5 +1,6 @@
 ## 0.1.8
 
+- address recent warnings in assert upload api as well as introduce asset upload overrides, allowing for multiple runs for the same release with the same named asserts [#134](https://github.com/softprops/action-gh-release/pull/134)
 - fix backwards compatibility with `GITHUB_TOKEN` resolution. `GITHUB_TOKEN` is no resolved first from an env varibale and then from and input [#133](https://github.com/softprops/action-gh-release/pull/133)
 - trim white space in provided `tag_name` [#130](https://github.com/softprops/action-gh-release/pull/130)
 
