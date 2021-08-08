@@ -1,14 +1,17 @@
-import { GitHub } from "@actions/github";
+import fetch from "node-fetch";
+import { GitHub } from "@actions/github/lib/utils";
 import { Config, isTag, releaseBody } from "./util";
 import { lstatSync, readFileSync } from "fs";
 import { getType } from "mime";
 import { basename } from "path";
 
+type GitHub = InstanceType<typeof GitHub>;
+
 export interface ReleaseAsset {
   name: string;
   mime: string;
   size: number;
-  file: Buffer;
+  data: Buffer;
 }
 
 export interface Release {
@@ -16,11 +19,12 @@ export interface Release {
   upload_url: string;
   html_url: string;
   tag_name: string;
-  name: string;
-  body: string;
+  name: string | null;
+  body?: string | null | undefined;
   target_commitish: string;
   draft: boolean;
   prerelease: boolean;
+  assets: Array<{ id: number; name: string }>;
 }
 
 export interface Releaser {
@@ -70,7 +74,7 @@ export class GitHubReleaser implements Releaser {
     repo: string;
     tag: string;
   }): Promise<{ data: Release }> {
-    return this.github.repos.getReleaseByTag(params);
+    return this.github.rest.repos.getReleaseByTag(params);
   }
 
   createRelease(params: {
@@ -83,7 +87,7 @@ export class GitHubReleaser implements Releaser {
     prerelease: boolean | undefined;
     target_commitish: string | undefined;
   }): Promise<{ data: Release }> {
-    return this.github.repos.createRelease(params);
+    return this.github.rest.repos.createRelease(params);
   }
 
   updateRelease(params: {
@@ -97,7 +101,7 @@ export class GitHubReleaser implements Releaser {
     draft: boolean | undefined;
     prerelease: boolean | undefined;
   }): Promise<{ data: Release }> {
-    return this.github.repos.updateRelease(params);
+    return this.github.rest.repos.updateRelease(params);
   }
 
   allReleases(params: {
@@ -106,7 +110,7 @@ export class GitHubReleaser implements Releaser {
   }): AsyncIterableIterator<{ data: Release[] }> {
     const updatedParams = { per_page: 100, ...params };
     return this.github.paginate.iterator(
-      this.github.repos.listReleases.endpoint.merge(updatedParams)
+      this.github.rest.repos.listReleases.endpoint.merge(updatedParams)
     );
   }
 }
@@ -116,7 +120,7 @@ export const asset = (path: string): ReleaseAsset => {
     name: basename(path),
     mime: mimeOrDefault(path),
     size: lstatSync(path).size,
-    file: readFileSync(path)
+    data: readFileSync(path)
   };
 };
 
@@ -125,21 +129,44 @@ export const mimeOrDefault = (path: string): string => {
 };
 
 export const upload = async (
-  gh: GitHub,
+  config: Config,
+  github: GitHub,
   url: string,
-  path: string
+  path: string,
+  currentAssets: Array<{ id: number; name: string }>
 ): Promise<any> => {
-  let { name, size, mime, file } = asset(path);
+  const [owner, repo] = config.github_repository.split("/");
+  const { name, size, mime, data: body } = asset(path);
+  const currentAsset = currentAssets.find(
+    ({ name: currentName }) => currentName == name
+  );
+  if (currentAsset) {
+    console.log(`♻️ Deleting previously uploaded asset ${name}...`);
+    await github.rest.repos.deleteReleaseAsset({
+      asset_id: currentAsset.id || 1,
+      owner,
+      repo
+    });
+  }
   console.log(`⬆️ Uploading ${name}...`);
-  return await gh.repos.uploadReleaseAsset({
-    url,
+  const endpoint = new URL(url);
+  endpoint.searchParams.append("name", name);
+  const resp = await fetch(endpoint, {
     headers: {
-      "content-length": size,
-      "content-type": mime
+      "content-length": `${size}`,
+      "content-type": mime,
+      authorization: `token ${config.github_token}`
     },
-    name,
-    file
+    method: "POST",
+    body
   });
+  const json = await resp.json();
+  if (resp.status !== 201) {
+    throw new Error(
+      "Failed to upload release asset ${name}. recieved status code ${resp.status}\n${json.message}\n${json.errors}"
+    );
+  }
+  return json;
 };
 
 export const release = async (

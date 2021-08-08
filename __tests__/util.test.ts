@@ -4,11 +4,22 @@ import {
   paths,
   parseConfig,
   parseInputFiles,
-  unmatchedPatterns
+  unmatchedPatterns,
+  uploadUrl
 } from "../src/util";
 import * as assert from "assert";
 
 describe("util", () => {
+  describe("uploadUrl", () => {
+    it("stripts template", () => {
+      assert.equal(
+        uploadUrl(
+          "https://uploads.github.com/repos/octocat/Hello-World/releases/1/assets{?name,label}"
+        ),
+        "https://uploads.github.com/repos/octocat/Hello-World/releases/1/assets"
+      );
+    });
+  });
   describe("parseInputFiles", () => {
     it("parses empty strings", () => {
       assert.deepStrictEqual(parseInputFiles(""), []);

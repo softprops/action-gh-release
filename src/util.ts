@@ -18,6 +18,14 @@ export interface Config {
   input_target_commitish?: string;
 }
 
+export const uploadUrl = (url: string): string => {
+  const templateMarkerPos = url.indexOf("{");
+  if (templateMarkerPos > -1) {
+    return url.substring(0, templateMarkerPos);
+  }
+  return url;
+};
+
 export const releaseBody = (config: Config): string | undefined => {
   return (
     (config.input_body_path &&

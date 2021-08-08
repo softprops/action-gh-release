@@ -1,7 +1,15 @@
-import { paths, parseConfig, isTag, unmatchedPatterns } from "./util";
+import {
+  paths,
+  parseConfig,
+  isTag,
+  unmatchedPatterns,
+  uploadUrl
+} from "./util";
 import { release, upload, GitHubReleaser } from "./github";
+import { getOctokit } from "@actions/github";
 import { setFailed, setOutput } from "@actions/core";
-import { GitHub } from "@actions/github";
+import { GitHub, getOctokitOptions } from "@actions/github/lib/utils";
+
 import { env } from "process";
 
 async function run() {
@@ -23,11 +31,14 @@ async function run() {
         throw new Error(`⚠️ There were unmatched files`);
       }
     }
-    GitHub.plugin([
-      require("@octokit/plugin-throttling"),
-      require("@octokit/plugin-retry")
-    ]);
-    const gh = new GitHub(config.github_token, {
+
+    // const oktokit = GitHub.plugin(
+    //   require("@octokit/plugin-throttling"),
+    //   require("@octokit/plugin-retry")
+    // );
+
+    const gh = getOctokit(config.github_token, {
+      //new oktokit(
       throttle: {
         onRateLimit: (retryAfter, options) => {
           console.warn(
@@ -47,15 +58,23 @@ async function run() {
         }
       }
     });
-    let rel = await release(config, new GitHubReleaser(gh));
+    //);
+    const rel = await release(config, new GitHubReleaser(gh));
     if (config.input_files) {
       const files = paths(config.input_files);
       if (files.length == 0) {
         console.warn(`🤔 ${config.input_files} not include valid file.`);
       }
+      const currentAsserts = rel.assets;
       await Promise.all(
         files.map(async path => {
-          await upload(gh, rel.upload_url, path);
+          await upload(
+            config,
+            gh,
+            uploadUrl(rel.upload_url),
+            path,
+            currentAsserts
+          );
         })
       ).catch(error => {
         throw error;
