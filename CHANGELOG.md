@@ -1,3 +1,7 @@
+## 0.1.10
+
+- fixed error message formatting for file uploads
+
 ## 0.1.9
 
 - add support for linking release to GitHub discussion [#136](https://github.com/softprops/action-gh-release/pull/136)
