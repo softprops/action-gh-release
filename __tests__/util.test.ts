@@ -5,7 +5,7 @@ import {
   parseConfig,
   parseInputFiles,
   unmatchedPatterns,
-  uploadUrl
+  uploadUrl,
 } from "../src/util";
 import * as assert from "assert";
 
@@ -49,7 +49,8 @@ describe("util", () => {
           input_files: [],
           input_name: undefined,
           input_tag_name: undefined,
-          input_target_commitish: undefined
+          input_target_commitish: undefined,
+          input_discussion_category_name: undefined,
         })
       );
     });
@@ -67,7 +68,8 @@ describe("util", () => {
           input_files: [],
           input_name: undefined,
           input_tag_name: undefined,
-          input_target_commitish: undefined
+          input_target_commitish: undefined,
+          input_discussion_category_name: undefined,
         })
       );
     });
@@ -85,7 +87,8 @@ describe("util", () => {
           input_files: [],
           input_name: undefined,
           input_tag_name: undefined,
-          input_target_commitish: undefined
+          input_target_commitish: undefined,
+          input_discussion_category_name: undefined,
         })
       );
     });
@@ -104,14 +107,15 @@ describe("util", () => {
         input_name: undefined,
         input_tag_name: undefined,
         input_fail_on_unmatched_files: false,
-        input_target_commitish: undefined
+        input_target_commitish: undefined,
+        input_discussion_category_name: undefined,
       });
     });
 
     it("parses basic config with commitish", () => {
       assert.deepStrictEqual(
         parseConfig({
-          INPUT_TARGET_COMMITISH: "affa18ef97bc9db20076945705aba8c516139abd"
+          INPUT_TARGET_COMMITISH: "affa18ef97bc9db20076945705aba8c516139abd",
         }),
         {
           github_ref: "",
@@ -125,7 +129,30 @@ describe("util", () => {
           input_name: undefined,
           input_tag_name: undefined,
           input_fail_on_unmatched_files: false,
-          input_target_commitish: "affa18ef97bc9db20076945705aba8c516139abd"
+          input_target_commitish: "affa18ef97bc9db20076945705aba8c516139abd",
+          input_discussion_category_name: undefined,
+        }
+      );
+    });
+    it("supports discussion category names", () => {
+      assert.deepStrictEqual(
+        parseConfig({
+          INPUT_DISCUSSION_CATEGORY_NAME: "releases",
+        }),
+        {
+          github_ref: "",
+          github_repository: "",
+          github_token: "",
+          input_body: undefined,
+          input_body_path: undefined,
+          input_draft: undefined,
+          input_prerelease: undefined,
+          input_files: [],
+          input_name: undefined,
+          input_tag_name: undefined,
+          input_fail_on_unmatched_files: false,
+          input_target_commitish: undefined,
+          input_discussion_category_name: "releases",
         }
       );
     });
@@ -135,7 +162,7 @@ describe("util", () => {
           INPUT_DRAFT: "false",
           INPUT_PRERELEASE: "true",
           GITHUB_TOKEN: "env-token",
-          INPUT_TOKEN: "input-token"
+          INPUT_TOKEN: "input-token",
         }),
         {
           github_ref: "",
@@ -149,7 +176,8 @@ describe("util", () => {
           input_name: undefined,
           input_tag_name: undefined,
           input_fail_on_unmatched_files: false,
-          input_target_commitish: undefined
+          input_target_commitish: undefined,
+          input_discussion_category_name: undefined,
         }
       );
     });
@@ -158,7 +186,7 @@ describe("util", () => {
         parseConfig({
           INPUT_DRAFT: "false",
           INPUT_PRERELEASE: "true",
-          INPUT_TOKEN: "input-token"
+          INPUT_TOKEN: "input-token",
         }),
         {
           github_ref: "",
@@ -172,7 +200,8 @@ describe("util", () => {
           input_name: undefined,
           input_tag_name: undefined,
           input_fail_on_unmatched_files: false,
-          input_target_commitish: undefined
+          input_target_commitish: undefined,
+          input_discussion_category_name: undefined,
         }
       );
     });
@@ -180,7 +209,7 @@ describe("util", () => {
       assert.deepStrictEqual(
         parseConfig({
           INPUT_DRAFT: "false",
-          INPUT_PRERELEASE: "true"
+          INPUT_PRERELEASE: "true",
         }),
         {
           github_ref: "",
@@ -194,7 +223,8 @@ describe("util", () => {
           input_name: undefined,
           input_tag_name: undefined,
           input_fail_on_unmatched_files: false,
-          input_target_commitish: undefined
+          input_target_commitish: undefined,
+          input_discussion_category_name: undefined,
         }
       );
     });
