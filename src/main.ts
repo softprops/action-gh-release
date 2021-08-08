@@ -32,10 +32,10 @@ async function run() {
       }
     }
 
-    const oktokit = GitHub.plugin(
-      require("@octokit/plugin-throttling"),
-      require("@octokit/plugin-retry")
-    );
+    // const oktokit = GitHub.plugin(
+    //   require("@octokit/plugin-throttling"),
+    //   require("@octokit/plugin-retry")
+    // );
 
     const gh = getOctokit(config.github_token, {
       //new oktokit(
@@ -67,7 +67,7 @@ async function run() {
       }
       await Promise.all(
         files.map(async path => {
-          await upload(gh, uploadUrl(rel.upload_url), path);
+          await upload(config.github_token, uploadUrl(rel.upload_url), path);
         })
       ).catch(error => {
         throw error;

@@ -128,7 +128,7 @@ export const mimeOrDefault = (path: string): string => {
 };
 
 export const upload = async (
-  gh: GitHub,
+  ghToken: string,
   url: string,
   path: string
 ): Promise<any> => {
@@ -141,7 +141,7 @@ export const upload = async (
     headers: {
       "content-length": `${size}`,
       "content-type": mime,
-      authorization: `${gh.auth}`
+      authorization: `token ${ghToken}`
     },
     method: "POST",
     body
@@ -150,6 +150,11 @@ export const upload = async (
   console.log(resp.status);
   const json = await resp.json();
   console.log(`body`, json);
+  if (resp.status !== 201) {
+    throw new Error(
+      "failed to upload release asset ${name}. recieved status code ${resp.status}\n${json}"
+    );
+  }
   return json;
 
   // return await gh.rest.repos.uploadReleaseAsset({
