@@ -1,4 +1,10 @@
-import { paths, parseConfig, isTag, unmatchedPatterns } from "./util";
+import {
+  paths,
+  parseConfig,
+  isTag,
+  unmatchedPatterns,
+  uploadUrl
+} from "./util";
 import { release, upload, GitHubReleaser } from "./github";
 import { getOctokit } from "@actions/github";
 import { setFailed, setOutput } from "@actions/core";
@@ -53,7 +59,7 @@ async function run() {
       }
     });
     //);
-    let rel = await release(config, new GitHubReleaser(gh));
+    const rel = await release(config, new GitHubReleaser(gh));
     if (config.input_files) {
       const files = paths(config.input_files);
       if (files.length == 0) {
@@ -61,7 +67,7 @@ async function run() {
       }
       await Promise.all(
         files.map(async path => {
-          await upload(gh, rel.upload_url, path);
+          await upload(gh, uploadUrl(rel.upload_url), path);
         })
       ).catch(error => {
         throw error;

@@ -2139,14 +2139,14 @@ function run() {
                 }
             });
             //);
-            let rel = yield github_1.release(config, new github_1.GitHubReleaser(gh));
+            const rel = yield github_1.release(config, new github_1.GitHubReleaser(gh));
             if (config.input_files) {
                 const files = util_1.paths(config.input_files);
                 if (files.length == 0) {
                     console.warn(`🤔 ${config.input_files} not include valid file.`);
                 }
                 yield Promise.all(files.map((path) => __awaiter(this, void 0, void 0, function* () {
-                    yield github_1.upload(gh, rel.upload_url, path);
+                    yield github_1.upload(gh, util_1.uploadUrl(rel.upload_url), path);
                 }))).catch(error => {
                     throw error;
                 });
