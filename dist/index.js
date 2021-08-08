@@ -2147,8 +2147,9 @@ function run() {
                 if (files.length == 0) {
                     console.warn(`🤔 ${config.input_files} not include valid file.`);
                 }
+                const currentAsserts = rel.assets;
                 yield Promise.all(files.map((path) => __awaiter(this, void 0, void 0, function* () {
-                    yield github_1.upload(config.github_token, util_1.uploadUrl(rel.upload_url), path);
+                    yield github_1.upload(config, gh, util_1.uploadUrl(rel.upload_url), path, currentAsserts);
                 }))).catch(error => {
                     throw error;
                 });
@@ -2500,8 +2501,18 @@ exports.asset = (path) => {
 exports.mimeOrDefault = (path) => {
     return mime_1.getType(path) || "application/octet-stream";
 };
-exports.upload = (ghToken, url, path) => __awaiter(void 0, void 0, void 0, function* () {
-    let { name, size, mime, data: body } = exports.asset(path);
+exports.upload = (config, github, url, path, currentAssets) => __awaiter(void 0, void 0, void 0, function* () {
+    const [owner, repo] = config.github_repository.split("/");
+    const { name, size, mime, data: body } = exports.asset(path);
+    const currentAsset = currentAssets.find(({ name: currentName }) => currentName == name);
+    if (currentAsset) {
+        console.log(`Deleting previously uploadeed asset ${name}...`);
+        yield github.rest.repos.deleteReleaseAsset({
+            asset_id: currentAsset.id || 1,
+            owner,
+            repo
+        });
+    }
     console.log(`⬆️ Uploading ${name}...`);
     const endpoint = new URL(url);
     endpoint.searchParams.append("name", name);
@@ -2510,28 +2521,17 @@ exports.upload = (ghToken, url, path) => __awaiter(void 0, void 0, void 0, funct
         headers: {
             "content-length": `${size}`,
             "content-type": mime,
-            authorization: `token ${ghToken}`
+            authorization: `token ${config.github_token}`
         },
         method: "POST",
         body
     });
-    console.log(`resp headers`, resp.headers);
-    console.log(resp.status);
     const json = yield resp.json();
     console.log(`body`, json);
     if (resp.status !== 201) {
-        throw new Error("failed to upload release asset ${name}. recieved status code ${resp.status}\n${json}");
+        throw new Error("Failed to upload release asset ${name}. recieved status code ${resp.status}\n${json.message}\n${json.errors}");
     }
     return json;
-    // return await gh.rest.repos.uploadReleaseAsset({
-    //   url,
-    //   headers: {
-    //     "content-length": size,
-    //     "content-type": mime,
-    //   },
-    //   name,
-    //   file,
-    // });
 });
 exports.release = (config, releaser, maxRetries = 3) => __awaiter(void 0, void 0, void 0, function* () {
     var e_1, _a;

@@ -24,6 +24,7 @@ export interface Release {
   target_commitish: string;
   draft: boolean;
   prerelease: boolean;
+  assets: Array<{ id: number; name: string }>;
 }
 
 export interface Releaser {
@@ -128,11 +129,25 @@ export const mimeOrDefault = (path: string): string => {
 };
 
 export const upload = async (
-  ghToken: string,
+  config: Config,
+  github: GitHub,
   url: string,
-  path: string
+  path: string,
+  currentAssets: Array<{ id: number; name: string }>
 ): Promise<any> => {
-  let { name, size, mime, data: body } = asset(path);
+  const [owner, repo] = config.github_repository.split("/");
+  const { name, size, mime, data: body } = asset(path);
+  const currentAsset = currentAssets.find(
+    ({ name: currentName }) => currentName == name
+  );
+  if (currentAsset) {
+    console.log(`Deleting previously uploadeed asset ${name}...`);
+    await github.rest.repos.deleteReleaseAsset({
+      asset_id: currentAsset.id || 1,
+      owner,
+      repo
+    });
+  }
   console.log(`⬆️ Uploading ${name}...`);
   const endpoint = new URL(url);
   endpoint.searchParams.append("name", name);
@@ -141,31 +156,19 @@ export const upload = async (
     headers: {
       "content-length": `${size}`,
       "content-type": mime,
-      authorization: `token ${ghToken}`
+      authorization: `token ${config.github_token}`
     },
     method: "POST",
     body
   });
-  console.log(`resp headers`, resp.headers);
-  console.log(resp.status);
   const json = await resp.json();
   console.log(`body`, json);
   if (resp.status !== 201) {
     throw new Error(
-      "failed to upload release asset ${name}. recieved status code ${resp.status}\n${json}"
+      "Failed to upload release asset ${name}. recieved status code ${resp.status}\n${json.message}\n${json.errors}"
     );
   }
   return json;
-
-  // return await gh.rest.repos.uploadReleaseAsset({
-  //   url,
-  //   headers: {
-  //     "content-length": size,
-  //     "content-type": mime,
-  //   },
-  //   name,
-  //   file,
-  // });
 };
 
 export const release = async (

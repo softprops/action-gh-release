@@ -65,9 +65,16 @@ async function run() {
       if (files.length == 0) {
         console.warn(`🤔 ${config.input_files} not include valid file.`);
       }
+      const currentAsserts = rel.assets;
       await Promise.all(
         files.map(async path => {
-          await upload(config.github_token, uploadUrl(rel.upload_url), path);
+          await upload(
+            config,
+            gh,
+            uploadUrl(rel.upload_url),
+            path,
+            currentAsserts
+          );
         })
       ).catch(error => {
         throw error;
