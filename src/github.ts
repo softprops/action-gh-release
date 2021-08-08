@@ -43,6 +43,7 @@ export interface Releaser {
     draft: boolean | undefined;
     prerelease: boolean | undefined;
     target_commitish: string | undefined;
+    discussion_category_name: string | undefined;
   }): Promise<{ data: Release }>;
 
   updateRelease(params: {
@@ -55,6 +56,7 @@ export interface Releaser {
     body: string | undefined;
     draft: boolean | undefined;
     prerelease: boolean | undefined;
+    discussion_category_name: string | undefined;
   }): Promise<{ data: Release }>;
 
   allReleases(params: {
@@ -86,6 +88,7 @@ export class GitHubReleaser implements Releaser {
     draft: boolean | undefined;
     prerelease: boolean | undefined;
     target_commitish: string | undefined;
+    discussion_category_name: string | undefined;
   }): Promise<{ data: Release }> {
     return this.github.rest.repos.createRelease(params);
   }
@@ -100,6 +103,7 @@ export class GitHubReleaser implements Releaser {
     body: string | undefined;
     draft: boolean | undefined;
     prerelease: boolean | undefined;
+    discussion_category_name: string | undefined;
   }): Promise<{ data: Release }> {
     return this.github.rest.repos.updateRelease(params);
   }
@@ -185,6 +189,8 @@ export const release = async (
     (isTag(config.github_ref)
       ? config.github_ref.replace("refs/tags/", "")
       : "");
+
+  const discussion_category_name = config.input_discussion_category_name;
   try {
     // you can't get a an existing draft by tag
     // so we must find one in the list of all releases
@@ -246,7 +252,8 @@ export const release = async (
       name,
       body,
       draft,
-      prerelease
+      prerelease,
+      discussion_category_name
     });
     return release.data;
   } catch (error) {
@@ -273,7 +280,8 @@ export const release = async (
           body,
           draft,
           prerelease,
-          target_commitish
+          target_commitish,
+          discussion_category_name
         });
         return release.data;
       } catch (error) {
