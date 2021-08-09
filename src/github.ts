@@ -271,7 +271,7 @@ export const release = async (
         commitMessage = ` using commit "${target_commitish}"`;
       }
       console.log(
-        `👩‍🏭 Creating new GitHub release for tag ${tag_name}${commitMessage}...`
+        `👩‍🏭 Creating new GitHub release in ${owner}/${repo} for tag ${tag_name}${commitMessage}...`
       );
       try {
         let release = await releaser.createRelease({
@@ -291,7 +291,7 @@ export const release = async (
         console.log(
           `⚠️ GitHub release failed with status: ${
             error.status
-          }, retrying... (${maxRetries - 1} retries remaining)`
+          },retrying... (${maxRetries - 1} retries remaining)`
         );
         return release(config, releaser, maxRetries - 1);
       }
