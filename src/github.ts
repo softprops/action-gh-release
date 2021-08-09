@@ -291,7 +291,7 @@ export const release = async (
         console.log(
           `⚠️ GitHub release failed with status: ${
             error.status
-          }\n${JSON.stringify(error.errors)}\nretrying... (${maxRetries -
+          }\n${JSON.stringify(error)}\nretrying... (${maxRetries -
             1} retries remaining)`
         );
         return release(config, releaser, maxRetries - 1);
