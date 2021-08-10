@@ -11,7 +11,7 @@ import * as assert from "assert";
 
 describe("util", () => {
   describe("uploadUrl", () => {
-    it("stripts template", () => {
+    it("strips template", () => {
       assert.equal(
         uploadUrl(
           "https://uploads.github.com/repos/octocat/Hello-World/releases/1/assets{?name,label}"
@@ -95,21 +95,33 @@ describe("util", () => {
   });
   describe("parseConfig", () => {
     it("parses basic config", () => {
-      assert.deepStrictEqual(parseConfig({}), {
-        github_ref: "",
-        github_repository: "",
-        github_token: "",
-        input_body: undefined,
-        input_body_path: undefined,
-        input_draft: undefined,
-        input_prerelease: undefined,
-        input_files: [],
-        input_name: undefined,
-        input_tag_name: undefined,
-        input_fail_on_unmatched_files: false,
-        input_target_commitish: undefined,
-        input_discussion_category_name: undefined
-      });
+      assert.deepStrictEqual(
+        parseConfig({
+          // note: inputs declared in actions.yml, even when declared not required,
+          // are still provided by the actions runtime env as empty strings instead of
+          // the normal absent env value one would expect. this breaks things
+          // as an empty string !== undefined in terms of what we pass to the api
+          // so we cover that in a test case here to ensure undefined values are actually
+          // resolved as undefined and not empty strings
+          INPUT_TARGET_COMMITISH: "",
+          INPUT_DISCUSSION_CATEGORY_NAME: ""
+        }),
+        {
+          github_ref: "",
+          github_repository: "",
+          github_token: "",
+          input_body: undefined,
+          input_body_path: undefined,
+          input_draft: undefined,
+          input_prerelease: undefined,
+          input_files: [],
+          input_name: undefined,
+          input_tag_name: undefined,
+          input_fail_on_unmatched_files: false,
+          input_target_commitish: undefined,
+          input_discussion_category_name: undefined
+        }
+      );
     });
 
     it("parses basic config with commitish", () => {
