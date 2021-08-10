@@ -63,8 +63,9 @@ export const parseConfig = (env: Env): Config => {
       ? env.INPUT_PRERELEASE == "true"
       : undefined,
     input_fail_on_unmatched_files: env.INPUT_FAIL_ON_UNMATCHED_FILES == "true",
-    input_target_commitish: env.INPUT_TARGET_COMMITISH,
-    input_discussion_category_name: env.INPUT_DISCUSSION_CATEGORY_NAME
+    input_target_commitish: env.INPUT_TARGET_COMMITISH || undefined,
+    input_discussion_category_name:
+      env.INPUT_DISCUSSION_CATEGORY_NAME || undefined
   };
 };
 
