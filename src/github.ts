@@ -207,11 +207,13 @@ export const release = async (
         }
       }
     }
+    console.log(`fetching existing release for tag ${owner}/${repo}/${tag}`);
     let existingRelease = await releaser.getReleaseByTag({
       owner,
       repo,
       tag,
     });
+    console.log(`found release ${existingRelease.data.id}`);
 
     const release_id = existingRelease.data.id;
     let target_commitish: string;
@@ -246,7 +248,7 @@ export const release = async (
         : existingRelease.data.prerelease;
 
     console.log(
-      `attemping update of release_id ${release_id} tag_name ${tag_name} target_commitish ${target_commitish}`
+      `attemping update of release_id ${release_id} tag_name ${tag_name} target_commitish ${target_commitish} discussion_category_name ${discussion_category_name}`
     );
     const release = await releaser.updateRelease({
       owner,
@@ -260,6 +262,7 @@ export const release = async (
       prerelease,
       discussion_category_name,
     });
+    console.log(`updated release ${release_id}`);
     return release.data;
   } catch (error) {
     if (error.status === 404) {
