@@ -42,8 +42,8 @@ export const parseInputFiles = (files: string): string[] => {
     (acc, line) =>
       acc
         .concat(line.split(","))
-        .filter(pat => pat)
-        .map(pat => pat.trim()),
+        .filter((pat) => pat)
+        .map((pat) => pat.trim()),
     []
   );
 };
@@ -63,15 +63,16 @@ export const parseConfig = (env: Env): Config => {
       ? env.INPUT_PRERELEASE == "true"
       : undefined,
     input_fail_on_unmatched_files: env.INPUT_FAIL_ON_UNMATCHED_FILES == "true",
-    input_target_commitish: env.INPUT_TARGET_COMMITISH,
-    input_discussion_category_name: env.INPUT_DISCUSSION_CATEGORY_NAME
+    input_target_commitish: env.INPUT_TARGET_COMMITISH || undefined,
+    input_discussion_category_name:
+      env.INPUT_DISCUSSION_CATEGORY_NAME || undefined,
   };
 };
 
 export const paths = (patterns: string[]): string[] => {
   return patterns.reduce((acc: string[], pattern: string): string[] => {
     return acc.concat(
-      glob.sync(pattern).filter(path => lstatSync(path).isFile())
+      glob.sync(pattern).filter((path) => lstatSync(path).isFile())
     );
   }, []);
 };
@@ -79,7 +80,7 @@ export const paths = (patterns: string[]): string[] => {
 export const unmatchedPatterns = (patterns: string[]): string[] => {
   return patterns.reduce((acc: string[], pattern: string): string[] => {
     return acc.concat(
-      glob.sync(pattern).filter(path => lstatSync(path).isFile()).length == 0
+      glob.sync(pattern).filter((path) => lstatSync(path).isFile()).length == 0
         ? [pattern]
         : []
     );
