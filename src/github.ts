@@ -263,6 +263,8 @@ export const release = async (
     return release.data;
   } catch (error) {
     if (error.status === 404) {
+      console.log(`update failed with 404`);
+      console.log(JSON.stringify(error.response.data.errors));
       const tag_name = tag;
       const name = config.input_name || tag;
       const body = releaseBody(config);
