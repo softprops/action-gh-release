@@ -250,6 +250,18 @@ export const release = async (
     console.log(
       `attemping update of release_id ${release_id} tag_name ${tag_name} target_commitish ${target_commitish} discussion_category_name ${discussion_category_name}`
     );
+    console.log({
+      owner,
+      repo,
+      release_id,
+      tag_name,
+      target_commitish,
+      name,
+      body,
+      draft,
+      prerelease,
+      discussion_category_name,
+    });
     const release = await releaser.updateRelease({
       owner,
       repo,
@@ -281,6 +293,18 @@ export const release = async (
       console.log(
         `👩‍🏭 Creating new GitHub release for tag ${tag_name}${commitMessage}...`
       );
+
+      console.log({
+        owner,
+        repo,
+        tag_name,
+        name,
+        body,
+        draft,
+        prerelease,
+        target_commitish,
+        discussion_category_name,
+      });
       try {
         let release = await releaser.createRelease({
           owner,
