@@ -124,7 +124,7 @@ export const asset = (path: string): ReleaseAsset => {
     name: basename(path),
     mime: mimeOrDefault(path),
     size: lstatSync(path).size,
-    data: readFileSync(path)
+    data: readFileSync(path),
   };
 };
 
@@ -149,7 +149,7 @@ export const upload = async (
     await github.rest.repos.deleteReleaseAsset({
       asset_id: currentAsset.id || 1,
       owner,
-      repo
+      repo,
     });
   }
   console.log(`⬆️ Uploading ${name}...`);
@@ -159,10 +159,10 @@ export const upload = async (
     headers: {
       "content-length": `${size}`,
       "content-type": mime,
-      authorization: `token ${config.github_token}`
+      authorization: `token ${config.github_token}`,
     },
     method: "POST",
-    body
+    body,
   });
   const json = await resp.json();
   if (resp.status !== 201) {
@@ -199,9 +199,9 @@ export const release = async (
     if (config.input_draft) {
       for await (const response of releaser.allReleases({
         owner,
-        repo
+        repo,
       })) {
-        let release = response.data.find(release => release.tag_name === tag);
+        let release = response.data.find((release) => release.tag_name === tag);
         if (release) {
           return release;
         }
@@ -210,7 +210,7 @@ export const release = async (
     let existingRelease = await releaser.getReleaseByTag({
       owner,
       repo,
-      tag
+      tag,
     });
 
     const release_id = existingRelease.data.id;
@@ -245,6 +245,9 @@ export const release = async (
         ? config.input_prerelease
         : existingRelease.data.prerelease;
 
+    console.log(
+      `attemping update of release_id ${release_id} tag_name ${tag_name} target_commitish ${target_commitish}`
+    );
     const release = await releaser.updateRelease({
       owner,
       repo,
@@ -255,7 +258,7 @@ export const release = async (
       body,
       draft,
       prerelease,
-      discussion_category_name
+      discussion_category_name,
     });
     return release.data;
   } catch (error) {
@@ -283,7 +286,7 @@ export const release = async (
           draft,
           prerelease,
           target_commitish,
-          discussion_category_name
+          discussion_category_name,
         });
         return release.data;
       } catch (error) {
