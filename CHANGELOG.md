@@ -1,3 +1,7 @@
+## 0.1.13
+
+- fix issue with multiple runs concatenating release bodies [#145](https://github.com/softprops/action-gh-release/pull/145)
+
 ## 0.1.12
 
 - fix bug leading to empty strings subsituted for inputs users don't provide breaking api calls [#144](https://github.com/softprops/action-gh-release/pull/144)
