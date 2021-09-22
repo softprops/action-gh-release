@@ -208,4 +208,15 @@ The following `step.env` keys are allowed as a fallback but deprecated in favor 
 
 > **⚠️ Note:** This action was previously implemented as a Docker container, limiting its use to GitHub Actions Linux virtual environments only. With recent releases, we now support cross platform usage. You'll need to remove the `docker://` prefix in these versions
 
+### Permissions
+
+This Action requires the following permissions on the GitHub integration token:
+
+```yaml
+permissions:
+  contents: write
+```
+
+[GitHub token permissions](https://docs.github.com/en/actions/security-guides/automatic-token-authentication#permissions-for-the-github_token) can be set for an individual job, workflow, or for Actions as a whole.
+
 Doug Tangren (softprops) 2019
