@@ -34,6 +34,12 @@ export interface Releaser {
     tag: string;
   }): Promise<{ data: Release }>;
 
+  deleteTag(params: {
+    owner: string;
+    repo: string;
+    ref: string;
+  }): void;
+
   createRelease(params: {
     owner: string;
     repo: string;
@@ -77,6 +83,14 @@ export class GitHubReleaser implements Releaser {
     tag: string;
   }): Promise<{ data: Release }> {
     return this.github.rest.repos.getReleaseByTag(params);
+  }
+
+  deleteTag(params: {
+    owner: string;
+    repo: string;
+    ref: string;
+  }): void {
+    return this.github.rest.git.deleteRef(params);
   }
 
   createRelease(params: {
