@@ -49,6 +49,7 @@ describe("util", () => {
           input_files: [],
           input_name: undefined,
           input_tag_name: undefined,
+          input_move_existing_tag: undefined,
           input_target_commitish: undefined,
           input_discussion_category_name: undefined
         })
@@ -68,6 +69,7 @@ describe("util", () => {
           input_files: [],
           input_name: undefined,
           input_tag_name: undefined,
+          input_move_existing_tag: undefined,
           input_target_commitish: undefined,
           input_discussion_category_name: undefined
         })
@@ -87,6 +89,7 @@ describe("util", () => {
           input_files: [],
           input_name: undefined,
           input_tag_name: undefined,
+          input_move_existing_tag: undefined,
           input_target_commitish: undefined,
           input_discussion_category_name: undefined
         })
@@ -117,6 +120,7 @@ describe("util", () => {
           input_files: [],
           input_name: undefined,
           input_tag_name: undefined,
+          input_move_existing_tag: undefined,
           input_fail_on_unmatched_files: false,
           input_target_commitish: undefined,
           input_discussion_category_name: undefined
@@ -140,6 +144,7 @@ describe("util", () => {
           input_files: [],
           input_name: undefined,
           input_tag_name: undefined,
+          input_move_existing_tag: undefined,
           input_fail_on_unmatched_files: false,
           input_target_commitish: "affa18ef97bc9db20076945705aba8c516139abd",
           input_discussion_category_name: undefined
@@ -162,6 +167,7 @@ describe("util", () => {
           input_files: [],
           input_name: undefined,
           input_tag_name: undefined,
+          input_move_existing_tag: undefined,
           input_fail_on_unmatched_files: false,
           input_target_commitish: undefined,
           input_discussion_category_name: "releases"
@@ -187,6 +193,7 @@ describe("util", () => {
           input_files: [],
           input_name: undefined,
           input_tag_name: undefined,
+          input_move_existing_tag: undefined,
           input_fail_on_unmatched_files: false,
           input_target_commitish: undefined,
           input_discussion_category_name: undefined
@@ -211,6 +218,7 @@ describe("util", () => {
           input_files: [],
           input_name: undefined,
           input_tag_name: undefined,
+          input_move_existing_tag: undefined,
           input_fail_on_unmatched_files: false,
           input_target_commitish: undefined,
           input_discussion_category_name: undefined
@@ -234,6 +242,30 @@ describe("util", () => {
           input_files: [],
           input_name: undefined,
           input_tag_name: undefined,
+          input_move_existing_tag: undefined,
+          input_fail_on_unmatched_files: false,
+          input_target_commitish: undefined,
+          input_discussion_category_name: undefined
+        }
+      );
+    });
+    it("parses basic config with input_move_existing_tag", () => {
+      assert.deepStrictEqual(
+        parseConfig({
+          INPUT_MOVE_EXISTING_TAG: "true",
+        }),
+        {
+          github_ref: "",
+          github_repository: "",
+          github_token: "",
+          input_body: undefined,
+          input_body_path: undefined,
+          input_draft: undefined,
+          input_prerelease: undefined,
+          input_files: [],
+          input_name: undefined,
+          input_tag_name: undefined,
+          input_move_existing_tag: undefined,
           input_fail_on_unmatched_files: false,
           input_target_commitish: undefined,
           input_discussion_category_name: undefined

@@ -8,6 +8,7 @@ export interface Config {
   // user provided
   input_name?: string;
   input_tag_name?: string;
+  input_move_existing_tag?: boolean;
   input_repository?: string;
   input_body?: string;
   input_body_path?: string;
@@ -55,6 +56,7 @@ export const parseConfig = (env: Env): Config => {
     github_repository: env.INPUT_REPOSITORY || env.GITHUB_REPOSITORY || "",
     input_name: env.INPUT_NAME,
     input_tag_name: env.INPUT_TAG_NAME?.trim(),
+    input_move_existing_tag: env.INPUT_MOVE_EXISTING_TAG ? env.INPUT_MOVE_EXISTING_TAG === "true" : undefined,
     input_body: env.INPUT_BODY,
     input_body_path: env.INPUT_BODY_PATH,
     input_files: parseInputFiles(env.INPUT_FILES || ""),
