@@ -167,7 +167,7 @@ export const upload = async (
   const json = await resp.json();
   if (resp.status !== 201) {
     throw new Error(
-      `Failed to upload release asset ${name}. recieved status code ${
+      `Failed to upload release asset ${name}. received status code ${
         resp.status
       }\n${json.message}\n${JSON.stringify(json.errors)}`
     );
