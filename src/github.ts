@@ -233,9 +233,34 @@ export const release = async (
       config.input_target_commitish &&
       config.input_target_commitish !== existingRelease.data.target_commitish
     ) {
-      console.log(
-        `Updating commit from "${existingRelease.data.target_commitish}" to "${config.input_target_commitish}"`
-      );
+
+      if (config.input_move_existing_tag) {
+        console.log(
+          `Deleting and recreating tag "${tag}". Moving it from "${existingRelease.data.target_commitish}" to "${config.input_target_commitish}"`
+        );
+        try {
+          await releaser.deleteTag({
+            owner,
+            repo,
+            ref: tag,
+          });
+        } catch (error) {
+          console.log(
+            `⚠️ Failed to delete tag "${tag}" with status: ${
+              error.status
+            }\n${JSON.stringify(
+              error.response.data.errors
+            )}\nretrying... (${maxRetries - 1} retries remaining)`
+          );
+          return release(config, releaser, maxRetries - 1);
+        }
+      } else if (existingRelease.data.target_commitish != undefined) {
+        console.log(
+          `⚠️ Release tag "${tag}" already points at "${existingRelease.data.target_commitish}"; will not update the tag to point at target_commitish "${config.input_target_commitish}". \
+          Set move_existing_tag to true if you want to delete and recreate the "${tag}" existing tag at the new target_commitish.`
+        );
+      }
+
       target_commitish = config.input_target_commitish;
     } else {
       target_commitish = existingRelease.data.target_commitish;
