@@ -17,6 +17,7 @@ export interface Config {
   input_fail_on_unmatched_files?: boolean;
   input_target_commitish?: string;
   input_discussion_category_name?: string;
+  input_generate_release_notes?: boolean;
 }
 
 export const uploadUrl = (url: string): string => {
@@ -65,7 +66,8 @@ export const parseConfig = (env: Env): Config => {
     input_fail_on_unmatched_files: env.INPUT_FAIL_ON_UNMATCHED_FILES == "true",
     input_target_commitish: env.INPUT_TARGET_COMMITISH || undefined,
     input_discussion_category_name:
-      env.INPUT_DISCUSSION_CATEGORY_NAME || undefined
+      env.INPUT_DISCUSSION_CATEGORY_NAME || undefined,
+    input_generate_release_notes: env.INPUT_GENERATE_RELEASE_NOTES == "true"
   };
 };
 
