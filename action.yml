@@ -40,6 +40,9 @@ inputs:
   discussion_category_name:
     description: "If specified, a discussion of the specified category is created and linked to the release. The value must be a category that already exists in the repository. If there is already a discussion linked to the release, this parameter is ignored."
     required: false
+  generate_release_notes:
+    description: "Whether to automatically generate the name and body for this release. If name is specified, the specified name will be used; otherwise, a name will be automatically generated. If body is specified, the body will be pre-pended to the automatically generated notes."
+    required: false
 env:
   "GITHUB_TOKEN": "As provided by Github Actions"
 outputs:

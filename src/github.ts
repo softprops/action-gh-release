@@ -44,6 +44,7 @@ export interface Releaser {
     prerelease: boolean | undefined;
     target_commitish: string | undefined;
     discussion_category_name: string | undefined;
+    generate_release_notes: boolean | undefined;
   }): Promise<{ data: Release }>;
 
   updateRelease(params: {
@@ -57,6 +58,7 @@ export interface Releaser {
     draft: boolean | undefined;
     prerelease: boolean | undefined;
     discussion_category_name: string | undefined;
+    generate_release_notes: boolean | undefined;
   }): Promise<{ data: Release }>;
 
   allReleases(params: {
@@ -89,6 +91,7 @@ export class GitHubReleaser implements Releaser {
     prerelease: boolean | undefined;
     target_commitish: string | undefined;
     discussion_category_name: string | undefined;
+    generate_release_notes: boolean | undefined;
   }): Promise<{ data: Release }> {
     return this.github.rest.repos.createRelease(params);
   }
@@ -104,6 +107,7 @@ export class GitHubReleaser implements Releaser {
     draft: boolean | undefined;
     prerelease: boolean | undefined;
     discussion_category_name: string | undefined;
+    generate_release_notes: boolean | undefined;
   }): Promise<{ data: Release }> {
     return this.github.rest.repos.updateRelease(params);
   }
@@ -193,6 +197,7 @@ export const release = async (
       : "");
 
   const discussion_category_name = config.input_discussion_category_name;
+  const generate_release_notes = config.input_generate_release_notes;
   try {
     // you can't get a an existing draft by tag
     // so we must find one in the list of all releases
@@ -254,7 +259,8 @@ export const release = async (
       body,
       draft,
       prerelease,
-      discussion_category_name
+      discussion_category_name,
+      generate_release_notes
     });
     return release.data;
   } catch (error) {
@@ -282,7 +288,8 @@ export const release = async (
           draft,
           prerelease,
           target_commitish,
-          discussion_category_name
+          discussion_category_name,
+          generate_release_notes
         });
         return release.data;
       } catch (error) {
