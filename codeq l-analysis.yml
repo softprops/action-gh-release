@@ -1,0 +1,15 @@
+variables1
+-options "$ var"1
+dono't do:
+ARGS =--option1 $var--option2 $var2
+option 3 "$var"
+C! ºARGS:
+C! Constante\ funcion\ aleatoria
+init_array_var() {
+    local array_var=${1}
+    local count_var=${array_var}_COUNT
+    for (( i = 0; i < ${!count_var:=0}; i++ ))
+    do
+      eval ${array_var}[$i]='$'${array_var}_${i}
+    done
+}
