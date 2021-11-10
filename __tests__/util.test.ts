@@ -51,7 +51,10 @@ describe("util", () => {
           input_tag_name: undefined,
           input_target_commitish: undefined,
           input_discussion_category_name: undefined,
-          input_generate_release_notes: false
+          input_generate_release_notes: false,
+          input_retries: 0,
+          input_retry_interval: 0,
+          input_delete_on_existing: false
         })
       );
     });
@@ -71,7 +74,10 @@ describe("util", () => {
           input_tag_name: undefined,
           input_target_commitish: undefined,
           input_discussion_category_name: undefined,
-          input_generate_release_notes: false
+          input_generate_release_notes: false,
+          input_retries: 0,
+          input_retry_interval: 0,
+          input_delete_on_existing: false
         })
       );
     });
@@ -91,7 +97,10 @@ describe("util", () => {
           input_tag_name: undefined,
           input_target_commitish: undefined,
           input_discussion_category_name: undefined,
-          input_generate_release_notes: false
+          input_generate_release_notes: false,
+          input_retries: 0,
+          input_retry_interval: 0,
+          input_delete_on_existing: false
         })
       );
     });
@@ -123,7 +132,10 @@ describe("util", () => {
           input_fail_on_unmatched_files: false,
           input_target_commitish: undefined,
           input_discussion_category_name: undefined,
-          input_generate_release_notes: false
+          input_generate_release_notes: false,
+          input_retries: 0,
+          input_retry_interval: 0,
+          input_delete_on_existing: false
         }
       );
     });
@@ -147,7 +159,10 @@ describe("util", () => {
           input_fail_on_unmatched_files: false,
           input_target_commitish: "affa18ef97bc9db20076945705aba8c516139abd",
           input_discussion_category_name: undefined,
-          input_generate_release_notes: false
+          input_generate_release_notes: false,
+          input_retries: 0,
+          input_retry_interval: 0,
+          input_delete_on_existing: false
         }
       );
     });
@@ -170,7 +185,10 @@ describe("util", () => {
           input_fail_on_unmatched_files: false,
           input_target_commitish: undefined,
           input_discussion_category_name: "releases",
-          input_generate_release_notes: false
+          input_generate_release_notes: false,
+          input_retries: 0,
+          input_retry_interval: 0,
+          input_delete_on_existing: false
         }
       );
     });
@@ -194,7 +212,65 @@ describe("util", () => {
           input_fail_on_unmatched_files: false,
           input_target_commitish: undefined,
           input_discussion_category_name: undefined,
-          input_generate_release_notes: true
+          input_generate_release_notes: true,
+          input_retries: 0,
+          input_retry_interval: 0,
+          input_delete_on_existing: false
+        }
+      );
+    });
+
+    it("supports providing retry options", () => {
+      assert.deepStrictEqual(
+        parseConfig({
+          INPUT_RETRIES: "3",
+          INPUT_RETRY_INTERVAL: "1000"
+        }),
+        {
+          github_ref: "",
+          github_repository: "",
+          github_token: "",
+          input_body: undefined,
+          input_body_path: undefined,
+          input_draft: undefined,
+          input_prerelease: undefined,
+          input_files: [],
+          input_name: undefined,
+          input_tag_name: undefined,
+          input_fail_on_unmatched_files: false,
+          input_target_commitish: undefined,
+          input_discussion_category_name: undefined,
+          input_generate_release_notes: false,
+          input_retries: 3,
+          input_retry_interval: 1000,
+          input_delete_on_existing: false
+        }
+      );
+    });
+
+    it("supports deleting existing releases", () => {
+      assert.deepStrictEqual(
+        parseConfig({
+          INPUT_DELETE_ON_EXISTING: "true"
+        }),
+        {
+          github_ref: "",
+          github_repository: "",
+          github_token: "",
+          input_body: undefined,
+          input_body_path: undefined,
+          input_draft: undefined,
+          input_prerelease: undefined,
+          input_files: [],
+          input_name: undefined,
+          input_tag_name: undefined,
+          input_fail_on_unmatched_files: false,
+          input_target_commitish: undefined,
+          input_discussion_category_name: undefined,
+          input_generate_release_notes: false,
+          input_retries: 0,
+          input_retry_interval: 0,
+          input_delete_on_existing: true
         }
       );
     });
@@ -221,7 +297,10 @@ describe("util", () => {
           input_fail_on_unmatched_files: false,
           input_target_commitish: undefined,
           input_discussion_category_name: undefined,
-          input_generate_release_notes: false
+          input_generate_release_notes: false,
+          input_retries: 0,
+          input_retry_interval: 0,
+          input_delete_on_existing: false
         }
       );
     });
@@ -246,7 +325,10 @@ describe("util", () => {
           input_fail_on_unmatched_files: false,
           input_target_commitish: undefined,
           input_discussion_category_name: undefined,
-          input_generate_release_notes: false
+          input_generate_release_notes: false,
+          input_retries: 0,
+          input_retry_interval: 0,
+          input_delete_on_existing: false
         }
       );
     });
@@ -270,7 +352,10 @@ describe("util", () => {
           input_fail_on_unmatched_files: false,
           input_target_commitish: undefined,
           input_discussion_category_name: undefined,
-          input_generate_release_notes: false
+          input_generate_release_notes: false,
+          input_retries: 0,
+          input_retry_interval: 0,
+          input_delete_on_existing: false
         }
       );
     });

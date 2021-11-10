@@ -43,6 +43,15 @@ inputs:
   generate_release_notes:
     description: "Whether to automatically generate the name and body for this release. If name is specified, the specified name will be used; otherwise, a name will be automatically generated. If body is specified, the body will be pre-pended to the automatically generated notes."
     required: false
+  retries:
+    description: "The amount of times you want to try to upload a release asset. This will default to 0 which means do not retry."
+    required: false
+  retry_interval:
+    description: "The interval in millisecond between failed asset upload attempts."
+    required: false
+  delete_on_existing:
+    description: "Whether or not to delete an existing release entirely when running this action."
+    required: false
 env:
   "GITHUB_TOKEN": "As provided by Github Actions"
 outputs:
