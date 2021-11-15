@@ -1,3 +1,7 @@
+## 0.1.14
+
+- provides an new workflow input option `generate_release_notes` which when set to true will automatically generate release notes for you based on GitHub activity [#179](https://github.com/softprops/action-gh-release/pull/179). Please see the [GitHub docs for this feature](https://docs.github.com/en/repositories/releasing-projects-on-github/automatically-generated-release-notes) for more information
+
 ## 0.1.13
 
 - fix issue with multiple runs concatenating release bodies [#145](https://github.com/softprops/action-gh-release/pull/145)
