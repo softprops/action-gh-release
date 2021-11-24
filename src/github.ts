@@ -1,7 +1,7 @@
 import fetch from "node-fetch";
 import { GitHub } from "@actions/github/lib/utils";
 import { Config, isTag, releaseBody } from "./util";
-import { lstatSync, readFileSync } from "fs";
+import { statSync, readFileSync } from "fs";
 import { getType } from "mime";
 import { basename } from "path";
 
@@ -127,7 +127,7 @@ export const asset = (path: string): ReleaseAsset => {
   return {
     name: basename(path),
     mime: mimeOrDefault(path),
-    size: lstatSync(path).size,
+    size: statSync(path).size,
     data: readFileSync(path)
   };
 };
