@@ -1,5 +1,5 @@
 import * as glob from "glob";
-import { lstatSync, readFileSync } from "fs";
+import { statSync, readFileSync } from "fs";
 
 export interface Config {
   github_token: string;
@@ -74,7 +74,7 @@ export const parseConfig = (env: Env): Config => {
 export const paths = (patterns: string[]): string[] => {
   return patterns.reduce((acc: string[], pattern: string): string[] => {
     return acc.concat(
-      glob.sync(pattern).filter(path => lstatSync(path).isFile())
+      glob.sync(pattern).filter(path => statSync(path).isFile())
     );
   }, []);
 };
@@ -82,7 +82,7 @@ export const paths = (patterns: string[]): string[] => {
 export const unmatchedPatterns = (patterns: string[]): string[] => {
   return patterns.reduce((acc: string[], pattern: string): string[] => {
     return acc.concat(
-      glob.sync(pattern).filter(path => lstatSync(path).isFile()).length == 0
+      glob.sync(pattern).filter(path => statSync(path).isFile()).length == 0
         ? [pattern]
         : []
     );
