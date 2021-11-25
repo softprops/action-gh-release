@@ -197,6 +197,9 @@ The following outputs can be accessed via `${{ steps.<step-id>.outputs }}` from 
 | `url`        | String | Github.com URL for the release          |
 | `id`         | String | Release ID                              |
 | `upload_url` | String | URL for uploading assets to the release |
+| `assets`     | String | JSON array containing information about each uploaded asset, in the format given [here](https://docs.github.com/en/rest/reference/repos#upload-a-release-asset--code-samples) (minus the `uploader` field) |
+
+As an example, you can use `${{ fromJSON(steps.<step-id>.outputs.assets)[0].browser_download_url }}` to get the download URL of the first asset.
 
 #### environment variables
 
