@@ -1,11 +1,11 @@
 import fetch from "node-fetch";
-import { GitHub } from "@actions/github/lib/utils";
+import { Octokit } from "@octokit/action";
 import { Config, isTag, releaseBody } from "./util";
 import { statSync, readFileSync } from "fs";
 import { getType } from "mime";
 import { basename } from "path";
 
-type GitHub = InstanceType<typeof GitHub>;
+type GitHub = InstanceType<typeof Octokit>;
 
 export interface ReleaseAsset {
   name: string;
