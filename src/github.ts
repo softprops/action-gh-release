@@ -238,7 +238,14 @@ export const release = async (
     // body parts as a release gets updated. some users will likely want this while
     // others won't previously this was duplicating content for most which
     // no one wants
-    let body = releaseBody(config) || existingRelease.data.body || "";
+    const workflowBody = releaseBody(config) || "";
+    const existingReleaseBody = existingRelease.data.body || "";
+    let body: string;
+    if (config.input_append_body && workflowBody && existingReleaseBody) {
+      body = existingReleaseBody + "\n" + workflowBody;
+    } else {
+      body = workflowBody || existingReleaseBody;
+    }
 
     const draft =
       config.input_draft !== undefined
