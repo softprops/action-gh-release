@@ -1,4 +1,4 @@
-import fetch from "node-fetch";
+import fetch from "@adobe/node-fetch-retry";
 import { GitHub } from "@actions/github/lib/utils";
 import { Config, isTag, releaseBody } from "./util";
 import { statSync, readFileSync } from "fs";
@@ -159,7 +159,7 @@ export const upload = async (
   console.log(`⬆️ Uploading ${name}...`);
   const endpoint = new URL(url);
   endpoint.searchParams.append("name", name);
-  const resp = await fetch(endpoint, {
+  const resp = await fetch(endpoint.toString(), {
     headers: {
       "content-length": `${size}`,
       "content-type": mime,
