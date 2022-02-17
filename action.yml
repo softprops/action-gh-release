@@ -44,7 +44,7 @@ inputs:
     description: "Whether to automatically generate the name and body for this release. If name is specified, the specified name will be used; otherwise, a name will be automatically generated. If body is specified, the body will be pre-pended to the automatically generated notes."
     required: false
   append_body:
-    description: "Append existed body instead of overrites. Default is false."
+    description: "Append to existing body instead of overwriting it. Default is false."
     required: false
 env:
   "GITHUB_TOKEN": "As provided by Github Actions"
