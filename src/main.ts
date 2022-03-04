@@ -6,9 +6,9 @@ import {
   uploadUrl
 } from "./util";
 import { release, upload, GitHubReleaser } from "./github";
+import * as core from "@actions/core";
 import { getOctokit } from "@actions/github";
 import { setFailed, setOutput } from "@actions/core";
-import { GitHub, getOctokitOptions } from "@actions/github/lib/utils";
 
 import { env } from "process";
 
@@ -37,7 +37,7 @@ async function run() {
     //   require("@octokit/plugin-retry")
     // );
 
-    const gh = getOctokit(config.github_token, {
+    const gh = getOctokit(core.getInput('token'), {
       //new oktokit(
       throttle: {
         onRateLimit: (retryAfter, options) => {
