@@ -222,6 +222,14 @@ permissions:
   contents: write
 ```
 
+When used with `discussion_category_name`, additional permission is needed:
+
+```yaml
+permissions:
+  contents: write
+  discussions: write
+```
+
 [GitHub token permissions](https://docs.github.com/en/actions/security-guides/automatic-token-authentication#permissions-for-the-github_token) can be set for an individual job, workflow, or for Actions as a whole.
 
 Doug Tangren (softprops) 2019
