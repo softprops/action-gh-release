@@ -19,7 +19,9 @@ describe("github", () => {
       assert.equal(name, "bar.txt");
       assert.equal(mime, "text/plain");
       assert.equal(size, 10);
-      assert.equal(data.toString(), "release me");
+      for await (const value of data) {
+        assert.equal(value, "release me");
+      }
     });
   });
 });
