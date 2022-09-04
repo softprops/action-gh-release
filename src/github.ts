@@ -179,6 +179,50 @@ export const upload = async (
   return json;
 };
 
+const find_existing_release = async (
+  config: Config,
+  releaser: Releaser,
+  tag: string
+): Promise<Release | null> => {
+  const [owner, repo] = config.github_repository.split("/");
+
+  // you can't get a an existing draft by tag
+  // so we must find one in the list of all releases
+  if (config.input_draft) {
+    for await (const response of releaser.allReleases({
+      owner,
+      repo,
+    })) {
+      let release = response.data.find(
+        (release) => release.name === config.input_name
+      );
+      if (release) {
+        return release;
+      }
+    }
+
+    return null;
+  } else {
+    try {
+      let existingRelease = await releaser.getReleaseByTag({
+        owner,
+        repo,
+        tag,
+      });
+      return existingRelease.data;
+    } catch (error) {
+      if (error.status === 404) {
+        return null;
+      } else {
+        console.log(
+          `⚠️ Unexpected error fetching GitHub release for tag ${config.github_ref}: ${error}`
+        );
+        throw error;
+      }
+    }
+  }
+};
+
 export const release = async (
   config: Config,
   releaser: Releaser,
@@ -198,30 +242,9 @@ export const release = async (
 
   const discussion_category_name = config.input_discussion_category_name;
   const generate_release_notes = config.input_generate_release_notes;
-  try {
-    // you can't get a an existing draft by tag
-    // so we must find one in the list of all releases
-    if (config.input_draft) {
-      for await (const response of releaser.allReleases({
-        owner,
-        repo,
-      })) {
-        let release = response.data.find(
-          (release) => release.name === config.input_name
-        );
-        if (release) {
-          return release;
-        }
-      }
-    }
-    let existingRelease = (
-      await releaser.getReleaseByTag({
-        owner,
-        repo,
-        tag,
-      })
-    ).data;
 
+  const existingRelease = await find_existing_release(config, releaser, tag);
+  if (existingRelease !== null) {
     const release_id = existingRelease.id;
     let target_commitish: string;
     if (
@@ -274,51 +297,44 @@ export const release = async (
       generate_release_notes,
     });
     return release.data;
-  } catch (error) {
-    if (error.status === 404) {
-      const tag_name = tag;
-      const name = config.input_name || tag;
-      const body = releaseBody(config);
-      const draft = config.input_draft;
-      const prerelease = config.input_prerelease;
-      const target_commitish = config.input_target_commitish;
-      let commitMessage: string = "";
-      if (target_commitish) {
-        commitMessage = ` using commit "${target_commitish}"`;
-      }
+  } else {
+    const tag_name = tag;
+    const name = config.input_name || tag;
+    const body = releaseBody(config);
+    const draft = config.input_draft;
+    const prerelease = config.input_prerelease;
+    const target_commitish = config.input_target_commitish;
+    let commitMessage: string = "";
+    if (target_commitish) {
+      commitMessage = ` using commit "${target_commitish}"`;
+    }
+    console.log(
+      `👩‍🏭 Creating new GitHub release for tag ${tag_name}${commitMessage}...`
+    );
+    try {
+      let release = await releaser.createRelease({
+        owner,
+        repo,
+        tag_name,
+        name,
+        body,
+        draft,
+        prerelease,
+        target_commitish,
+        discussion_category_name,
+        generate_release_notes,
+      });
+      return release.data;
+    } catch (error) {
+      // presume a race with competing metrix runs
       console.log(
-        `👩‍🏭 Creating new GitHub release for tag ${tag_name}${commitMessage}...`
+        `⚠️ GitHub release failed with status: ${
+          error.status
+        }\n${JSON.stringify(error.response.data.errors)}\nretrying... (${
+          maxRetries - 1
+        } retries remaining)`
       );
-      try {
-        let release = await releaser.createRelease({
-          owner,
-          repo,
-          tag_name,
-          name,
-          body,
-          draft,
-          prerelease,
-          target_commitish,
-          discussion_category_name,
-          generate_release_notes,
-        });
-        return release.data;
-      } catch (error) {
-        // presume a race with competing metrix runs
-        console.log(
-          `⚠️ GitHub release failed with status: ${
-            error.status
-          }\n${JSON.stringify(error.response.data.errors)}\nretrying... (${
-            maxRetries - 1
-          } retries remaining)`
-        );
-        return release(config, releaser, maxRetries - 1);
-      }
-    } else {
-      console.log(
-        `⚠️ Unexpected error fetching GitHub release for tag ${config.github_ref}: ${error}`
-      );
-      throw error;
+      return release(config, releaser, maxRetries - 1);
     }
   }
 };
