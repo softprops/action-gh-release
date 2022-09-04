@@ -206,7 +206,9 @@ export const release = async (
         owner,
         repo,
       })) {
-        let release = response.data.find((release) => release.tag_name === tag);
+        let release = response.data.find(
+          (release) => release.name === config.input_name
+        );
         if (release) {
           return release;
         }
