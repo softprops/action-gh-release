@@ -24,12 +24,12 @@
     "@actions/github": "^5.0.0",
     "@octokit/plugin-retry": "^3.0.9",
     "@octokit/plugin-throttling": "^3.5.1",
-    "glob": "^7.1.6",
+    "glob": "^8.0.3",
     "mime": "^2.4.4",
     "node-fetch": "^2.6.1"
   },
   "devDependencies": {
-    "@types/glob": "^7.1.1",
+    "@types/glob": "^8.0.0",
     "@types/jest": "^24.0.25",
     "@types/mime": "^2.0.1",
     "@types/node": "^18.11.9",
