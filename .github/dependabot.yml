@@ -4,9 +4,11 @@ updates:
   directory: "/"
   schedule:
     interval: weekly
-  open-pull-requests-limit: 10
+  ignore:
+  - dependency-name: node-fetch
+    versions:
+    - ">=3.0.0"
 - package-ecosystem: github-actions
   directory: "/"
   schedule:
     interval: weekly
-  open-pull-requests-limit: 10
