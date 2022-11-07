@@ -34,7 +34,7 @@
     "@types/mime": "^3.0.1",
     "@types/node": "^18.11.9",
     "@types/node-fetch": "^2.5.12",
-    "@zeit/ncc": "^0.21.0",
+    "@zeit/ncc": "^0.22.3",
     "jest": "^24.9.0",
     "jest-circus": "^24.9.0",
     "prettier": "2.7.1",
