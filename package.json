@@ -37,7 +37,7 @@
     "@zeit/ncc": "^0.21.0",
     "jest": "^24.9.0",
     "jest-circus": "^24.9.0",
-    "prettier": "1.19.1",
+    "prettier": "2.7.1",
     "ts-jest": "^24.3.0",
     "typescript": "^3.7.4",
     "typescript-formatter": "^7.2.2"
