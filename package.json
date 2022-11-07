@@ -32,7 +32,7 @@
     "@types/glob": "^7.1.1",
     "@types/jest": "^24.0.25",
     "@types/mime": "^2.0.1",
-    "@types/node": "^12.12.24",
+    "@types/node": "^18.11.9",
     "@types/node-fetch": "^2.5.12",
     "@zeit/ncc": "^0.21.0",
     "jest": "^24.9.0",
