@@ -25,13 +25,13 @@
     "@octokit/plugin-retry": "^4.0.3",
     "@octokit/plugin-throttling": "^3.5.1",
     "glob": "^8.0.3",
-    "mime": "^2.4.4",
+    "mime": "^3.0.0",
     "node-fetch": "^2.6.1"
   },
   "devDependencies": {
     "@types/glob": "^8.0.0",
     "@types/jest": "^24.0.25",
-    "@types/mime": "^2.0.1",
+    "@types/mime": "^3.0.1",
     "@types/node": "^18.11.9",
     "@types/node-fetch": "^2.5.12",
     "@zeit/ncc": "^0.21.0",
