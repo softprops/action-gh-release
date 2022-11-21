@@ -18,28 +18,27 @@
     "actions"
   ],
   "author": "softprops",
-  "license": "MIT",
   "dependencies": {
-    "@actions/core": "^1.4.0",
-    "@actions/github": "^5.0.0",
-    "@octokit/plugin-retry": "^3.0.9",
-    "@octokit/plugin-throttling": "^3.5.1",
-    "glob": "^7.1.6",
-    "mime": "^2.4.4",
-    "node-fetch": "^2.6.1"
+    "@actions/core": "^1.10.0",
+    "@actions/github": "^5.1.1",
+    "@octokit/plugin-retry": "^4.0.3",
+    "@octokit/plugin-throttling": "^4.3.2",
+    "glob": "^8.0.3",
+    "mime": "^3.0.0",
+    "node-fetch": "^2.6.7"
   },
   "devDependencies": {
-    "@types/glob": "^7.1.1",
-    "@types/jest": "^24.0.25",
-    "@types/mime": "^2.0.1",
-    "@types/node": "^12.12.24",
+    "@types/glob": "^8.0.0",
+    "@types/jest": "^29.2.2",
+    "@types/mime": "^3.0.1",
+    "@types/node": "^18.11.9",
     "@types/node-fetch": "^2.5.12",
-    "@zeit/ncc": "^0.21.0",
-    "jest": "^24.9.0",
-    "jest-circus": "^24.9.0",
-    "prettier": "1.19.1",
-    "ts-jest": "^24.2.0",
-    "typescript": "^3.7.4",
+    "@vercel/ncc": "^0.34.0",
+    "jest": "^29.3.1",
+    "jest-circus": "^29.3.1",
+    "prettier": "2.7.1",
+    "ts-jest": "^29.0.3",
+    "typescript": "^4.8.4",
     "typescript-formatter": "^7.2.2"
   }
 }
