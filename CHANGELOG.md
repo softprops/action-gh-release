@@ -1,3 +1,7 @@
+## 0.1.15
+
+- Upgrade to action.yml declaration to node16 to address deprecations
+- Upgrade dependencies
 - Add `asset` output as a JSON array containing information about the uploaded assets
 
 ## 0.1.14
