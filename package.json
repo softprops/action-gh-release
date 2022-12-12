@@ -33,7 +33,7 @@
     "@types/mime": "^3.0.1",
     "@types/node": "^18.11.9",
     "@types/node-fetch": "^2.5.12",
-    "@vercel/ncc": "^0.34.0",
+    "@vercel/ncc": "^0.36.0",
     "jest": "^29.3.1",
     "jest-circus": "^29.3.1",
     "prettier": "2.8.0",
