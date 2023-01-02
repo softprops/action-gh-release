@@ -29,7 +29,7 @@
   },
   "devDependencies": {
     "@types/glob": "^8.0.0",
-    "@types/jest": "^29.2.3",
+    "@types/jest": "^29.2.5",
     "@types/mime": "^3.0.1",
     "@types/node": "^18.11.9",
     "@types/node-fetch": "^2.5.12",
