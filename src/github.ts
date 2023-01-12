@@ -45,7 +45,7 @@ export interface Releaser {
     target_commitish: string | undefined;
     discussion_category_name: string | undefined;
     generate_release_notes: boolean | undefined;
-    make_latest: boolean | undefined;
+    make_latest: string | undefined;
   }): Promise<{ data: Release }>;
 
   updateRelease(params: {
@@ -60,7 +60,7 @@ export interface Releaser {
     prerelease: boolean | undefined;
     discussion_category_name: string | undefined;
     generate_release_notes: boolean | undefined;
-    make_latest: boolean | undefined;
+    make_latest: string | undefined;
   }): Promise<{ data: Release }>;
 
   allReleases(params: {
@@ -94,7 +94,7 @@ export class GitHubReleaser implements Releaser {
     target_commitish: string | undefined;
     discussion_category_name: string | undefined;
     generate_release_notes: boolean | undefined;
-    make_latest: boolean | undefined;
+    make_latest: string | undefined;
   }): Promise<{ data: Release }> {
     return this.github.rest.repos.createRelease(params);
   }
@@ -111,7 +111,7 @@ export class GitHubReleaser implements Releaser {
     prerelease: boolean | undefined;
     discussion_category_name: string | undefined;
     generate_release_notes: boolean | undefined;
-    make_latest: boolean | undefined;
+    make_latest: string | undefined;
   }): Promise<{ data: Release }> {
     return this.github.rest.repos.updateRelease(params);
   }

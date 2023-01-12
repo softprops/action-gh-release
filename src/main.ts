@@ -32,11 +32,6 @@ async function run() {
       }
     }
 
-    // const oktokit = GitHub.plugin(
-    //   require("@octokit/plugin-throttling"),
-    //   require("@octokit/plugin-retry")
-    // );
-
     const gh = getOctokit(config.github_token, {
       //new oktokit(
       throttle: {
