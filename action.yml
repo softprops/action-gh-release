@@ -21,6 +21,9 @@ inputs:
   prerelease:
     description: "Identify the release as a prerelease. Defaults to false"
     required: false
+  make_latest:
+    description: "Indicates whether this is the latest release. Defaults to true"
+    required: false
   files:
     description: "Newline-delimited list of path globs for asset files to upload"
     required: false
