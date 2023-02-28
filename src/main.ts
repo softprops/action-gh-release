@@ -3,7 +3,7 @@ import {
   parseConfig,
   isTag,
   unmatchedPatterns,
-  uploadUrl
+  uploadUrl,
 } from "./util";
 import { release, upload, GitHubReleaser } from "./github";
 import { getOctokit } from "@actions/github";
@@ -24,7 +24,7 @@ async function run() {
     }
     if (config.input_files) {
       const patterns = unmatchedPatterns(config.input_files);
-      patterns.forEach(pattern =>
+      patterns.forEach((pattern) =>
         console.warn(`🤔 Pattern '${pattern}' does not match any files.`)
       );
       if (patterns.length > 0 && config.input_fail_on_unmatched_files) {
@@ -55,8 +55,8 @@ async function run() {
           console.warn(
             `Abuse detected for request ${options.method} ${options.url}`
           );
-        }
-      }
+        },
+      },
     });
     //);
     const rel = await release(config, new GitHubReleaser(gh));
@@ -67,7 +67,7 @@ async function run() {
       }
       const currentAssets = rel.assets;
       const assets = await Promise.all(
-        files.map(async path => {
+        files.map(async (path) => {
           const json = await upload(
             config,
             gh,
@@ -78,7 +78,7 @@ async function run() {
           delete json.uploader;
           return json;
         })
-      ).catch(error => {
+      ).catch((error) => {
         throw error;
       });
       setOutput("assets", assets);

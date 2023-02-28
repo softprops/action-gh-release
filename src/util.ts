@@ -44,8 +44,8 @@ export const parseInputFiles = (files: string): string[] => {
     (acc, line) =>
       acc
         .concat(line.split(","))
-        .filter(pat => pat)
-        .map(pat => pat.trim()),
+        .filter((pat) => pat)
+        .map((pat) => pat.trim()),
     []
   );
 };
@@ -69,14 +69,14 @@ export const parseConfig = (env: Env): Config => {
     input_discussion_category_name:
       env.INPUT_DISCUSSION_CATEGORY_NAME || undefined,
     input_generate_release_notes: env.INPUT_GENERATE_RELEASE_NOTES == "true",
-    input_append_body: env.INPUT_APPEND_BODY == "true"
+    input_append_body: env.INPUT_APPEND_BODY == "true",
   };
 };
 
 export const paths = (patterns: string[]): string[] => {
   return patterns.reduce((acc: string[], pattern: string): string[] => {
     return acc.concat(
-      glob.sync(pattern).filter(path => statSync(path).isFile())
+      glob.sync(pattern).filter((path) => statSync(path).isFile())
     );
   }, []);
 };
@@ -84,7 +84,7 @@ export const paths = (patterns: string[]): string[] => {
 export const unmatchedPatterns = (patterns: string[]): string[] => {
   return patterns.reduce((acc: string[], pattern: string): string[] => {
     return acc.concat(
-      glob.sync(pattern).filter(path => statSync(path).isFile()).length == 0
+      glob.sync(pattern).filter((path) => statSync(path).isFile()).length == 0
         ? [pattern]
         : []
     );
