@@ -128,6 +128,8 @@ jobs:
 
 > **⚠️ Note:** Notice the `|` in the yaml syntax above ☝️. That let's you effectively declare a multi-line yaml string. You can learn more about multi-line yaml syntax [here](https://yaml-multiline.info)
 
+> **⚠️ Note for Windows:** Paths must use `/` as a separator, not `\`, as `\` is used to escape characters with special meaning in the pattern; for example, instead of specifying `D:\Foo.txt`, you must specify `D:/Foo.txt`. If you're using PowerShell, you can do this with `$Path = $Path -replace '\\','/'`
+
 ### 📝 External release notes
 
 Many systems exist that can help generate release notes for you. This action supports
