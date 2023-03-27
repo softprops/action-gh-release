@@ -126,7 +126,8 @@ jobs:
             LICENSE
 ```
 
-> **⚠️ Note:** Notice the `|` in the yaml syntax above ☝️. That let's you effectively declare a multi-line yaml string. You can learn more about multi-line yaml syntax [here](https://yaml-multiline.info)
+> **Warning**:
+> Notice the `|` in the yaml syntax above ☝️. That let's you effectively declare a multi-line yaml string. You can learn more about multi-line yaml syntax [here](https://yaml-multiline.info)
 
 > **⚠️ Note for Windows:** Paths must use `/` as a separator, not `\`, as `\` is used to escape characters with special meaning in the pattern; for example, instead of specifying `D:\Foo.txt`, you must specify `D:/Foo.txt`. If you're using PowerShell, you can do this with `$Path = $Path -replace '\\','/'`
 
@@ -184,12 +185,11 @@ The following are optional as `step.with` keys
 | `generate_release_notes`   | Boolean | Whether to automatically generate the name and body for this release. If name is specified, the specified name will be used; otherwise, a name will be automatically generated. If body is specified, the body will be pre-pended to the automatically generated notes. See the [GitHub docs for this feature](https://docs.github.com/en/repositories/releasing-projects-on-github/automatically-generated-release-notes) for more information |
 | `append_body`              | Boolean | Append to existing body instead of overwriting it                                                                                                                                                                                                                                                                                                                                                                                               |
 
-💡 When providing a `body` and `body_path` at the same time, `body_path` will be
-attempted first, then falling back on `body` if the path can not be read from.
+> **Info**:
+> When providing a `body` and `body_path` at the same time, `body_path` will be attempted first, then falling back on `body` if the path can not be read from.
 
-💡 When the release info keys (such as `name`, `body`, `draft`, `prerelease`, etc.)
-are not explicitly set and there is already an existing release for the tag, the
-release will retain its original info.
+> **Info**:
+> When the release info keys (such as `name`, `body`, `draft`, `prerelease`, etc.) are not explicitly set and there is already an existing release for the tag, the release will retain its original info.
 
 #### outputs
 
@@ -213,7 +213,8 @@ The following `step.env` keys are allowed as a fallback but deprecated in favor 
 | `GITHUB_TOKEN`      | GITHUB_TOKEN as provided by `secrets`                                                      |
 | `GITHUB_REPOSITORY` | Name of a target repository in `<owner>/<repo>` format. defaults to the current repository |
 
-> **⚠️ Note:** This action was previously implemented as a Docker container, limiting its use to GitHub Actions Linux virtual environments only. With recent releases, we now support cross platform usage. You'll need to remove the `docker://` prefix in these versions
+> **Warning**:
+> This action was previously implemented as a Docker container, limiting its use to GitHub Actions Linux virtual environments only. With recent releases, we now support cross platform usage. You'll need to remove the `docker://` prefix in these versions
 
 ### Permissions
 
