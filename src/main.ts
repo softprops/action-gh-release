@@ -67,17 +67,23 @@ async function run() {
       }
       const currentAssets = rel.assets;
       const assets = await Promise.all(
-        files.map(async (path) => {
-          const json = await upload(
-            config,
-            gh,
-            uploadUrl(rel.upload_url),
-            path,
-            currentAssets
-          );
-          delete json.uploader;
-          return json;
-        })
+        files
+          .map(async (path) => {
+            const json = await upload(
+              config,
+              gh,
+              uploadUrl(rel.upload_url),
+              path,
+              currentAssets
+            );
+
+            if (json) {
+              delete json.uploader;
+            }
+
+            return json;
+          })
+          .filter((json) => json !== null)
       ).catch((error) => {
         throw error;
       });
