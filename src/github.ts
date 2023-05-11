@@ -148,6 +148,7 @@ export const upload = async (
   const currentAsset = currentAssets.find(
     ({ name: currentName }) => currentName == name
   );
+  // Delete old asset even if the size of currentAsset is 0
   if (currentAsset) {
     console.log(`♻️ Deleting previously uploaded asset ${name}...`);
     await github.rest.repos.deleteReleaseAsset({
@@ -155,6 +156,10 @@ export const upload = async (
       owner,
       repo,
     });
+  }
+  if (size === 0) {
+    console.warn(`❌ Skip uploading release asset ${name} with 0 byte in size`);
+    return {}; // return empty JSON object for compatibility
   }
   console.log(`⬆️ Uploading ${name}...`);
   const endpoint = new URL(url);
