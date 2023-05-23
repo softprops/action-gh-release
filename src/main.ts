@@ -9,6 +9,7 @@ import { release, upload, GitHubReleaser } from "./github";
 import { getOctokit } from "@actions/github";
 import { setFailed, setOutput } from "@actions/core";
 import { GitHub, getOctokitOptions } from "@actions/github/lib/utils";
+import * as fs from 'fs';
 
 import { env } from "process";
 
@@ -24,9 +25,21 @@ async function run() {
     }
     if (config.input_files) {
       const patterns = unmatchedPatterns(config.input_files);
-      patterns.forEach((pattern) =>
-        console.warn(`🤔 Pattern '${pattern}' does not match any files.`)
-      );
+      patterns.forEach((pattern) => {
+        console.warn(pattern);
+        // Rename file using oldName:newName notation
+        if (pattern.includes(":")) {
+          let names = pattern.split(':');
+          let oldName = names[0];
+          let newName = names[1];
+          fs.rename(oldName, newName, () => {
+              console.warn(`🤔Renamed file from '${oldName}' to '${newName}!`);
+          });
+        }
+        else {
+          console.warn(`🤔 Pattern '${pattern}' does not match any files.`)
+        }
+      });
       if (patterns.length > 0 && config.input_fail_on_unmatched_files) {
         throw new Error(`⚠️ There were unmatched files`);
       }
@@ -62,8 +75,14 @@ async function run() {
     const rel = await release(config, new GitHubReleaser(gh));
     if (config.input_files) {
       const files = paths(config.input_files);
+      config.input_files.forEach((file) => {
+        if (file.includes(":")) {
+          // Use the new name instead to upload
+          files.push(file.split(":")[1]);
+        }
+      })
       if (files.length == 0) {
-        console.warn(`🤔 ${config.input_files} not include valid file.`);
+        console.warn(`🤔 ${config.input_files} did not include valid files.`);
       }
       const currentAssets = rel.assets;
       const assets = await Promise.all(
