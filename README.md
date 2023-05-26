@@ -161,6 +161,46 @@ jobs:
           GITHUB_REPOSITORY: my_gh_org/my_gh_repo
 ```
 
+### Draft ⇒ Upload ⇒ Publish
+
+This action can be used to create a draft Release, upload assets (or do other
+processing), then publish the Release only after that work is done. Because of
+how finding existing Releases and the `draft` input interact, you need to pass
+the `id` output from the create step as input to the update steps.
+
+```yaml
+jobs:
+  create:
+    runs-on: ubuntu-latest
+    steps:
+      - id: create
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: "..."
+          draft: true
+  outputs:
+    release_id: ${{ steps.create.outputs.id }}
+
+  upload:
+    needs: create
+    runs-on: ubuntu-latest
+    steps:
+      # build the thing...
+      - uses: softprops/action-gh-release@v1
+        with:
+          id: ${{ needs.create.outputs.release_id }}
+          files: "..."
+
+  publish:
+    needs: create
+    runs-on: ubuntu-latest
+    steps:
+      - uses: softprops/action-gh-release@v1
+        with:
+          id: ${{ needs.create.outputs.release_id }}
+          draft: false
+```
+
 ### 💅 Customizing
 
 #### inputs
@@ -174,6 +214,7 @@ The following are optional as `step.with` keys
 | `draft`                    | Boolean | Indicator of whether or not this release is a draft                                                                                                                                                                                                                                                                                                                                                                                             |
 | `prerelease`               | Boolean | Indicator of whether or not is a prerelease                                                                                                                                                                                                                                                                                                                                                                                                     |
 | `files`                    | String  | Newline-delimited globs of paths to assets to upload for release                                                                                                                                                                                                                                                                                                                                                                                |
+| `id`                       | Number  | Id to an existing release you want to update                                                                                                                                                                                                                                                                                                                                                                                                    |
 | `name`                     | String  | Name of the release. defaults to tag name                                                                                                                                                                                                                                                                                                                                                                                                       |
 | `tag_name`                 | String  | Name of a tag. defaults to `github.ref`                                                                                                                                                                                                                                                                                                                                                                                                         |
 | `fail_on_unmatched_files`  | Boolean | Indicator of whether to fail if any of the `files` globs match nothing                                                                                                                                                                                                                                                                                                                                                                          |
