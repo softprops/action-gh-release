@@ -3,6 +3,9 @@ name: "GH Release"
 description: "Github Action for creating Github Releases"
 author: "softprops"
 inputs:
+  id:
+    description: "An existing release id, useful if updating"
+    required: false
   body:
     description: "Note-worthy description of changes in release"
     required: false

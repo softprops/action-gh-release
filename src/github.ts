@@ -28,6 +28,12 @@ export interface Release {
 }
 
 export interface Releaser {
+  getReleaseById(params: {
+    owner: string;
+    repo: string;
+    release_id: number;
+  }): Promise<{ data: Release }>;
+
   getReleaseByTag(params: {
     owner: string;
     repo: string;
@@ -71,6 +77,14 @@ export class GitHubReleaser implements Releaser {
   github: GitHub;
   constructor(github: GitHub) {
     this.github = github;
+  }
+
+  getReleaseById(params: {
+    owner: string;
+    repo: string;
+    release_id: number;
+  }): Promise<{ data: Release }> {
+    return this.github.rest.repos.getRelease(params);
   }
 
   getReleaseByTag(params: {
@@ -199,47 +213,36 @@ export const release = async (
   const discussion_category_name = config.input_discussion_category_name;
   const generate_release_notes = config.input_generate_release_notes;
   try {
-    // you can't get a an existing draft by tag
-    // so we must find one in the list of all releases
-    if (config.input_draft) {
-      for await (const response of releaser.allReleases({
-        owner,
-        repo,
-      })) {
-        let release = response.data.find((release) => release.tag_name === tag);
-        if (release) {
-          return release;
-        }
-      }
-    }
-    let existingRelease = await releaser.getReleaseByTag({
+    const existingRelease = await findExistingRelease(
+      config,
+      releaser,
       owner,
       repo,
-      tag,
-    });
+      tag
+    );
 
-    const release_id = existingRelease.data.id;
+    const release_id = existingRelease.id;
     let target_commitish: string;
     if (
       config.input_target_commitish &&
-      config.input_target_commitish !== existingRelease.data.target_commitish
+      config.input_target_commitish !== existingRelease.target_commitish
     ) {
       console.log(
-        `Updating commit from "${existingRelease.data.target_commitish}" to "${config.input_target_commitish}"`
+        `Updating commit from "${existingRelease.target_commitish}" to "${config.input_target_commitish}"`
       );
       target_commitish = config.input_target_commitish;
     } else {
-      target_commitish = existingRelease.data.target_commitish;
+      target_commitish = existingRelease.target_commitish;
     }
 
     const tag_name = tag;
-    const name = config.input_name || existingRelease.data.name || tag;
+    const name = config.input_name || existingRelease.name || tag;
     // revisit: support a new body-concat-strategy input for accumulating
     // body parts as a release gets updated. some users will likely want this while
     // others won't previously this was duplicating content for most which
     // no one wants
     const workflowBody = releaseBody(config) || "";
-    const existingReleaseBody = existingRelease.data.body || "";
+    const existingReleaseBody = existingRelease.body || "";
     let body: string;
     if (config.input_append_body && workflowBody && existingReleaseBody) {
       body = existingReleaseBody + "\n" + workflowBody;
@@ -250,11 +253,11 @@ export const release = async (
     const draft =
       config.input_draft !== undefined
         ? config.input_draft
-        : existingRelease.data.draft;
+        : existingRelease.draft;
     const prerelease =
       config.input_prerelease !== undefined
         ? config.input_prerelease
-        : existingRelease.data.prerelease;
+        : existingRelease.prerelease;
 
     const release = await releaser.updateRelease({
       owner,
@@ -318,3 +321,48 @@ export const release = async (
     }
   }
 };
+
+async function findExistingRelease(
+  config: Config,
+  releaser: Releaser,
+  owner: string,
+  repo: string,
+  tag: string
+): Promise<Release> {
+  const release_id = config.input_id;
+
+  if (release_id !== undefined) {
+    const { data } = await releaser.getReleaseById({
+      owner,
+      repo,
+      release_id,
+    });
+    console.log(`Found Release by id: ${release_id}`);
+    return data;
+  }
+
+  // you can't get a an existing draft by tag
+  // so we must find one in the list of all releases
+  if (config.input_draft) {
+    for await (const response of releaser.allReleases({
+      owner,
+      repo,
+    })) {
+      let release = response.data.find((release) => release.tag_name === tag);
+
+      if (release) {
+        console.log(`Found draft Release by tag: ${tag}`);
+        return release;
+      }
+    }
+  }
+
+  const { data } = await releaser.getReleaseByTag({
+    owner,
+    repo,
+    tag,
+  });
+
+  console.log(`Found release by tag: ${tag}`);
+  return data;
+}

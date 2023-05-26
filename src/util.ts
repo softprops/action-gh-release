@@ -6,6 +6,7 @@ export interface Config {
   github_ref: string;
   github_repository: string;
   // user provided
+  input_id?: number;
   input_name?: string;
   input_tag_name?: string;
   input_repository?: string;
@@ -55,6 +56,7 @@ export const parseConfig = (env: Env): Config => {
     github_token: env.GITHUB_TOKEN || env.INPUT_TOKEN || "",
     github_ref: env.GITHUB_REF || "",
     github_repository: env.INPUT_REPOSITORY || env.GITHUB_REPOSITORY || "",
+    input_id: env.INPUT_ID ? parseInt(env.INPUT_ID.trim(), 10) : undefined,
     input_name: env.INPUT_NAME,
     input_tag_name: env.INPUT_TAG_NAME?.trim(),
     input_body: env.INPUT_BODY,
