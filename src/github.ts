@@ -235,8 +235,8 @@ export const release = async (
       target_commitish = existingRelease.target_commitish;
     }
 
-    const tag_name = tag;
-    const name = config.input_name || existingRelease.name || tag;
+    const tag_name = config.input_tag_name || existingRelease.tag_name;
+    const name = config.input_name || existingRelease.name || tag_name;
     // revisit: support a new body-concat-strategy input for accumulating
     // body parts as a release gets updated. some users will likely want this while
     // others won't previously this was duplicating content for most which
