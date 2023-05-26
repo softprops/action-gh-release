@@ -18,9 +18,12 @@ async function run() {
     if (
       !config.input_tag_name &&
       !isTag(config.github_ref) &&
-      !config.input_draft
+      !config.input_draft &&
+      !config.input_id
     ) {
-      throw new Error(`⚠️ GitHub Releases requires a tag`);
+      throw new Error(
+        `⚠️ You must supply tag_name, an id to an existing Release to update, or use draft:true`
+      );
     }
     if (config.input_files) {
       const patterns = unmatchedPatterns(config.input_files);
