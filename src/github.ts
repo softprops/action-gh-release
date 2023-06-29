@@ -225,7 +225,20 @@ export const release = async (
         })
       ).data;
     }
-    let existingRelease = _release!;
+    if (_release === null || _release === undefined) {
+      return await createRelease(
+        tag,
+        config,
+        releaser,
+        owner,
+        repo,
+        discussion_category_name,
+        generate_release_notes,
+        maxRetries
+      );
+    }
+
+    let existingRelease: Release = _release!;
     console.log(
       `Found release ${existingRelease.name} (with id=${existingRelease.id})`
     );
@@ -293,58 +306,80 @@ export const release = async (
       throw error;
     }
 
-    const tag_name = tag;
-    const name = config.input_name || tag;
-    const body = releaseBody(config);
-    const draft = config.input_draft;
-    const prerelease = config.input_prerelease;
-    const target_commitish = config.input_target_commitish;
-    const make_latest = config.input_make_latest;
-    let commitMessage: string = "";
-    if (target_commitish) {
-      commitMessage = ` using commit "${target_commitish}"`;
-    }
-    console.log(
-      `👩‍🏭 Creating new GitHub release for tag ${tag_name}${commitMessage}...`
+    return await createRelease(
+      tag,
+      config,
+      releaser,
+      owner,
+      repo,
+      discussion_category_name,
+      generate_release_notes,
+      maxRetries
     );
-    try {
-      let release = await releaser.createRelease({
-        owner,
-        repo,
-        tag_name,
-        name,
-        body,
-        draft,
-        prerelease,
-        target_commitish,
-        discussion_category_name,
-        generate_release_notes,
-        make_latest,
-      });
-      return release.data;
-    } catch (error) {
-      // presume a race with competing matrix runs
-      console.log(`⚠️ GitHub release failed with status: ${error.status}`);
-      console.log(`${JSON.stringify(error.response.data)}`);
-
-      switch (error.status) {
-        case 403:
-          console.log(
-            "Skip retry — your GitHub token/PAT does not have the required permission to create a release"
-          );
-          throw error;
-
-        case 404:
-          console.log("Skip retry - discussion category mismatch");
-          throw error;
-
-        case 422:
-          console.log("Skip retry - validation failed");
-          throw error;
-      }
-
-      console.log(`retrying... (${maxRetries - 1} retries remaining)`);
-      return release(config, releaser, maxRetries - 1);
-    }
   }
 };
+
+async function createRelease(
+  tag: string,
+  config: Config,
+  releaser: Releaser,
+  owner: string,
+  repo: string,
+  discussion_category_name: string | undefined,
+  generate_release_notes: boolean | undefined,
+  maxRetries: number
+) {
+  const tag_name = tag;
+  const name = config.input_name || tag;
+  const body = releaseBody(config);
+  const draft = config.input_draft;
+  const prerelease = config.input_prerelease;
+  const target_commitish = config.input_target_commitish;
+  const make_latest = config.input_make_latest;
+  let commitMessage: string = "";
+  if (target_commitish) {
+    commitMessage = ` using commit "${target_commitish}"`;
+  }
+  console.log(
+    `👩‍🏭 Creating new GitHub release for tag ${tag_name}${commitMessage}...`
+  );
+  try {
+    let release = await releaser.createRelease({
+      owner,
+      repo,
+      tag_name,
+      name,
+      body,
+      draft,
+      prerelease,
+      target_commitish,
+      discussion_category_name,
+      generate_release_notes,
+      make_latest,
+    });
+    return release.data;
+  } catch (error) {
+    // presume a race with competing matrix runs
+    console.log(`⚠️ GitHub release failed with status: ${error.status}`);
+    console.log(`${JSON.stringify(error.response.data)}`);
+
+    switch (error.status) {
+      case 403:
+        console.log(
+          "Skip retry — your GitHub token/PAT does not have the required permission to create a release"
+        );
+        throw error;
+
+      case 404:
+        console.log("Skip retry - discussion category mismatch");
+        throw error;
+
+      case 422:
+        console.log("Skip retry - validation failed");
+        throw error;
+    }
+
+    console.log(`retrying... (${maxRetries - 1} retries remaining)`);
+    return release(config, releaser, maxRetries - 1);
+  }
+}
