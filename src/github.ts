@@ -44,7 +44,6 @@ export interface Releaser {
     prerelease: boolean | undefined;
     target_commitish: string | undefined;
     discussion_category_name: string | undefined;
-    generate_release_notes: boolean | undefined;
   }): Promise<{ data: Release }>;
 
   updateRelease(params: {
@@ -58,13 +57,21 @@ export interface Releaser {
     draft: boolean | undefined;
     prerelease: boolean | undefined;
     discussion_category_name: string | undefined;
-    generate_release_notes: boolean | undefined;
   }): Promise<{ data: Release }>;
 
   allReleases(params: {
     owner: string;
     repo: string;
   }): AsyncIterableIterator<{ data: Release[] }>;
+
+  getLatestTag(params: {
+    owner: string;
+    repo: string;
+  }): Promise<undefined | string>;
+
+  generateReleaseBody(
+    params: Parameters<GitHub["rest"]["repos"]["generateReleaseNotes"]>[0]
+  ): Promise<string>;
 }
 
 export class GitHubReleaser implements Releaser {
@@ -91,9 +98,11 @@ export class GitHubReleaser implements Releaser {
     prerelease: boolean | undefined;
     target_commitish: string | undefined;
     discussion_category_name: string | undefined;
-    generate_release_notes: boolean | undefined;
   }): Promise<{ data: Release }> {
-    return this.github.rest.repos.createRelease(params);
+    return this.github.rest.repos.createRelease({
+      ...params,
+      generate_release_notes: false,
+    });
   }
 
   updateRelease(params: {
@@ -107,9 +116,11 @@ export class GitHubReleaser implements Releaser {
     draft: boolean | undefined;
     prerelease: boolean | undefined;
     discussion_category_name: string | undefined;
-    generate_release_notes: boolean | undefined;
   }): Promise<{ data: Release }> {
-    return this.github.rest.repos.updateRelease(params);
+    return this.github.rest.repos.updateRelease({
+      ...params,
+      generate_release_notes: false,
+    });
   }
 
   allReleases(params: {
@@ -120,6 +131,41 @@ export class GitHubReleaser implements Releaser {
     return this.github.paginate.iterator(
       this.github.rest.repos.listReleases.endpoint.merge(updatedParams)
     );
+  }
+
+  async getLatestTag(params: {
+    owner: string;
+    repo: string;
+  }): Promise<undefined | string> {
+    try {
+      const release = await this.github.rest.repos.getLatestRelease(params);
+
+      if (!release?.data) {
+        return;
+      }
+
+      return release.data.tag_name;
+    } catch (e) {
+      console.error(e);
+
+      return;
+    }
+  }
+
+  async generateReleaseBody(
+    params: Parameters<GitHub["rest"]["repos"]["generateReleaseNotes"]>[0]
+  ): Promise<string> {
+    try {
+      const { data } = await this.github.rest.repos.generateReleaseNotes(params);
+
+      if (!data.body) {
+        throw new Error("No release body generated");
+      }
+
+      return data.body;
+    } catch (e) {
+      throw e;
+    }
   }
 }
 
@@ -196,8 +242,40 @@ export const release = async (
       ? config.github_ref.replace("refs/tags/", "")
       : "");
 
+  const previous_tag = config.input_previous_tag;
   const discussion_category_name = config.input_discussion_category_name;
   const generate_release_notes = config.input_generate_release_notes;
+
+  const latestTag: string | undefined = !previous_tag
+      ? await releaser.getLatestTag({
+          owner,
+          repo,
+        })
+      : undefined;
+
+  if (latestTag) {
+    console.log(`🏷️ Latest tag related to a release is ${latestTag}`);
+  } else if (previous_tag) {
+    console.log(`🏷️ Previous tag is ${previous_tag}`);
+  }
+
+  const tag_name = tag;
+
+  let body: string = generate_release_notes
+    ? await releaser.generateReleaseBody({
+        owner,
+        repo,
+        tag_name,
+        previous_tag_name: previous_tag || latestTag,
+      })
+    : "";
+
+  if (generate_release_notes && previous_tag || latestTag) {
+    console.log(`Will generate release notes using ${previous_tag || latestTag} as previous tag`);
+  }
+
+  body = body ? `${body}\n` : "";
+
   try {
     // you can't get a an existing draft by tag
     // so we must find one in the list of all releases
@@ -232,7 +310,6 @@ export const release = async (
       target_commitish = existingRelease.data.target_commitish;
     }
 
-    const tag_name = tag;
     const name = config.input_name || existingRelease.data.name || tag;
     // revisit: support a new body-concat-strategy input for accumulating
     // body parts as a release gets updated. some users will likely want this while
@@ -240,11 +317,13 @@ export const release = async (
     // no one wants
     const workflowBody = releaseBody(config) || "";
     const existingReleaseBody = existingRelease.data.body || "";
-    let body: string;
+
     if (config.input_append_body && workflowBody && existingReleaseBody) {
-      body = existingReleaseBody + "\n" + workflowBody;
+      console.log('➕ Appending existing release body');
+      body = body + existingReleaseBody + "\n" + workflowBody;
     } else {
-      body = workflowBody || existingReleaseBody;
+      console.log(`➕ Using ${workflowBody ? 'workflow body' : 'existing release body'}`);
+      body = body + (workflowBody || existingReleaseBody);
     }
 
     const draft =
@@ -267,14 +346,19 @@ export const release = async (
       draft,
       prerelease,
       discussion_category_name,
-      generate_release_notes,
     });
     return release.data;
   } catch (error) {
     if (error.status === 404) {
       const tag_name = tag;
       const name = config.input_name || tag;
-      const body = releaseBody(config);
+      const workflowBody = releaseBody(config) || "";
+
+      if (config.input_append_body && workflowBody) {
+        console.log('➕ Appending existing release body');
+        body = body + workflowBody;
+      }
+
       const draft = config.input_draft;
       const prerelease = config.input_prerelease;
       const target_commitish = config.input_target_commitish;
@@ -296,7 +380,6 @@ export const release = async (
           prerelease,
           target_commitish,
           discussion_category_name,
-          generate_release_notes,
         });
         return release.data;
       } catch (error) {
