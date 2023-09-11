@@ -25,7 +25,7 @@ async function run() {
     if (config.input_files) {
       const patterns = unmatchedPatterns(config.input_files);
       patterns.forEach((pattern) =>
-        console.warn(`🤔 Pattern '${pattern}' does not match any files.`)
+        throw new Error(`⚠️  Pattern '${pattern}' does not match any files.`)
       );
       if (patterns.length > 0 && config.input_fail_on_unmatched_files) {
         throw new Error(`⚠️ There were unmatched files`);
