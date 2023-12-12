@@ -12,7 +12,7 @@ export interface Config {
   input_body?: string;
   input_body_path?: string;
   input_files?: string[];
-  input_filelist?: string;
+  input_filelist?: string[];
   input_draft?: boolean;
   input_prerelease?: boolean;
   input_fail_on_unmatched_files?: boolean;
@@ -51,7 +51,8 @@ export const parseInputFiles = (files: string): string[] => {
   );
 };
 
-export const parseInputListfile = (filelist: string, files: string): string[] => {
+export const parseInputListfile = (filelist: string): string[] => {
+  let files: string = '';
   files = readFileSync(filelist).toString("utf8");
   return files.split(/\r?\n/).reduce<string[]>(
     (acc, line) =>
@@ -72,8 +73,8 @@ export const parseConfig = (env: Env): Config => {
     input_tag_name: env.INPUT_TAG_NAME?.trim(),
     input_body: env.INPUT_BODY,
     input_body_path: env.INPUT_BODY_PATH,
-    input_filelist: parseInputListfile(env.INPUT_FILELIST || "", input_files),
     input_files: parseInputFiles(env.INPUT_FILES || ""),
+    input_filelist: parseInputListfile(env.INPUT_FILELIST || ""),
     input_draft: env.INPUT_DRAFT ? env.INPUT_DRAFT === "true" : undefined,
     input_prerelease: env.INPUT_PRERELEASE
       ? env.INPUT_PRERELEASE == "true"
