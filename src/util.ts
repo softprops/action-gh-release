@@ -72,7 +72,7 @@ export const parseConfig = (env: Env): Config => {
     input_tag_name: env.INPUT_TAG_NAME?.trim(),
     input_body: env.INPUT_BODY,
     input_body_path: env.INPUT_BODY_PATH,
-    input_filelist: parseInputListfile(env.INPUT_FILELIST || "". input_files),
+    input_filelist: parseInputListfile(env.INPUT_FILELIST || "", input_files),
     input_files: parseInputFiles(env.INPUT_FILES || ""),
     input_draft: env.INPUT_DRAFT ? env.INPUT_DRAFT === "true" : undefined,
     input_prerelease: env.INPUT_PRERELEASE
