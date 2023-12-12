@@ -1,0 +1,119 @@
+name: build-dist
+
+on:
+  workflow_dispatch:
+    inputs:
+      archive_ALL:
+        description: archive_ALL
+        type: boolean
+        default: false
+        required: true
+
+#  pull_request:
+#  push:
+#    paths-ignore:
+#    - "README.md"
+#    branches:
+#      - master
+#      - releases/*
+
+jobs:
+  build:
+    runs-on: ${{ matrix.operating-system }}
+    strategy:
+      matrix:
+        operating-system: [windows-latest]
+    steps:
+      - name: Checkout source code
+        uses: actions/checkout@v3
+
+      - name: clean node_modules
+        continue-on-error: true
+        shell: bash
+        run: |
+          rm -r node_modules || true;
+          rm package-lock.json || true;
+
+      - name: Setup node 16
+        uses: actions/setup-node@v4
+        continue-on-error: true
+        with:
+          node-version: 16.x
+
+      - name: npm install
+        continue-on-error: true
+        run: |
+          npm install
+
+      - name: npm i --save-dev @types/node
+        continue-on-error: true
+        run: |
+          npm i --save-dev @types/node
+
+      - name: npm ci
+        continue-on-error: true
+        run: |
+          npm ci
+
+      - name: npm audit fix
+        continue-on-error: true
+        run: |
+          npm audit fix
+
+      - name: npm run build
+        continue-on-error: true
+        run: |
+          npm run build
+
+      - name: Create archive dist
+        continue-on-error: true
+        uses: deep-soft/zip-release@v2
+        with:
+          type: 'zip'
+          filename: "npm-build-dist-${{ matrix.operating-system }}"
+          directory: '.'
+          exclusions: '*node_modules*'
+          recursive_exclusions: ''
+          path: './dist'
+          env_variable: ZIP_RELEASE_ARCHIVE
+        # archive name is ${{ env.ZIP_RELEASE_ARCHIVE }}
+
+      - name: Upload artifact
+        continue-on-error: true
+        uses: deep-soft/upload-artifact@main
+        with:
+          name: ${{ env.ZIP_RELEASE_ARCHIVE }}
+          path: ${{ env.ZIP_RELEASE_ARCHIVE }}
+
+      - name: Publish artifact
+        continue-on-error: true
+        uses: deep-soft/action-gh-release@v1
+        with:
+          draft: true
+          tag_name: npm-build-dist
+          files: |
+            ${{ env.ZIP_RELEASE_ARCHIVE }}
+
+      - name: Create archive - ALL
+        if: ${{ inputs.archive_ALL }}
+        continue-on-error: true
+        uses: deep-soft/zip-release@v2
+        with:
+          type: 'zip'
+          filename: "npm-build-ALL-${{ matrix.operating-system }}"
+          directory: '.'
+          exclusions: ''
+          #recursive_exclusions: ''
+          path: '.'
+          env_variable: ZIP_RELEASE_ARCHIVE_ALL
+        # archive name is ${{ env.ZIP_RELEASE_ARCHIVE }}
+
+      - name: Publish artifact - ALL
+        if: ${{ inputs.archive_ALL }}
+        continue-on-error: true
+        uses: deep-soft/action-gh-release@v1
+        with:
+          draft: true
+          tag_name: npm-build-ALL
+          files: |
+            ${{ env.ZIP_RELEASE_ARCHIVE_ALL }}
