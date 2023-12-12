@@ -52,7 +52,7 @@ export const parseInputFiles = (files: string): string[] => {
 };
 
 export const parseInputListfile = (filelist: string, files: string): string[] => {
-  files = readFileSync(filelist).toString("utf8"));
+  files = readFileSync(filelist).toString("utf8");
   return files.split(/\r?\n/).reduce<string[]>(
     (acc, line) =>
       acc
