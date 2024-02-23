@@ -4,6 +4,7 @@ import { statSync, readFileSync } from "fs";
 export interface Config {
   github_token: string;
   github_ref: string;
+  github_sha: string;
   github_repository: string;
   // user provided
   input_name?: string;
@@ -19,6 +20,7 @@ export interface Config {
   input_discussion_category_name?: string;
   input_generate_release_notes?: boolean;
   input_append_body?: boolean;
+  input_update_tag?: string;
 }
 
 export const uploadUrl = (url: string): string => {
@@ -54,6 +56,7 @@ export const parseConfig = (env: Env): Config => {
   return {
     github_token: env.GITHUB_TOKEN || env.INPUT_TOKEN || "",
     github_ref: env.GITHUB_REF || "",
+    github_sha: env.GITHUB_SHA || "",
     github_repository: env.INPUT_REPOSITORY || env.GITHUB_REPOSITORY || "",
     input_name: env.INPUT_NAME,
     input_tag_name: env.INPUT_TAG_NAME?.trim(),
@@ -70,6 +73,7 @@ export const parseConfig = (env: Env): Config => {
       env.INPUT_DISCUSSION_CATEGORY_NAME || undefined,
     input_generate_release_notes: env.INPUT_GENERATE_RELEASE_NOTES == "true",
     input_append_body: env.INPUT_APPEND_BODY == "true",
+    input_update_tag: env.INPUT_UPDATE_TAG,
   };
 };
 

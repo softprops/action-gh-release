@@ -46,6 +46,9 @@ inputs:
   append_body:
     description: "Append to existing body instead of overwriting it. Default is false."
     required: false
+  update_tag:
+    description: "Update the tag of the release to the current commit. This will also update the release time."
+    required: false
 env:
   "GITHUB_TOKEN": "As provided by Github Actions"
 outputs:
