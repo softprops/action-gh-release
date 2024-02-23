@@ -149,12 +149,19 @@ export const upload = async (
     ({ name: currentName }) => currentName == name
   );
   if (currentAsset) {
-    console.log(`♻️ Deleting previously uploaded asset ${name}...`);
-    await github.rest.repos.deleteReleaseAsset({
-      asset_id: currentAsset.id || 1,
-      owner,
-      repo,
-    });
+    if (config.input_overwrite_files === false) {
+      console.log(
+        `Asset ${name} already exists and overwrite_files is false...`
+      );
+      return null;
+    } else {
+      console.log(`♻️ Deleting previously uploaded asset ${name}...`);
+      await github.rest.repos.deleteReleaseAsset({
+        asset_id: currentAsset.id || 1,
+        owner,
+        repo,
+      });
+    }
   }
   console.log(`⬆️ Uploading ${name}...`);
   const endpoint = new URL(url);
