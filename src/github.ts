@@ -201,45 +201,61 @@ export const release = async (
   try {
     // you can't get a an existing draft by tag
     // so we must find one in the list of all releases
+    let _release: Release | undefined = undefined;
     if (config.input_draft) {
       for await (const response of releaser.allReleases({
         owner,
         repo,
       })) {
-        let release = response.data.find((release) => release.tag_name === tag);
-        if (release) {
-          return release;
-        }
+        _release = response.data.find((release) => release.tag_name === tag);
       }
+    } else {
+      _release = (
+        await releaser.getReleaseByTag({
+          owner,
+          repo,
+          tag,
+        })
+      ).data;
     }
-    let existingRelease = await releaser.getReleaseByTag({
-      owner,
-      repo,
-      tag,
-    });
+    if (_release === null || _release === undefined) {
+      return await createRelease(
+        tag,
+        config,
+        releaser,
+        owner,
+        repo,
+        maxRetries
+      );
+    }
 
-    const release_id = existingRelease.data.id;
+    let existingRelease: Release = _release!;
+    console.log(
+      `Found release ${existingRelease.name} (with id=${existingRelease.id})`
+    );
+
+    const release_id = existingRelease.id;
     let target_commitish: string;
     if (
       config.input_target_commitish &&
-      config.input_target_commitish !== existingRelease.data.target_commitish
+      config.input_target_commitish !== existingRelease.target_commitish
     ) {
       console.log(
-        `Updating commit from "${existingRelease.data.target_commitish}" to "${config.input_target_commitish}"`
+        `Updating commit from "${existingRelease.target_commitish}" to "${config.input_target_commitish}"`
       );
       target_commitish = config.input_target_commitish;
     } else {
-      target_commitish = existingRelease.data.target_commitish;
+      target_commitish = existingRelease.target_commitish;
     }
 
     const tag_name = tag;
-    const name = config.input_name || existingRelease.data.name || tag;
+    const name = config.input_name || existingRelease.name || tag;
     // revisit: support a new body-concat-strategy input for accumulating
     // body parts as a release gets updated. some users will likely want this while
     // others won't previously this was duplicating content for most which
     // no one wants
     const workflowBody = releaseBody(config) || "";
-    const existingReleaseBody = existingRelease.data.body || "";
+    const existingReleaseBody = existingRelease.body || "";
     let body: string;
     if (config.input_append_body && workflowBody && existingReleaseBody) {
       body = existingReleaseBody + "\n" + workflowBody;
@@ -250,11 +266,11 @@ export const release = async (
     const draft =
       config.input_draft !== undefined
         ? config.input_draft
-        : existingRelease.data.draft;
+        : existingRelease.draft;
     const prerelease =
       config.input_prerelease !== undefined
         ? config.input_prerelease
-        : existingRelease.data.prerelease;
+        : existingRelease.prerelease;
 
     const release = await releaser.updateRelease({
       owner,
@@ -272,49 +288,65 @@ export const release = async (
     return release.data;
   } catch (error) {
     if (error.status === 404) {
-      const tag_name = tag;
-      const name = config.input_name || tag;
-      const body = releaseBody(config);
-      const draft = config.input_draft;
-      const prerelease = config.input_prerelease;
-      const target_commitish = config.input_target_commitish;
-      let commitMessage: string = "";
-      if (target_commitish) {
-        commitMessage = ` using commit "${target_commitish}"`;
-      }
-      console.log(
-        `👩‍🏭 Creating new GitHub release for tag ${tag_name}${commitMessage}...`
+      return await createRelease(
+        tag,
+        config,
+        releaser,
+        owner,
+        repo,
+        maxRetries
       );
-      try {
-        let release = await releaser.createRelease({
-          owner,
-          repo,
-          tag_name,
-          name,
-          body,
-          draft,
-          prerelease,
-          target_commitish,
-          discussion_category_name,
-          generate_release_notes,
-        });
-        return release.data;
-      } catch (error) {
-        // presume a race with competing metrix runs
-        console.log(
-          `⚠️ GitHub release failed with status: ${
-            error.status
-          }\n${JSON.stringify(error.response.data.errors)}\nretrying... (${
-            maxRetries - 1
-          } retries remaining)`
-        );
-        return release(config, releaser, maxRetries - 1);
-      }
     } else {
-      console.log(
+      console.trace(
         `⚠️ Unexpected error fetching GitHub release for tag ${config.github_ref}: ${error}`
       );
       throw error;
     }
   }
 };
+
+async function createRelease(
+  tag: string,
+  config: Config,
+  releaser: Releaser,
+  owner: string,
+  repo: string,
+  maxRetries: number
+) {
+  const tag_name = tag;
+  const name = config.input_name || tag;
+  const body = releaseBody(config);
+  const draft = config.input_draft;
+  const prerelease = config.input_prerelease;
+  const target_commitish = config.input_target_commitish;
+  let commitMessage: string = "";
+  if (target_commitish) {
+    commitMessage = ` using commit "${target_commitish}"`;
+  }
+  console.log(
+    `👩‍🏭 Creating new GitHub release for tag ${tag_name}${commitMessage}...`
+  );
+  try {
+    let release = await releaser.createRelease({
+      owner,
+      repo,
+      tag_name,
+      name,
+      body,
+      draft,
+      prerelease,
+      target_commitish,
+      discussion_category_name: config.input_discussion_category_name,
+      generate_release_notes: config.input_generate_release_notes,
+    });
+    return release.data;
+  } catch (error) {
+    // presume a race with competing matrix runs
+    console.log(
+      `⚠️ GitHub release failed with status: ${error.status}\n${JSON.stringify(
+        error.response.data.errors
+      )}\nretrying... (${maxRetries - 1} retries remaining)`
+    );
+    return release(config, releaser, maxRetries - 1);
+  }
+}

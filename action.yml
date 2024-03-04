@@ -47,7 +47,7 @@ inputs:
     description: "Append to existing body instead of overwriting it. Default is false."
     required: false
 env:
-  "GITHUB_TOKEN": "As provided by Github Actions"
+  GITHUB_TOKEN: "As provided by Github Actions"
 outputs:
   url:
     description: "URL to the Release HTML Page"
