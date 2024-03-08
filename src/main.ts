@@ -60,7 +60,7 @@ async function run() {
     });
     //);
     const rel = await release(config, new GitHubReleaser(gh));
-    if (config.input_files) {
+    if (config.input_files && config.input_files.length > 0) {
       const files = paths(config.input_files);
       if (files.length == 0) {
         console.warn(`🤔 ${config.input_files} not include valid file.`);
