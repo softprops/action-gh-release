@@ -58,7 +58,7 @@ outputs:
   assets:
     description: "JSON array containing information about each uploaded asset, in the format given [here](https://docs.github.com/en/rest/reference/repos#upload-a-release-asset--code-samples) (minus the `uploader` field)"
 runs:
-  using: "node16"
+  using: "node20"
   main: "dist/index.js"
 branding:
   color: "green"

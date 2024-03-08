@@ -41,9 +41,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Release
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2
         if: startsWith(github.ref, 'refs/tags/')
 ```
 
@@ -62,9 +62,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Release
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2
 ```
 
 ### ⬆️ Uploading release assets
@@ -88,13 +88,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Build
         run: echo ${{ github.sha }} > Release.txt
       - name: Test
         run: cat Release.txt
       - name: Release
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2
         if: startsWith(github.ref, 'refs/tags/')
         with:
           files: Release.txt
@@ -112,13 +112,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Build
         run: echo ${{ github.sha }} > Release.txt
       - name: Test
         run: cat Release.txt
       - name: Release
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2
         if: startsWith(github.ref, 'refs/tags/')
         with:
           files: |
@@ -126,7 +126,9 @@ jobs:
             LICENSE
 ```
 
-> **⚠️ Note:** Notice the `|` in the yaml syntax above ☝️. That let's you effectively declare a multi-line yaml string. You can learn more about multi-line yaml syntax [here](https://yaml-multiline.info)
+> **⚠️ Note:** Notice the `|` in the yaml syntax above ☝️. That lets you effectively declare a multi-line yaml string. You can learn more about multi-line yaml syntax [here](https://yaml-multiline.info)
+
+> **⚠️ Note for Windows:** Paths must use `/` as a separator, not `\`, as `\` is used to escape characters with special meaning in the pattern; for example, instead of specifying `D:\Foo.txt`, you must specify `D:/Foo.txt`. If you're using PowerShell, you can do this with `$Path = $Path -replace '\\','/'`
 
 ### 📝 External release notes
 
@@ -144,11 +146,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Generate Changelog
         run: echo "# Good things have arrived" > ${{ github.workspace }}-CHANGELOG.txt
       - name: Release
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2
         if: startsWith(github.ref, 'refs/tags/')
         with:
           body_path: ${{ github.workspace }}-CHANGELOG.txt
@@ -232,5 +234,8 @@ permissions:
 ```
 
 [GitHub token permissions](https://docs.github.com/en/actions/security-guides/automatic-token-authentication#permissions-for-the-github_token) can be set for an individual job, workflow, or for Actions as a whole.
+
+Note that if you intend to run workflows on the release event (`on: { release: { types: [published] } }`), you need to use
+a personal access token for this action, as the [default `secrets.GITHUB_TOKEN` does not trigger another workflow](https://github.com/actions/create-release/issues/71).
 
 Doug Tangren (softprops) 2019

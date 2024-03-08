@@ -1,3 +1,14 @@
+## 2.0.1 (unreleased)
+
+- Fail run if files setting contains invalid patterns [#384](https://github.com/softprops/action-gh-release/pull/384) via [@rpdelaney](https://github.com/rpdelaney)
+- Add support for proxy env variables (don't use node-fetch) [#386](https://github.com/softprops/action-gh-release/pull/386/) via [@timor-raiman](https://github.com/timor-raiman)
+- Suppress confusing warning when input_files is empty [#389](https://github.com/softprops/action-gh-release/pull/389) via [@Drowze](https://github.com/Drowze)
+
+## 2.0.0
+
+- `2.0.0`!? this release corrects a disjunction between git tag versions used in the marketplace and versions list this file. Previous versions should have really been 1.\*. Going forward this should be better aligned.
+- Upgrade action.yml declaration to node20 to address deprecations
+
 ## 0.1.15
 
 - Upgrade to action.yml declaration to node16 to address deprecations
