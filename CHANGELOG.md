@@ -1,6 +1,7 @@
 ## 2.0.1 (unreleased)
 
-- suppress confusing warning when input_files is empty [#389](https://github.com/softprops/action-gh-release/pull/389) via @Drowze
+- Suppress confusing warning when input_files is empty [#389](https://github.com/softprops/action-gh-release/pull/389) via [@Drowze](https://github.com/Drowze)
+- Add support for proxy env variables (don't use node-fetch) [#386](https://github.com/softprops/action-gh-release/pull/386/) via [@timor-raiman](https://github.com/timor-raiman)
 
 ## 2.0.0
 
