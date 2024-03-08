@@ -1,7 +1,8 @@
 ## 2.0.1 (unreleased)
 
-- Suppress confusing warning when input_files is empty [#389](https://github.com/softprops/action-gh-release/pull/389) via [@Drowze](https://github.com/Drowze)
+- Fail run if files setting contains invalid patterns [#384](https://github.com/softprops/action-gh-release/pull/384) via [@rpdelaney](https://github.com/rpdelaney)
 - Add support for proxy env variables (don't use node-fetch) [#386](https://github.com/softprops/action-gh-release/pull/386/) via [@timor-raiman](https://github.com/timor-raiman)
+- Suppress confusing warning when input_files is empty [#389](https://github.com/softprops/action-gh-release/pull/389) via [@Drowze](https://github.com/Drowze)
 
 ## 2.0.0
 
