@@ -260,7 +260,7 @@ export const release = async (
         ? config.input_prerelease
         : existingRelease.data.prerelease;
 
-     const make_latest = config.input_make_latest;   
+    const make_latest = config.input_make_latest;
 
     const release = await releaser.updateRelease({
       owner,
@@ -274,7 +274,7 @@ export const release = async (
       prerelease,
       discussion_category_name,
       generate_release_notes,
-      make_latest
+      make_latest,
     });
     return release.data;
   } catch (error) {
@@ -305,7 +305,7 @@ export const release = async (
           target_commitish,
           discussion_category_name,
           generate_release_notes,
-          make_latest
+          make_latest,
         });
         return release.data;
       } catch (error) {

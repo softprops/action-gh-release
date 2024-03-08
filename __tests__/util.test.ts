@@ -128,7 +128,7 @@ describe("util", () => {
           input_target_commitish: undefined,
           input_discussion_category_name: undefined,
           input_generate_release_notes: false,
-          input_make_latest: undefined
+          input_make_latest: undefined,
         }
       );
     });
@@ -154,7 +154,7 @@ describe("util", () => {
           input_target_commitish: "affa18ef97bc9db20076945705aba8c516139abd",
           input_discussion_category_name: undefined,
           input_generate_release_notes: false,
-          input_make_latest: undefined
+          input_make_latest: undefined,
         }
       );
     });
@@ -179,7 +179,7 @@ describe("util", () => {
           input_target_commitish: undefined,
           input_discussion_category_name: "releases",
           input_generate_release_notes: false,
-          input_make_latest: undefined
+          input_make_latest: undefined,
         }
       );
     });
@@ -205,7 +205,7 @@ describe("util", () => {
           input_target_commitish: undefined,
           input_discussion_category_name: undefined,
           input_generate_release_notes: true,
-          input_make_latest: undefined
+          input_make_latest: undefined,
         }
       );
     });
@@ -234,7 +234,7 @@ describe("util", () => {
           input_target_commitish: undefined,
           input_discussion_category_name: undefined,
           input_generate_release_notes: false,
-          input_make_latest: undefined
+          input_make_latest: undefined,
         }
       );
     });
@@ -261,7 +261,7 @@ describe("util", () => {
           input_target_commitish: undefined,
           input_discussion_category_name: undefined,
           input_generate_release_notes: false,
-          input_make_latest: undefined
+          input_make_latest: undefined,
         }
       );
     });
@@ -287,11 +287,11 @@ describe("util", () => {
           input_target_commitish: undefined,
           input_discussion_category_name: undefined,
           input_generate_release_notes: false,
-          input_make_latest: undefined
+          input_make_latest: undefined,
         }
       );
     });
-    it('parses basic config where make_latest is passed', () => {
+    it("parses basic config where make_latest is passed", () => {
       assert.deepStrictEqual(
         parseConfig({
           INPUT_MAKE_LATEST: "false",
@@ -312,10 +312,10 @@ describe("util", () => {
           input_target_commitish: undefined,
           input_discussion_category_name: undefined,
           input_generate_release_notes: false,
-          input_make_latest: "false"
+          input_make_latest: "false",
         }
       );
-    })
+    });
     it("parses basic config with append_body", () => {
       assert.deepStrictEqual(
         parseConfig({
@@ -337,7 +337,7 @@ describe("util", () => {
           input_target_commitish: undefined,
           input_discussion_category_name: undefined,
           input_generate_release_notes: false,
-          input_make_latest: undefined
+          input_make_latest: undefined,
         }
       );
     });
