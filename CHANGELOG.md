@@ -1,4 +1,6 @@
-## 2.0.1 (unreleased)
+## 2.0.2 (unreleased)
+
+## 2.0.1
 
 - Add support for make_latest property [#304](https://github.com/softprops/action-gh-release/pull/304) via [@samueljseay](https://github.com/samueljseay)
 - Fail run if files setting contains invalid patterns [#384](https://github.com/softprops/action-gh-release/pull/384) via [@rpdelaney](https://github.com/rpdelaney)
