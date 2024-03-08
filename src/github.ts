@@ -44,6 +44,7 @@ export interface Releaser {
     target_commitish: string | undefined;
     discussion_category_name: string | undefined;
     generate_release_notes: boolean | undefined;
+    make_latest: string | undefined;
   }): Promise<{ data: Release }>;
 
   updateRelease(params: {
@@ -58,6 +59,7 @@ export interface Releaser {
     prerelease: boolean | undefined;
     discussion_category_name: string | undefined;
     generate_release_notes: boolean | undefined;
+    make_latest: string | undefined;
   }): Promise<{ data: Release }>;
 
   allReleases(params: {
@@ -91,6 +93,7 @@ export class GitHubReleaser implements Releaser {
     target_commitish: string | undefined;
     discussion_category_name: string | undefined;
     generate_release_notes: boolean | undefined;
+    make_latest: string | undefined;
   }): Promise<{ data: Release }> {
     return this.github.rest.repos.createRelease(params);
   }
@@ -107,6 +110,7 @@ export class GitHubReleaser implements Releaser {
     prerelease: boolean | undefined;
     discussion_category_name: string | undefined;
     generate_release_notes: boolean | undefined;
+    make_latest: string | undefined;
   }): Promise<{ data: Release }> {
     return this.github.rest.repos.updateRelease(params);
   }
@@ -256,6 +260,8 @@ export const release = async (
         ? config.input_prerelease
         : existingRelease.data.prerelease;
 
+     const make_latest = config.input_make_latest;   
+
     const release = await releaser.updateRelease({
       owner,
       repo,
@@ -268,6 +274,7 @@ export const release = async (
       prerelease,
       discussion_category_name,
       generate_release_notes,
+      make_latest
     });
     return release.data;
   } catch (error) {
@@ -278,6 +285,7 @@ export const release = async (
       const draft = config.input_draft;
       const prerelease = config.input_prerelease;
       const target_commitish = config.input_target_commitish;
+      const make_latest = config.input_make_latest;
       let commitMessage: string = "";
       if (target_commitish) {
         commitMessage = ` using commit "${target_commitish}"`;
@@ -297,6 +305,7 @@ export const release = async (
           target_commitish,
           discussion_category_name,
           generate_release_notes,
+          make_latest
         });
         return release.data;
       } catch (error) {
