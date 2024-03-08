@@ -1,3 +1,12 @@
+## 2.0.1 (unreleased)
+
+- suppress confusing warning when input_files is empty [#389](https://github.com/softprops/action-gh-release/pull/389) via @Drowze
+
+## 2.0.0
+
+- `2.0.0`!? this release corrects a disjunction between git tag versions used in the marketplace and versions list this file. Previous versions should have really been 1.\*. Going forward this should be better aligned.
+- Upgrade action.yml declartion to node20 to address deprecations
+
 ## 0.1.15
 
 - Upgrade to action.yml declaration to node16 to address deprecations
