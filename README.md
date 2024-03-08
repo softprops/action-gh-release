@@ -234,4 +234,7 @@ permissions:
 
 [GitHub token permissions](https://docs.github.com/en/actions/security-guides/automatic-token-authentication#permissions-for-the-github_token) can be set for an individual job, workflow, or for Actions as a whole.
 
+Note that if you intend to run workflows on the release event (`on: { release: { types: [published] } }`), you need to use
+a personal access token for this action, as the [default `secrets.GITHUB_TOKEN` does not trigger another workflow](https://github.com/actions/create-release/issues/71).
+
 Doug Tangren (softprops) 2019
