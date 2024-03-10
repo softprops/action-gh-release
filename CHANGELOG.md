@@ -1,6 +1,6 @@
 ## 2.0.2 (unreleased)
 
-- Revisit approach to [#384](https://github.com/softprops/action-gh-release/pull/384) making unresolved pattern failures opt-in
+- Revisit approach to [#384](https://github.com/softprops/action-gh-release/pull/384) making unresolved pattern failures opt-in [#417](https://github.com/softprops/action-gh-release/pull/417)
 
 ## 2.0.1
 
