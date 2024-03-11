@@ -8,7 +8,8 @@
     "build": "ncc build src/main.ts --minify",
     "test": "jest",
     "fmt": "prettier --write \"src/**/*.ts\" \"__tests__/**/*.ts\"",
-    "fmtcheck": "prettier --check \"src/**/*.ts\" \"__tests__/**/*.ts\""
+    "fmtcheck": "prettier --check \"src/**/*.ts\" \"__tests__/**/*.ts\"",
+    "updatetag": "git tag -d v2 && git push origin :v2 && git tag -a v2 -m '' && git push origin v2"
   },
   "repository": {
     "type": "git",
