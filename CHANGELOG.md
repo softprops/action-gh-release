@@ -1,4 +1,8 @@
-## 2.0.3 (unreleased)
+## 2.0.4 (unreleased)
+
+## 2.0.3
+
+- Declare `make_latest` as an input field in `action.yml` [#419](https://github.com/softprops/action-gh-release/pull/419)
 
 ## 2.0.2
 
