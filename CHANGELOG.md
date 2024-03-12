@@ -1,4 +1,6 @@
-## 2.0.4 (unreleased)
+## 2.0.4
+
+- Minor follow up to [#417](https://github.com/softprops/action-gh-release/pull/417). [#425](https://github.com/softprops/action-gh-release/pull/425)
 
 ## 2.0.3
 
