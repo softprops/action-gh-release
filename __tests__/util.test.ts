@@ -53,6 +53,7 @@ describe("util", () => {
           input_discussion_category_name: undefined,
           input_generate_release_notes: false,
           input_make_latest: undefined,
+          input_previous_tag: undefined,
         })
       );
     });
@@ -74,6 +75,7 @@ describe("util", () => {
           input_discussion_category_name: undefined,
           input_generate_release_notes: false,
           input_make_latest: undefined,
+          input_previous_tag: undefined,
         })
       );
     });
@@ -95,6 +97,7 @@ describe("util", () => {
           input_discussion_category_name: undefined,
           input_generate_release_notes: false,
           input_make_latest: undefined,
+          input_previous_tag: undefined,
         })
       );
     });
@@ -129,6 +132,7 @@ describe("util", () => {
           input_discussion_category_name: undefined,
           input_generate_release_notes: false,
           input_make_latest: undefined,
+          input_previous_tag: undefined,
         }
       );
     });
@@ -155,6 +159,7 @@ describe("util", () => {
           input_discussion_category_name: undefined,
           input_generate_release_notes: false,
           input_make_latest: undefined,
+          input_previous_tag: undefined,
         }
       );
     });
@@ -180,6 +185,7 @@ describe("util", () => {
           input_discussion_category_name: "releases",
           input_generate_release_notes: false,
           input_make_latest: undefined,
+          input_previous_tag: undefined,
         }
       );
     });
@@ -206,6 +212,7 @@ describe("util", () => {
           input_discussion_category_name: undefined,
           input_generate_release_notes: true,
           input_make_latest: undefined,
+          input_previous_tag: undefined,
         }
       );
     });
@@ -235,6 +242,7 @@ describe("util", () => {
           input_discussion_category_name: undefined,
           input_generate_release_notes: false,
           input_make_latest: undefined,
+          input_previous_tag: undefined,
         }
       );
     });
@@ -262,6 +270,7 @@ describe("util", () => {
           input_discussion_category_name: undefined,
           input_generate_release_notes: false,
           input_make_latest: undefined,
+          input_previous_tag: undefined,
         }
       );
     });
@@ -313,6 +322,7 @@ describe("util", () => {
           input_discussion_category_name: undefined,
           input_generate_release_notes: false,
           input_make_latest: "false",
+          input_previous_tag: undefined,
         }
       );
     });
@@ -338,6 +348,7 @@ describe("util", () => {
           input_discussion_category_name: undefined,
           input_generate_release_notes: false,
           input_make_latest: undefined,
+          input_previous_tag: undefined,
         }
       );
     });
