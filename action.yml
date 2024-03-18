@@ -50,8 +50,9 @@ inputs:
   append_body:
     description: "Append to existing body instead of overwriting it. Default is false."
     required: false
-env:
-  "GITHUB_TOKEN": "As provided by Github Actions"
+  make_latest:
+    description: "Specifies whether this release should be set as the latest release for the repository. Drafts and prereleases cannot be set as latest. Can be `true`, `false`, or `legacy`. Uses GitHub api default if not provided"
+    required: false
 outputs:
   url:
     description: "URL to the Release HTML Page"
@@ -62,7 +63,7 @@ outputs:
   assets:
     description: "JSON array containing information about each uploaded asset, in the format given [here](https://docs.github.com/en/rest/reference/repos#upload-a-release-asset--code-samples) (minus the `uploader` field)"
 runs:
-  using: "node16"
+  using: "node20"
   main: "dist/index.js"
 branding:
   color: "green"

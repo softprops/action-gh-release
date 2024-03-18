@@ -1,8 +1,7 @@
-import fetch from "node-fetch";
 import { GitHub } from "@actions/github/lib/utils";
 import { Config, isTag, releaseBody } from "./util";
 import { statSync, readFileSync } from "fs";
-import { getType } from "mime";
+import mime from "mime";
 import { basename } from "path";
 
 type GitHub = InstanceType<typeof GitHub>;
@@ -13,6 +12,10 @@ export interface ReleaseAsset {
   size: number;
   data: Buffer;
 }
+
+export type GenerateReleaseNotesParams = Partial<Parameters<GitHub["rest"]["repos"]["generateReleaseNotes"]['defaults']>[0]>;
+export type CreateReleaseParams = Partial<Parameters<GitHub["rest"]["repos"]["createRelease"]>[0]>;
+export type UpdateReleaseParams = Partial<Parameters<GitHub["rest"]["repos"]["updateRelease"]>[0]>;
 
 export interface Release {
   id: number;
@@ -34,30 +37,9 @@ export interface Releaser {
     tag: string;
   }): Promise<{ data: Release }>;
 
-  createRelease(params: {
-    owner: string;
-    repo: string;
-    tag_name: string;
-    name: string;
-    body: string | undefined;
-    draft: boolean | undefined;
-    prerelease: boolean | undefined;
-    target_commitish: string | undefined;
-    discussion_category_name: string | undefined;
-  }): Promise<{ data: Release }>;
+  createRelease(params: CreateReleaseParams): Promise<{ data: Release }>;
 
-  updateRelease(params: {
-    owner: string;
-    repo: string;
-    release_id: number;
-    tag_name: string;
-    target_commitish: string;
-    name: string;
-    body: string | undefined;
-    draft: boolean | undefined;
-    prerelease: boolean | undefined;
-    discussion_category_name: string | undefined;
-  }): Promise<{ data: Release }>;
+  updateRelease(params: UpdateReleaseParams): Promise<{ data: Release }>;
 
   allReleases(params: {
     owner: string;
@@ -70,7 +52,7 @@ export interface Releaser {
   }): Promise<undefined | string>;
 
   generateReleaseBody(
-    params: Parameters<GitHub["rest"]["repos"]["generateReleaseNotes"]>[0]
+    params: GenerateReleaseNotesParams
   ): Promise<string>;
 }
 
@@ -85,42 +67,21 @@ export class GitHubReleaser implements Releaser {
     repo: string;
     tag: string;
   }): Promise<{ data: Release }> {
-    return this.github.rest.repos.getReleaseByTag(params);
+    return this.github.rest.repos.getReleaseByTag(params as any);
   }
 
-  createRelease(params: {
-    owner: string;
-    repo: string;
-    tag_name: string;
-    name: string;
-    body: string | undefined;
-    draft: boolean | undefined;
-    prerelease: boolean | undefined;
-    target_commitish: string | undefined;
-    discussion_category_name: string | undefined;
-  }): Promise<{ data: Release }> {
+  createRelease(params: CreateReleaseParams): Promise<{ data: Release }> {
     return this.github.rest.repos.createRelease({
       ...params,
-      generate_release_notes: false,
-    });
+      generate_release_notes: false
+    } as any);
   }
 
-  updateRelease(params: {
-    owner: string;
-    repo: string;
-    release_id: number;
-    tag_name: string;
-    target_commitish: string;
-    name: string;
-    body: string | undefined;
-    draft: boolean | undefined;
-    prerelease: boolean | undefined;
-    discussion_category_name: string | undefined;
-  }): Promise<{ data: Release }> {
+  updateRelease(params: UpdateReleaseParams): Promise<{ data: Release }> {
     return this.github.rest.repos.updateRelease({
       ...params,
       generate_release_notes: false,
-    });
+    } as any);
   }
 
   allReleases(params: {
@@ -129,7 +90,7 @@ export class GitHubReleaser implements Releaser {
   }): AsyncIterableIterator<{ data: Release[] }> {
     const updatedParams = { per_page: 100, ...params };
     return this.github.paginate.iterator(
-      this.github.rest.repos.listReleases.endpoint.merge(updatedParams)
+      this.github.rest.repos.listReleases.endpoint.merge(updatedParams as any)
     );
   }
 
@@ -138,7 +99,7 @@ export class GitHubReleaser implements Releaser {
     repo: string;
   }): Promise<undefined | string> {
     try {
-      const release = await this.github.rest.repos.getLatestRelease(params);
+      const release = await this.github.rest.repos.getLatestRelease(params as any);
 
       if (!release?.data) {
         return;
@@ -152,11 +113,11 @@ export class GitHubReleaser implements Releaser {
     }
   }
 
-  async generateReleaseBody(
-    params: Parameters<GitHub["rest"]["repos"]["generateReleaseNotes"]>[0]
-  ): Promise<string> {
+  async generateReleaseBody(params: GenerateReleaseNotesParams): Promise<string> {
     try {
-      const { data } = await this.github.rest.repos.generateReleaseNotes(params);
+      const { data } = await this.github.rest.repos.generateReleaseNotes(
+        params as any
+      );
 
       if (!data.body) {
         throw new Error("No release body generated");
@@ -179,7 +140,7 @@ export const asset = (path: string): ReleaseAsset => {
 };
 
 export const mimeOrDefault = (path: string): string => {
-  return getType(path) || "application/octet-stream";
+  return mime.getType(path) || "application/octet-stream";
 };
 
 export const upload = async (
@@ -205,16 +166,17 @@ export const upload = async (
   console.log(`⬆️ Uploading ${name}...`);
   const endpoint = new URL(url);
   endpoint.searchParams.append("name", name);
-  const resp = await fetch(endpoint, {
+  const resp = await github.request({
+    method: "POST",
+    url: endpoint.toString(),
     headers: {
       "content-length": `${size}`,
       "content-type": mime,
       authorization: `token ${config.github_token}`,
     },
-    method: "POST",
-    body,
+    data: body,
   });
-  const json = await resp.json();
+  const json = resp.data;
   if (resp.status !== 201) {
     throw new Error(
       `Failed to upload release asset ${name}. received status code ${
@@ -247,11 +209,11 @@ export const release = async (
   const generate_release_notes = config.input_generate_release_notes;
 
   const latestTag: string | undefined = !previous_tag
-      ? await releaser.getLatestTag({
-          owner,
-          repo,
-        })
-      : undefined;
+    ? await releaser.getLatestTag({
+        owner,
+        repo,
+      })
+    : undefined;
 
   if (latestTag) {
     console.log(`🏷️ Latest tag related to a release is ${latestTag}`);
@@ -267,11 +229,15 @@ export const release = async (
         repo,
         tag_name,
         previous_tag_name: previous_tag || latestTag,
-      })
+      } as GenerateReleaseNotesParams)
     : "";
 
-  if (generate_release_notes && previous_tag || latestTag) {
-    console.log(`Will generate release notes using ${previous_tag || latestTag} as previous tag`);
+  if ((generate_release_notes && previous_tag) || latestTag) {
+    console.log(
+      `Will generate release notes using ${
+        previous_tag || latestTag
+      } as previous tag`
+    );
   }
 
   body = body ? `${body}\n` : "";
@@ -319,10 +285,12 @@ export const release = async (
     const existingReleaseBody = existingRelease.data.body || "";
 
     if (config.input_append_body && workflowBody && existingReleaseBody) {
-      console.log('➕ Appending existing release body');
+      console.log("➕ Appending existing release body");
       body = body + existingReleaseBody + "\n" + workflowBody;
     } else {
-      console.log(`➕ Using ${workflowBody ? 'workflow body' : 'existing release body'}`);
+      console.log(
+        `➕ Using ${workflowBody ? "workflow body" : "existing release body"}`
+      );
       body = body + (workflowBody || existingReleaseBody);
     }
 
@@ -335,6 +303,8 @@ export const release = async (
         ? config.input_prerelease
         : existingRelease.data.prerelease;
 
+    const make_latest = config.input_make_latest!;
+
     const release = await releaser.updateRelease({
       owner,
       repo,
@@ -346,7 +316,8 @@ export const release = async (
       draft,
       prerelease,
       discussion_category_name,
-    });
+      make_latest,
+    } as UpdateReleaseParams);
     return release.data;
   } catch (error) {
     if (error.status === 404) {
@@ -355,13 +326,14 @@ export const release = async (
       const workflowBody = releaseBody(config) || "";
 
       if (config.input_append_body && workflowBody) {
-        console.log('➕ Appending existing release body');
+        console.log("➕ Appending existing release body");
         body = body + workflowBody;
       }
 
       const draft = config.input_draft;
       const prerelease = config.input_prerelease;
       const target_commitish = config.input_target_commitish;
+      const make_latest = config.input_make_latest!;
       let commitMessage: string = "";
       if (target_commitish) {
         commitMessage = ` using commit "${target_commitish}"`;
@@ -380,7 +352,8 @@ export const release = async (
           prerelease,
           target_commitish,
           discussion_category_name,
-        });
+          make_latest,
+        } as CreateReleaseParams);
         return release.data;
       } catch (error) {
         // presume a race with competing metrix runs
