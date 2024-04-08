@@ -19,7 +19,8 @@ export interface Config {
   input_discussion_category_name?: string;
   input_generate_release_notes?: boolean;
   input_append_body?: boolean;
-  input_make_latest: string | undefined;
+  input_previous_tag?: string;
+  input_make_latest?: string;
 }
 
 export const uploadUrl = (url: string): string => {
@@ -74,6 +75,7 @@ export const parseConfig = (env: Env): Config => {
     input_make_latest: env.INPUT_MAKE_LATEST
       ? env.INPUT_MAKE_LATEST
       : undefined,
+    input_previous_tag: env.INPUT_PREVIOUS_TAG?.trim() || undefined,
   };
 };
 
