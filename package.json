@@ -23,7 +23,7 @@
     "@actions/core": "^1.10.0",
     "@actions/github": "^5.1.1",
     "@octokit/plugin-retry": "^4.0.3",
-    "@octokit/plugin-throttling": "^4.3.2",
+    "@octokit/plugin-throttling": "^9.2.0",
     "glob": "^8.0.3",
     "mime": "^3.0.0"
   },
