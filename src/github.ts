@@ -149,7 +149,7 @@ export const upload = async (
   const [owner, repo] = config.github_repository.split("/");
   const { name, size, mime, data: body } = asset(path);
   const currentAsset = currentAssets.find(
-    ({ name: currentName }) => currentName == name
+    ({ name: currentName }) => currentName == name.replace(' ','.')
   );
   if (currentAsset) {
     console.log(`♻️ Deleting previously uploaded asset ${name}...`);
