@@ -310,6 +310,7 @@ export const release = async (
         return release.data;
       } catch (error) {
         // presume a race with competing metrix runs
+        console.log(error.response.data)
         console.log(
           `⚠️ GitHub release failed with status: ${
             error.status
