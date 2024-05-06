@@ -149,7 +149,7 @@ export const upload = async (
   const [owner, repo] = config.github_repository.split("/");
   const { name, size, mime, data: body } = asset(path);
   const currentAsset = currentAssets.find(
-    ({ name: currentName }) => currentName == name.replace(' ','.')
+    ({ name: currentName }) => currentName == name.replace(" ", ".")
   );
   if (currentAsset) {
     console.log(`♻️ Deleting previously uploaded asset ${name}...`);
@@ -310,7 +310,7 @@ export const release = async (
         return release.data;
       } catch (error) {
         // presume a race with competing metrix runs
-        console.log(error.response.data)
+        console.log(error.response.data);
         console.log(
           `⚠️ GitHub release failed with status: ${
             error.status
