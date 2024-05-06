@@ -149,6 +149,9 @@ export const upload = async (
   const [owner, repo] = config.github_repository.split("/");
   const { name, size, mime, data: body } = asset(path);
   const currentAsset = currentAssets.find(
+    // note: GitHub renames asset filenames that have special characters, non-alphanumeric characters, and leading or trailing periods. The "List release assets" endpoint lists the renamed filenames.
+    // due to this renaming we need to be mindful when we compare the file name we're uploading with a name github may already have rewritten for logical comparison
+    // see https://docs.github.com/en/rest/releases/assets?apiVersion=2022-11-28#upload-a-release-asset
     ({ name: currentName }) => currentName == name.replace(" ", ".")
   );
   if (currentAsset) {
