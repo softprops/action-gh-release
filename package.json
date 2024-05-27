@@ -24,7 +24,7 @@
     "@actions/github": "^5.1.1",
     "@octokit/plugin-retry": "^4.0.3",
     "@octokit/plugin-throttling": "^4.3.2",
-    "glob": "^8.0.3",
+    "glob": "^10.4.1",
     "mime": "^3.0.0"
   },
   "devDependencies": {
