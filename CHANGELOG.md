@@ -1,3 +1,7 @@
+## 2.0.6
+
+- maintenance release with updated dependencies
+
 ## 2.0.5
 
 - Factor in file names with spaces when upserting files [#446](https://github.com/softprops/action-gh-release/pull/446) via [@MystiPanda](https://github.com/MystiPanda)
