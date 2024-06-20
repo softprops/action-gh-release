@@ -208,45 +208,63 @@ export const release = async (
   try {
     // you can't get a an existing draft by tag
     // so we must find one in the list of all releases
+    let _release: Release | undefined = undefined;
     if (config.input_draft) {
       for await (const response of releaser.allReleases({
         owner,
         repo,
       })) {
-        let release = response.data.find((release) => release.tag_name === tag);
-        if (release) {
-          return release;
-        }
+        _release = response.data.find((release) => release.tag_name === tag);
       }
+    } else {
+      _release = (
+        await releaser.getReleaseByTag({
+          owner,
+          repo,
+          tag,
+        })
+      ).data;
     }
-    let existingRelease = await releaser.getReleaseByTag({
-      owner,
-      repo,
-      tag,
-    });
+    if (_release === null || _release === undefined) {
+      return await createRelease(
+        tag,
+        config,
+        releaser,
+        owner,
+        repo,
+        discussion_category_name,
+        generate_release_notes,
+        maxRetries
+      );
+    }
 
-    const release_id = existingRelease.data.id;
+    let existingRelease: Release = _release!;
+    console.log(
+      `Found release ${existingRelease.name} (with id=${existingRelease.id})`
+    );
+
+    const release_id = existingRelease.id;
     let target_commitish: string;
     if (
       config.input_target_commitish &&
-      config.input_target_commitish !== existingRelease.data.target_commitish
+      config.input_target_commitish !== existingRelease.target_commitish
     ) {
       console.log(
-        `Updating commit from "${existingRelease.data.target_commitish}" to "${config.input_target_commitish}"`
+        `Updating commit from "${existingRelease.target_commitish}" to "${config.input_target_commitish}"`
       );
       target_commitish = config.input_target_commitish;
     } else {
-      target_commitish = existingRelease.data.target_commitish;
+      target_commitish = existingRelease.target_commitish;
     }
 
     const tag_name = tag;
-    const name = config.input_name || existingRelease.data.name || tag;
+    const name = config.input_name || existingRelease.name || tag;
     // revisit: support a new body-concat-strategy input for accumulating
     // body parts as a release gets updated. some users will likely want this while
     // others won't previously this was duplicating content for most which
     // no one wants
     const workflowBody = releaseBody(config) || "";
-    const existingReleaseBody = existingRelease.data.body || "";
+    const existingReleaseBody = existingRelease.body || "";
     let body: string;
     if (config.input_append_body && workflowBody && existingReleaseBody) {
       body = existingReleaseBody + "\n" + workflowBody;
@@ -257,11 +275,11 @@ export const release = async (
     const draft =
       config.input_draft !== undefined
         ? config.input_draft
-        : existingRelease.data.draft;
+        : existingRelease.draft;
     const prerelease =
       config.input_prerelease !== undefined
         ? config.input_prerelease
-        : existingRelease.data.prerelease;
+        : existingRelease.prerelease;
 
     const make_latest = config.input_make_latest;
 
@@ -288,58 +306,80 @@ export const release = async (
       throw error;
     }
 
-    const tag_name = tag;
-    const name = config.input_name || tag;
-    const body = releaseBody(config);
-    const draft = config.input_draft;
-    const prerelease = config.input_prerelease;
-    const target_commitish = config.input_target_commitish;
-    const make_latest = config.input_make_latest;
-    let commitMessage: string = "";
-    if (target_commitish) {
-      commitMessage = ` using commit "${target_commitish}"`;
-    }
-    console.log(
-      `👩‍🏭 Creating new GitHub release for tag ${tag_name}${commitMessage}...`
+    return await createRelease(
+      tag,
+      config,
+      releaser,
+      owner,
+      repo,
+      discussion_category_name,
+      generate_release_notes,
+      maxRetries
     );
-    try {
-      let release = await releaser.createRelease({
-        owner,
-        repo,
-        tag_name,
-        name,
-        body,
-        draft,
-        prerelease,
-        target_commitish,
-        discussion_category_name,
-        generate_release_notes,
-        make_latest,
-      });
-      return release.data;
-    } catch (error) {
-      // presume a race with competing matrix runs
-      console.log(`⚠️ GitHub release failed with status: ${error.status}`);
-      console.log(`${JSON.stringify(error.response.data)}`);
-
-      switch (error.status) {
-        case 403:
-          console.log(
-            "Skip retry — your GitHub token/PAT does not have the required permission to create a release"
-          );
-          throw error;
-
-        case 404:
-          console.log("Skip retry - discussion category mismatch");
-          throw error;
-
-        case 422:
-          console.log("Skip retry - validation failed");
-          throw error;
-      }
-
-      console.log(`retrying... (${maxRetries - 1} retries remaining)`);
-      return release(config, releaser, maxRetries - 1);
-    }
   }
 };
+
+async function createRelease(
+  tag: string,
+  config: Config,
+  releaser: Releaser,
+  owner: string,
+  repo: string,
+  discussion_category_name: string | undefined,
+  generate_release_notes: boolean | undefined,
+  maxRetries: number
+) {
+  const tag_name = tag;
+  const name = config.input_name || tag;
+  const body = releaseBody(config);
+  const draft = config.input_draft;
+  const prerelease = config.input_prerelease;
+  const target_commitish = config.input_target_commitish;
+  const make_latest = config.input_make_latest;
+  let commitMessage: string = "";
+  if (target_commitish) {
+    commitMessage = ` using commit "${target_commitish}"`;
+  }
+  console.log(
+    `👩‍🏭 Creating new GitHub release for tag ${tag_name}${commitMessage}...`
+  );
+  try {
+    let release = await releaser.createRelease({
+      owner,
+      repo,
+      tag_name,
+      name,
+      body,
+      draft,
+      prerelease,
+      target_commitish,
+      discussion_category_name,
+      generate_release_notes,
+      make_latest,
+    });
+    return release.data;
+  } catch (error) {
+    // presume a race with competing matrix runs
+    console.log(`⚠️ GitHub release failed with status: ${error.status}`);
+    console.log(`${JSON.stringify(error.response.data)}`);
+
+    switch (error.status) {
+      case 403:
+        console.log(
+          "Skip retry — your GitHub token/PAT does not have the required permission to create a release"
+        );
+        throw error;
+
+      case 404:
+        console.log("Skip retry - discussion category mismatch");
+        throw error;
+
+      case 422:
+        console.log("Skip retry - validation failed");
+        throw error;
+    }
+
+    console.log(`retrying... (${maxRetries - 1} retries remaining)`);
+    return release(config, releaser, maxRetries - 1);
+  }
+}

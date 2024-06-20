@@ -6,6 +6,7 @@
   "main": "lib/main.js",
   "scripts": {
     "build": "ncc build src/main.ts --minify",
+    "build-debug": "ncc build src/main.ts --v8-cache --source-map",
     "test": "jest",
     "fmt": "prettier --write \"src/**/*.ts\" \"__tests__/**/*.ts\"",
     "fmtcheck": "prettier --check \"src/**/*.ts\" \"__tests__/**/*.ts\"",
