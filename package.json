@@ -25,12 +25,12 @@
     "@octokit/plugin-retry": "^7.1.1",
     "@octokit/plugin-throttling": "^9.3.0",
     "glob": "^10.4.2",
-    "mime": "^3.0.0"
+    "mime": "^4.0.3"
   },
   "devDependencies": {
     "@types/glob": "^8.1.0",
     "@types/jest": "^29.5.12",
-    "@types/mime": "^3.0.1",
+    "@types/mime": "^4.0.0",
     "@types/node": "^20.14.9",
     "@vercel/ncc": "^0.38.1",
     "jest": "^29.3.1",
