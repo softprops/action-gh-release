@@ -75,6 +75,7 @@ GitHub release and all are optional.
 A common case for GitHub releases is to upload your binary after its been validated and packaged.
 Use the `with.files` input to declare a newline-delimited list of glob expressions matching the files
 you wish to upload to GitHub releases. If you'd like you can just list the files by name directly.
+If a tag already has a GitHub release, the existing release will be updated with the release assets.
 
 Below is an example of uploading a single asset named `Release.txt`
 
