@@ -1,3 +1,19 @@
+## 2.0.7
+
+### Bug fixes 🐛
+
+* Fix missing update release body by @FirelightFlagboy in https://github.com/softprops/action-gh-release/pull/365
+
+### Other Changes 🔄
+
+* Bump @octokit/plugin-retry from 4.0.3 to 7.1.1 by @dependabot in https://github.com/softprops/action-gh-release/pull/443
+* Bump typescript from 4.9.5 to 5.5.2 by @dependabot in https://github.com/softprops/action-gh-release/pull/467
+* Bump @types/node from 20.14.6 to 20.14.8 by @dependabot in https://github.com/softprops/action-gh-release/pull/469
+* Bump @types/node from 20.14.8 to 20.14.9 by @dependabot in https://github.com/softprops/action-gh-release/pull/473
+* Bump typescript from 5.5.2 to 5.5.3 by @dependabot in https://github.com/softprops/action-gh-release/pull/472
+* Bump ts-jest from 29.1.5 to 29.2.2 by @dependabot in https://github.com/softprops/action-gh-release/pull/479
+* docs: document that existing releases are updated by @jvanbruegge in https://github.com/softprops/action-gh-release/pull/474
+
 ## 2.0.6
 
 - maintenance release with updated dependencies
