@@ -21,6 +21,16 @@
 
 <br />
 
+- [🤸 Usage](#-usage)
+  - [🚥 Limit releases to pushes to tags](#-limit-releases-to-pushes-to-tags)
+  - [⬆️ Uploading release assets](#️-uploading-release-assets)
+  - [📝 External release notes](#-external-release-notes)
+  - [💅 Customizing](#-customizing)
+    - [inputs](#inputs)
+    - [outputs](#outputs)
+    - [environment variables](#environment-variables)
+  - [Permissions](#permissions)
+
 ## 🤸 Usage
 
 ### 🚥 Limit releases to pushes to tags
@@ -41,9 +51,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Release
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2
         if: startsWith(github.ref, 'refs/tags/')
 ```
 
@@ -62,9 +72,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Release
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2
 ```
 
 ### ⬆️ Uploading release assets
@@ -75,6 +85,7 @@ GitHub release and all are optional.
 A common case for GitHub releases is to upload your binary after its been validated and packaged.
 Use the `with.files` input to declare a newline-delimited list of glob expressions matching the files
 you wish to upload to GitHub releases. If you'd like you can just list the files by name directly.
+If a tag already has a GitHub release, the existing release will be updated with the release assets.
 
 Below is an example of uploading a single asset named `Release.txt`
 
@@ -88,13 +99,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Build
         run: echo ${{ github.sha }} > Release.txt
       - name: Test
         run: cat Release.txt
       - name: Release
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2
         if: startsWith(github.ref, 'refs/tags/')
         with:
           files: Release.txt
@@ -112,13 +123,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Build
         run: echo ${{ github.sha }} > Release.txt
       - name: Test
         run: cat Release.txt
       - name: Release
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2
         if: startsWith(github.ref, 'refs/tags/')
         with:
           files: |
@@ -126,7 +137,7 @@ jobs:
             LICENSE
 ```
 
-> **⚠️ Note:** Notice the `|` in the yaml syntax above ☝️. That let's you effectively declare a multi-line yaml string. You can learn more about multi-line yaml syntax [here](https://yaml-multiline.info)
+> **⚠️ Note:** Notice the `|` in the yaml syntax above ☝️. That lets you effectively declare a multi-line yaml string. You can learn more about multi-line yaml syntax [here](https://yaml-multiline.info)
 
 > **⚠️ Note for Windows:** Paths must use `/` as a separator, not `\`, as `\` is used to escape characters with special meaning in the pattern; for example, instead of specifying `D:\Foo.txt`, you must specify `D:/Foo.txt`. If you're using PowerShell, you can do this with `$Path = $Path -replace '\\','/'`
 
@@ -146,19 +157,18 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Generate Changelog
         run: echo "# Good things have arrived" > ${{ github.workspace }}-CHANGELOG.txt
       - name: Release
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2
         if: startsWith(github.ref, 'refs/tags/')
         with:
           body_path: ${{ github.workspace }}-CHANGELOG.txt
+          repository: my_gh_org/my_gh_repo
           # note you'll typically need to create a personal access token
           # with permissions to create releases in the other repo
           token: ${{ secrets.CUSTOM_GITHUB_TOKEN }}
-        env:
-          GITHUB_REPOSITORY: my_gh_org/my_gh_repo
 ```
 
 ### 💅 Customizing
@@ -183,6 +193,7 @@ The following are optional as `step.with` keys
 | `discussion_category_name` | String  | If specified, a discussion of the specified category is created and linked to the release. The value must be a category that already exists in the repository. For more information, see ["Managing categories for discussions in your repository."](https://docs.github.com/en/discussions/managing-discussions-for-your-community/managing-categories-for-discussions-in-your-repository)                                                     |
 | `generate_release_notes`   | Boolean | Whether to automatically generate the name and body for this release. If name is specified, the specified name will be used; otherwise, a name will be automatically generated. If body is specified, the body will be pre-pended to the automatically generated notes. See the [GitHub docs for this feature](https://docs.github.com/en/repositories/releasing-projects-on-github/automatically-generated-release-notes) for more information |
 | `append_body`              | Boolean | Append to existing body instead of overwriting it                                                                                                                                                                                                                                                                                                                                                                                               |
+| `make_latest`              | String  | Specifies whether this release should be set as the latest release for the repository. Drafts and prereleases cannot be set as latest. Can be `true`, `false`, or `legacy`. Uses GitHub api defaults if not provided                                                                                                                                                                                                                            |
 
 💡 When providing a `body` and `body_path` at the same time, `body_path` will be
 attempted first, then falling back on `body` if the path can not be read from.
@@ -195,11 +206,11 @@ release will retain its original info.
 
 The following outputs can be accessed via `${{ steps.<step-id>.outputs }}` from this action
 
-| Name         | Type   | Description                                                                                                                                                                                                |
-| ------------ | ------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `url`        | String | Github.com URL for the release                                                                                                                                                                             |
-| `id`         | String | Release ID                                                                                                                                                                                                 |
-| `upload_url` | String | URL for uploading assets to the release                                                                                                                                                                    |
+| Name         | Type   | Description                                                                                                                                                                               |
+| ------------ | ------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `url`        | String | Github.com URL for the release                                                                                                                                                            |
+| `id`         | String | Release ID                                                                                                                                                                                |
+| `upload_url` | String | URL for uploading assets to the release                                                                                                                                                   |
 | `assets`     | String | JSON array containing information about each uploaded asset, in the format given [here](https://docs.github.com/en/rest/releases/assets#get-a-release-asset) (minus the `uploader` field) |
 
 As an example, you can use `${{ fromJSON(steps.<step-id>.outputs.assets)[0].browser_download_url }}` to get the download URL of the first asset.
@@ -233,5 +244,8 @@ permissions:
 ```
 
 [GitHub token permissions](https://docs.github.com/en/actions/security-guides/automatic-token-authentication#permissions-for-the-github_token) can be set for an individual job, workflow, or for Actions as a whole.
+
+Note that if you intend to run workflows on the release event (`on: { release: { types: [published] } }`), you need to use
+a personal access token for this action, as the [default `secrets.GITHUB_TOKEN` does not trigger another workflow](https://github.com/actions/create-release/issues/71).
 
 Doug Tangren (softprops) 2019

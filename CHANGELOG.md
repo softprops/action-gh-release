@@ -1,3 +1,52 @@
+## 2.0.7
+
+### Bug fixes 🐛
+
+* Fix missing update release body by @FirelightFlagboy in https://github.com/softprops/action-gh-release/pull/365
+
+### Other Changes 🔄
+
+* Bump @octokit/plugin-retry from 4.0.3 to 7.1.1 by @dependabot in https://github.com/softprops/action-gh-release/pull/443
+* Bump typescript from 4.9.5 to 5.5.2 by @dependabot in https://github.com/softprops/action-gh-release/pull/467
+* Bump @types/node from 20.14.6 to 20.14.8 by @dependabot in https://github.com/softprops/action-gh-release/pull/469
+* Bump @types/node from 20.14.8 to 20.14.9 by @dependabot in https://github.com/softprops/action-gh-release/pull/473
+* Bump typescript from 5.5.2 to 5.5.3 by @dependabot in https://github.com/softprops/action-gh-release/pull/472
+* Bump ts-jest from 29.1.5 to 29.2.2 by @dependabot in https://github.com/softprops/action-gh-release/pull/479
+* docs: document that existing releases are updated by @jvanbruegge in https://github.com/softprops/action-gh-release/pull/474
+
+## 2.0.6
+
+- maintenance release with updated dependencies
+
+## 2.0.5
+
+- Factor in file names with spaces when upserting files [#446](https://github.com/softprops/action-gh-release/pull/446) via [@MystiPanda](https://github.com/MystiPanda)
+- Improvements to error handling [#449](https://github.com/softprops/action-gh-release/pull/449) via [@till](https://github.com/till)
+
+## 2.0.4
+
+- Minor follow up to [#417](https://github.com/softprops/action-gh-release/pull/417). [#425](https://github.com/softprops/action-gh-release/pull/425)
+
+## 2.0.3
+
+- Declare `make_latest` as an input field in `action.yml` [#419](https://github.com/softprops/action-gh-release/pull/419)
+
+## 2.0.2
+
+- Revisit approach to [#384](https://github.com/softprops/action-gh-release/pull/384) making unresolved pattern failures opt-in [#417](https://github.com/softprops/action-gh-release/pull/417)
+
+## 2.0.1
+
+- Add support for make_latest property [#304](https://github.com/softprops/action-gh-release/pull/304) via [@samueljseay](https://github.com/samueljseay)
+- Fail run if files setting contains invalid patterns [#384](https://github.com/softprops/action-gh-release/pull/384) via [@rpdelaney](https://github.com/rpdelaney)
+- Add support for proxy env variables (don't use node-fetch) [#386](https://github.com/softprops/action-gh-release/pull/386/) via [@timor-raiman](https://github.com/timor-raiman)
+- Suppress confusing warning when input_files is empty [#389](https://github.com/softprops/action-gh-release/pull/389) via [@Drowze](https://github.com/Drowze)
+
+## 2.0.0
+
+- `2.0.0`!? this release corrects a disjunction between git tag versions used in the marketplace and versions list this file. Previous versions should have really been 1.\*. Going forward this should be better aligned.
+- Upgrade action.yml declaration to node20 to address deprecations
+
 ## 0.1.15
 
 - Upgrade to action.yml declaration to node16 to address deprecations
