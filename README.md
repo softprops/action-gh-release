@@ -21,6 +21,16 @@
 
 <br />
 
+- [🤸 Usage](#-usage)
+  - [🚥 Limit releases to pushes to tags](#-limit-releases-to-pushes-to-tags)
+  - [⬆️ Uploading release assets](#️-uploading-release-assets)
+  - [📝 External release notes](#-external-release-notes)
+  - [💅 Customizing](#-customizing)
+    - [inputs](#inputs)
+    - [outputs](#outputs)
+    - [environment variables](#environment-variables)
+  - [Permissions](#permissions)
+
 ## 🤸 Usage
 
 ### 🚥 Limit releases to pushes to tags
