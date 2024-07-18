@@ -1,3 +1,13 @@
+## 2.0.8
+
+### Other Changes 🔄
+* chore(deps): bump prettier from 2.8.0 to 3.3.3 by @dependabot in https://github.com/softprops/action-gh-release/pull/480
+* chore(deps): bump @types/node from 20.14.9 to 20.14.11 by @dependabot in https://github.com/softprops/action-gh-release/pull/483
+* chore(deps): bump @octokit/plugin-throttling from 9.3.0 to 9.3.1 by @dependabot in https://github.com/softprops/action-gh-release/pull/484
+* chore(deps): bump glob from 10.4.2 to 11.0.0 by @dependabot in https://github.com/softprops/action-gh-release/pull/477
+* refactor: write jest config in ts by @chenrui333 in https://github.com/softprops/action-gh-release/pull/485
+* chore(deps): bump @actions/github from 5.1.1 to 6.0.0 by @dependabot in https://github.com/softprops/action-gh-release/pull/470
+
 ## 2.0.7
 
 ### Bug fixes 🐛
