@@ -1,7 +1,7 @@
 import { GitHub } from "@actions/github/lib/utils";
 import { Config, isTag, releaseBody } from "./util";
 import { statSync, readFileSync } from "fs";
-import { getType } from "mime";
+import mime from "mime";
 import { basename } from "path";
 
 type GitHub = InstanceType<typeof GitHub>;
@@ -136,7 +136,7 @@ export const asset = (path: string): ReleaseAsset => {
 };
 
 export const mimeOrDefault = (path: string): string => {
-  return getType(path) || "application/octet-stream";
+  return mime.getType(path) || "application/octet-stream";
 };
 
 export const upload = async (
