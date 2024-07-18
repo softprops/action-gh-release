@@ -44,7 +44,7 @@ export interface Releaser {
     target_commitish: string | undefined;
     discussion_category_name: string | undefined;
     generate_release_notes: boolean | undefined;
-    make_latest: string | undefined;
+    make_latest: "true" | "false" | "legacy" | undefined;
   }): Promise<{ data: Release }>;
 
   updateRelease(params: {
@@ -59,7 +59,7 @@ export interface Releaser {
     prerelease: boolean | undefined;
     discussion_category_name: string | undefined;
     generate_release_notes: boolean | undefined;
-    make_latest: string | undefined;
+    make_latest: "true" | "false" | "legacy" | undefined;
   }): Promise<{ data: Release }>;
 
   allReleases(params: {
@@ -93,8 +93,15 @@ export class GitHubReleaser implements Releaser {
     target_commitish: string | undefined;
     discussion_category_name: string | undefined;
     generate_release_notes: boolean | undefined;
-    make_latest: string | undefined;
+    make_latest: "true" | "false" | "legacy" | undefined;
   }): Promise<{ data: Release }> {
+    if (
+      typeof params.make_latest === "string" &&
+      !["true", "false", "legacy"].includes(params.make_latest)
+    ) {
+      params.make_latest = undefined;
+    }
+
     return this.github.rest.repos.createRelease(params);
   }
 
@@ -110,8 +117,15 @@ export class GitHubReleaser implements Releaser {
     prerelease: boolean | undefined;
     discussion_category_name: string | undefined;
     generate_release_notes: boolean | undefined;
-    make_latest: string | undefined;
+    make_latest: "true" | "false" | "legacy" | undefined;
   }): Promise<{ data: Release }> {
+    if (
+      typeof params.make_latest === "string" &&
+      !["true", "false", "legacy"].includes(params.make_latest)
+    ) {
+      params.make_latest = undefined;
+    }
+
     return this.github.rest.repos.updateRelease(params);
   }
 
