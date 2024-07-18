@@ -19,7 +19,7 @@ export interface Config {
   input_discussion_category_name?: string;
   input_generate_release_notes?: boolean;
   input_append_body?: boolean;
-  input_make_latest: string | undefined;
+  input_make_latest: "true" | "false" | "legacy" | undefined;
 }
 
 export const uploadUrl = (url: string): string => {
@@ -71,11 +71,18 @@ export const parseConfig = (env: Env): Config => {
       env.INPUT_DISCUSSION_CATEGORY_NAME || undefined,
     input_generate_release_notes: env.INPUT_GENERATE_RELEASE_NOTES == "true",
     input_append_body: env.INPUT_APPEND_BODY == "true",
-    input_make_latest: env.INPUT_MAKE_LATEST
-      ? env.INPUT_MAKE_LATEST
-      : undefined,
+    input_make_latest: parseMakeLatest(env.INPUT_MAKE_LATEST),
   };
 };
+
+const parseMakeLatest = (
+  value: string | undefined
+): "true" | "false" | "legacy" | undefined => {
+  if (value === "true" || value === "false" || value === "legacy") {
+    return value;
+  }
+  return undefined;
+}
 
 export const paths = (patterns: string[]): string[] => {
   return patterns.reduce((acc: string[], pattern: string): string[] => {
