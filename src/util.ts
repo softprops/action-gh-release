@@ -76,13 +76,13 @@ export const parseConfig = (env: Env): Config => {
 };
 
 const parseMakeLatest = (
-  value: string | undefined
+  value: string | undefined,
 ): "true" | "false" | "legacy" | undefined => {
   if (value === "true" || value === "false" || value === "legacy") {
     return value;
   }
   return undefined;
-}
+};
 
 export const paths = (patterns: string[]): string[] => {
   return patterns.reduce((acc: string[], pattern: string): string[] => {

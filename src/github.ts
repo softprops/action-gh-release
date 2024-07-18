@@ -95,8 +95,10 @@ export class GitHubReleaser implements Releaser {
     generate_release_notes: boolean | undefined;
     make_latest: "true" | "false" | "legacy" | undefined;
   }): Promise<{ data: Release }> {
-
-    if (typeof params.make_latest === 'string' && !["true", "false", "legacy"].includes(params.make_latest)) {
+    if (
+      typeof params.make_latest === "string" &&
+      !["true", "false", "legacy"].includes(params.make_latest)
+    ) {
       params.make_latest = undefined;
     }
 
@@ -117,8 +119,10 @@ export class GitHubReleaser implements Releaser {
     generate_release_notes: boolean | undefined;
     make_latest: "true" | "false" | "legacy" | undefined;
   }): Promise<{ data: Release }> {
-
-    if (typeof params.make_latest === 'string' && !["true", "false", "legacy"].includes(params.make_latest)) {
+    if (
+      typeof params.make_latest === "string" &&
+      !["true", "false", "legacy"].includes(params.make_latest)
+    ) {
       params.make_latest = undefined;
     }
 
