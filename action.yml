@@ -25,7 +25,7 @@ inputs:
     description: "Newline-delimited list of path globs for asset files to upload"
     required: false
   overwrite_files:
-    description: "Overwrite existing files with the same name. Defaults to false"
+    description: "Overwrite existing files with the same name. Defaults to true"
     required: false
     default: 'true'
   fail_on_unmatched_files:
