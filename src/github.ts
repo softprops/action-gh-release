@@ -79,6 +79,12 @@ export interface Releaser {
     repo: string;
     ref: string;
   }) : Promise<any>;
+
+  getRef(params: {
+    owner: string;
+    repo: string;
+    ref: string;
+  }) : Promise<any>;
 }
 
 export class GitHubReleaser implements Releaser {
@@ -167,6 +173,14 @@ export class GitHubReleaser implements Releaser {
     ref: string;
   }) : Promise<any> {
     return this.github.rest.git.deleteRef(params);
+  }
+
+  getRef(params: {
+    owner: string;
+    repo: string;
+    ref: string;
+  }) : Promise<any> {
+    return this.github.rest.git.getRef(params);
   }
 }
 
@@ -328,6 +342,9 @@ export const release = async (
     const make_latest = config.input_make_latest;
 
     if(config.input_update_tag){
+
+      let newCommitSha = await getTargetCommit(target_commitish, releaser, owner, repo);
+
       await releaser.deleteRef({
         owner,
         repo,
@@ -337,10 +354,10 @@ export const release = async (
         owner,
         repo,
         ref: "refs/tags/"+existingRelease.tag_name,
-        sha: config.github_sha
+        sha: newCommitSha
       })
 
-      console.log(`Updated ref/tags/${existingRelease.tag_name} to ${config.github_sha}`);
+      console.log(`Updated ref/tags/${existingRelease.tag_name} to ${newCommitSha}`);
       
       // give github the time to draft the release before updating it
       // Else, I think we would have a race condition with github to update the release
@@ -445,6 +462,23 @@ async function createRelease(
 
     console.log(`retrying... (${maxRetries - 1} retries remaining)`);
     return release(config, releaser, maxRetries - 1);
+  }
+}
+
+async function getTargetCommit(target_commitish: string, releaser: Releaser, owner: string, repo: string) : Promise<string> {
+  if (target_commitish.length == 40) { // sha1 size
+    return target_commitish;
+  } else {
+    // assume it is a branch
+    let resp = await releaser.getRef({
+      owner: owner,
+      repo: repo,
+      ref: "heads/"+target_commitish,
+    })
+    if (resp.status == 404) {
+      throw new Error(`Branch ${target_commitish} not found`);
+    }
+    return resp.data.object.sha;
   }
 }
 
