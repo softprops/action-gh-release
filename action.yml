@@ -49,6 +49,8 @@ inputs:
   make_latest:
     description: "Specifies whether this release should be set as the latest release for the repository. Drafts and prereleases cannot be set as latest. Can be `true`, `false`, or `legacy`. Uses GitHub api default if not provided"
     required: false
+  update_tag:
+    description: "Update the tag of the release to the current commit. This will also update the release time."
 env:
   GITHUB_TOKEN: "As provided by Github Actions"
 outputs:
