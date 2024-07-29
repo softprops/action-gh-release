@@ -39,7 +39,7 @@
     "prettier": "3.3.3",
     "ts-jest": "^29.2.3",
     "ts-node": "^10.9.2",
-    "typescript": "^5.5.3",
+    "typescript": "^5.5.4",
     "typescript-formatter": "^7.2.2"
   }
 }
