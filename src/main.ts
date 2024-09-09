@@ -88,7 +88,7 @@ async function run() {
       };
       
       let assets;
-      if (config.preserve_order) {
+      if (!config.input_preserve_order) {
         assets = await Promise.all(files.map(uploadFile));
       } else {
         assets = [];

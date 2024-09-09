@@ -21,6 +21,9 @@ inputs:
   prerelease:
     description: "Identify the release as a prerelease. Defaults to false"
     required: false
+  preserve_order:
+    description: "Preserver the order of the artifacts when uploading"
+    required: false
   files:
     description: "Newline-delimited list of path globs for asset files to upload"
     required: false
