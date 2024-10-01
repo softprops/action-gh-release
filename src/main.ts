@@ -8,7 +8,6 @@ import {
 import { release, upload, GitHubReleaser } from "./github";
 import { getOctokit } from "@actions/github";
 import { setFailed, setOutput } from "@actions/core";
-import { GitHub, getOctokitOptions } from "@actions/github/lib/utils";
 
 import { env } from "process";
 
