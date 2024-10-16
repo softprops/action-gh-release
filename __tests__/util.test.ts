@@ -6,7 +6,7 @@ import {
   parseInputFiles,
   unmatchedPatterns,
   uploadUrl,
-  alignAssetName
+  alignAssetName,
 } from "../src/util";
 import * as assert from "assert";
 
@@ -370,17 +370,19 @@ describe("util", () => {
     });
   });
 
-  describe('replaceSpacesWithDots', () => {
-    it('replaces all spaces with dots', () => {
-        expect(alignAssetName("John Doe.bla")).toBe("John.Doe.bla");
+  describe("replaceSpacesWithDots", () => {
+    it("replaces all spaces with dots", () => {
+      expect(alignAssetName("John Doe.bla")).toBe("John.Doe.bla");
     });
 
-    it('handles names with multiple spaces', () => {
-        expect(alignAssetName("John William Doe.bla")).toBe("John.William.Doe.bla");
+    it("handles names with multiple spaces", () => {
+      expect(alignAssetName("John William Doe.bla")).toBe(
+        "John.William.Doe.bla",
+      );
     });
 
-    it('returns the same string if there are no spaces', () => {
-        expect(alignAssetName("JohnDoe")).toBe("JohnDoe");
+    it("returns the same string if there are no spaces", () => {
+      expect(alignAssetName("JohnDoe")).toBe("JohnDoe");
     });
   });
 });
