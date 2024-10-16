@@ -1,5 +1,5 @@
 import { GitHub } from "@actions/github/lib/utils";
-import { Config, isTag, releaseBody } from "./util";
+import { Config, isTag, releaseBody, alignAssetName } from "./util";
 import { statSync, readFileSync } from "fs";
 import { getType } from "mime";
 import { basename } from "path";
@@ -166,7 +166,7 @@ export const upload = async (
     // note: GitHub renames asset filenames that have special characters, non-alphanumeric characters, and leading or trailing periods. The "List release assets" endpoint lists the renamed filenames.
     // due to this renaming we need to be mindful when we compare the file name we're uploading with a name github may already have rewritten for logical comparison
     // see https://docs.github.com/en/rest/releases/assets?apiVersion=2022-11-28#upload-a-release-asset
-    ({ name: currentName }) => currentName == name.replace(" ", "."),
+    ({ name: currentName }) => currentName == alignAssetName(name),
   );
   if (currentAsset) {
     console.log(`♻️ Deleting previously uploaded asset ${name}...`);
