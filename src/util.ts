@@ -105,3 +105,7 @@ export const unmatchedPatterns = (patterns: string[]): string[] => {
 export const isTag = (ref: string): boolean => {
   return ref.startsWith("refs/tags/");
 };
+
+export const alignAssetName = (assetName: string): string => {
+  return assetName.replace(/ /g, ".");
+};
