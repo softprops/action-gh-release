@@ -73,21 +73,28 @@ async function run() {
         }
       }
       const currentAssets = rel.assets;
-      const assets = await Promise.all(
-        files.map(async (path) => {
-          const json = await upload(
-            config,
-            gh,
-            uploadUrl(rel.upload_url),
-            path,
-            currentAssets,
-          );
-          delete json.uploader;
-          return json;
-        }),
-      ).catch((error) => {
-        throw error;
-      });
+
+      const uploadFile = async (path) => {
+        const json = await upload(
+          config,
+          gh,
+          uploadUrl(rel.upload_url),
+          path,
+          currentAssets,
+        );
+        delete json.uploader;
+        return json;
+      };
+
+      let assets;
+      if (!config.input_preserve_order) {
+        assets = await Promise.all(files.map(uploadFile));
+      } else {
+        assets = [];
+        for (const path of files) {
+          assets.push(await uploadFile(path));
+        }
+      }
       setOutput("assets", assets);
     }
     console.log(`🎉 Release ready at ${rel.html_url}`);
