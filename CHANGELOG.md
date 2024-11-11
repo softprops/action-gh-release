@@ -1,3 +1,7 @@
+## 2.0.9
+
+- maintenance release with updated dependencies
+
 ## 2.0.8
 
 ### Other Changes 🔄
