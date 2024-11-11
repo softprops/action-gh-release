@@ -85,7 +85,7 @@ async function run() {
         delete json.uploader;
         return json;
       };
-      
+
       let assets;
       if (!config.input_preserve_order) {
         assets = await Promise.all(files.map(uploadFile));
