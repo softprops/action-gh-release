@@ -1,6 +1,5 @@
-//import * as assert from "assert";
-//const assert = require('assert');
 import * as assert from "assert";
+import { text } from "stream/consumers";
 import { mimeOrDefault, asset } from "../src/github";
 
 describe("github", () => {
@@ -19,7 +18,7 @@ describe("github", () => {
       assert.equal(name, "bar.txt");
       assert.equal(mime, "text/plain");
       assert.equal(size, 10);
-      assert.equal(data.toString(), "release me");
+      assert.equal(await text(data), "release me");
     });
   });
 });
