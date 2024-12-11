@@ -1,6 +1,6 @@
 import { GitHub } from "@actions/github/lib/utils";
 import { Config, isTag, releaseBody, alignAssetName } from "./util";
-import { statSync, readFileSync } from "fs";
+import { createReadStream, statSync, type ReadStream } from "fs";
 import { getType } from "mime";
 import { basename } from "path";
 
@@ -10,7 +10,7 @@ export interface ReleaseAsset {
   name: string;
   mime: string;
   size: number;
-  data: Buffer;
+  data: ReadStream;
 }
 
 export interface Release {
@@ -145,7 +145,7 @@ export const asset = (path: string): ReleaseAsset => {
     name: basename(path),
     mime: mimeOrDefault(path),
     size: statSync(path).size,
-    data: readFileSync(path),
+    data: createReadStream(path, "binary"),
   };
 };
 
