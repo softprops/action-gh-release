@@ -188,7 +188,7 @@ export const upload = async (
         "content-type": mime,
         authorization: `token ${config.github_token}`,
       },
-      data: fh.readableWebStream({type: "bytes"}),
+      data: fh.readableWebStream({ type: "bytes" }),
     });
     const json = resp.data;
     if (resp.status !== 201) {
