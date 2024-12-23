@@ -198,6 +198,7 @@ export const upload = async (
         }\n${json.message}\n${JSON.stringify(json.errors)}`,
       );
     }
+    console.log(`✅ Uploaded ${name}`);
     return json;
   } finally {
     await fh.close();
