@@ -1,3 +1,25 @@
+## 2.2.0
+
+## What's Changed
+
+### Exciting New Features 🎉
+
+* feat: read the release assets asynchronously by @xen0n in https://github.com/softprops/action-gh-release/pull/552
+
+### Bug fixes 🐛
+
+* fix(docs): clarify the default for tag_name by @alexeagle in https://github.com/softprops/action-gh-release/pull/544
+
+### Other Changes 🔄
+
+* chore(deps): bump typescript from 5.6.3 to 5.7.2 by @dependabot in https://github.com/softprops/action-gh-release/pull/548
+* chore(deps): bump @types/node from 22.9.0 to 22.9.4 by @dependabot in https://github.com/softprops/action-gh-release/pull/547
+* chore(deps): bump cross-spawn from 7.0.3 to 7.0.6 by @dependabot in https://github.com/softprops/action-gh-release/pull/545
+* chore(deps): bump @vercel/ncc from 0.38.2 to 0.38.3 by @dependabot in https://github.com/softprops/action-gh-release/pull/543
+* chore(deps): bump prettier from 3.3.3 to 3.4.1 by @dependabot in https://github.com/softprops/action-gh-release/pull/550
+* chore(deps): bump @types/node from 22.9.4 to 22.10.1 by @dependabot in https://github.com/softprops/action-gh-release/pull/551
+* chore(deps): bump prettier from 3.4.1 to 3.4.2 by @dependabot in https://github.com/softprops/action-gh-release/pull/554
+
 ## 2.1.0
 
 ## What's Changed
@@ -8,12 +30,6 @@
 
 ### Other Changes 🔄
 * chore(deps): bump @types/node from 22.8.2 to 22.8.7 by @dependabot in https://github.com/softprops/action-gh-release/pull/539
-
-## New Contributors
-* @dukhine made their first contribution in https://github.com/softprops/action-gh-release/pull/518
-* @richarddd made their first contribution in https://github.com/softprops/action-gh-release/pull/500
-
-**Full Changelog**: https://github.com/softprops/action-gh-release/compare/v2...v2.1.0
 
 ## 2.0.9
 
