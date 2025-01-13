@@ -109,6 +109,10 @@ jobs:
         if: startsWith(github.ref, 'refs/tags/')
         with:
           files: Release.txt
+        env:
+          # note you'll typically need to create a fine-grained personal access token
+          # with "Contents" repository permissions (write)
+          GITHUB_TOKEN: ${{ secrets.CUSTOM_GITHUB_TOKEN }}
 ```
 
 Below is an example of uploading more than one asset with a GitHub release
@@ -135,6 +139,10 @@ jobs:
           files: |
             Release.txt
             LICENSE
+        env:
+          # note you'll typically need to create a personal access token
+          # with "Contents" repository permissions (write)
+          GITHUB_TOKEN: ${{ secrets.CUSTOM_GITHUB_TOKEN }}
 ```
 
 > **⚠️ Note:** Notice the `|` in the yaml syntax above ☝️. That lets you effectively declare a multi-line yaml string. You can learn more about multi-line yaml syntax [here](https://yaml-multiline.info)
@@ -186,7 +194,7 @@ The following are optional as `step.with` keys
 | `preserve_order`           | Boolean | Indicator of whether order of files should be preserved when uploading assets                                                                                                                                                                                                                                                                                                                                                                   |
 | `files`                    | String  | Newline-delimited globs of paths to assets to upload for release                                                                                                                                                                                                                                                                                                                                                                                |
 | `name`                     | String  | Name of the release. defaults to tag name                                                                                                                                                                                                                                                                                                                                                                                                       |
-| `tag_name`                 | String  | Name of a tag. defaults to `github.ref_name`                                                                                                                                                                                                                                                                                                                                                                                                         |
+| `tag_name`                 | String  | Name of a tag. defaults to `github.ref_name`                                                                                                                                                                                                                                                                                                                                                                                                    |
 | `fail_on_unmatched_files`  | Boolean | Indicator of whether to fail if any of the `files` globs match nothing                                                                                                                                                                                                                                                                                                                                                                          |
 | `repository`               | String  | Name of a target repository in `<owner>/<repo>` format. Defaults to GITHUB_REPOSITORY env variable                                                                                                                                                                                                                                                                                                                                              |
 | `target_commitish`         | String  | Commitish value that determines where the Git tag is created from. Can be any branch or commit SHA. Defaults to repository default branch.                                                                                                                                                                                                                                                                                                      |
