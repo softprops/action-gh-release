@@ -1,6 +1,7 @@
 import { GitHub } from "@actions/github/lib/utils";
 import { Config, isTag, releaseBody, alignAssetName } from "./util";
-import { createReadStream, statSync, type ReadStream } from "fs";
+import { statSync } from "fs";
+import { open } from "fs/promises";
 import { getType } from "mime";
 import { basename } from "path";
 
@@ -10,7 +11,6 @@ export interface ReleaseAsset {
   name: string;
   mime: string;
   size: number;
-  data: ReadStream;
 }
 
 export interface Release {
@@ -145,7 +145,6 @@ export const asset = (path: string): ReleaseAsset => {
     name: basename(path),
     mime: mimeOrDefault(path),
     size: statSync(path).size,
-    data: createReadStream(path, "binary"),
   };
 };
 
@@ -161,7 +160,7 @@ export const upload = async (
   currentAssets: Array<{ id: number; name: string }>,
 ): Promise<any> => {
   const [owner, repo] = config.github_repository.split("/");
-  const { name, size, mime, data: body } = asset(path);
+  const { name, mime, size } = asset(path);
   const currentAsset = currentAssets.find(
     // note: GitHub renames asset filenames that have special characters, non-alphanumeric characters, and leading or trailing periods. The "List release assets" endpoint lists the renamed filenames.
     // due to this renaming we need to be mindful when we compare the file name we're uploading with a name github may already have rewritten for logical comparison
@@ -179,25 +178,31 @@ export const upload = async (
   console.log(`⬆️ Uploading ${name}...`);
   const endpoint = new URL(url);
   endpoint.searchParams.append("name", name);
-  const resp = await github.request({
-    method: "POST",
-    url: endpoint.toString(),
-    headers: {
-      "content-length": `${size}`,
-      "content-type": mime,
-      authorization: `token ${config.github_token}`,
-    },
-    data: body,
-  });
-  const json = resp.data;
-  if (resp.status !== 201) {
-    throw new Error(
-      `Failed to upload release asset ${name}. received status code ${
-        resp.status
-      }\n${json.message}\n${JSON.stringify(json.errors)}`,
-    );
+  const fh = await open(path);
+  try {
+    const resp = await github.request({
+      method: "POST",
+      url: endpoint.toString(),
+      headers: {
+        "content-length": `${size}`,
+        "content-type": mime,
+        authorization: `token ${config.github_token}`,
+      },
+      data: fh.readableWebStream({ type: "bytes" }),
+    });
+    const json = resp.data;
+    if (resp.status !== 201) {
+      throw new Error(
+        `Failed to upload release asset ${name}. received status code ${
+          resp.status
+        }\n${json.message}\n${JSON.stringify(json.errors)}`,
+      );
+    }
+    console.log(`✅ Uploaded ${name}`);
+    return json;
+  } finally {
+    await fh.close();
   }
-  return json;
 };
 
 export const release = async (

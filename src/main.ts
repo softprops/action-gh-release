@@ -67,9 +67,13 @@ async function run() {
       const files = paths(config.input_files);
       if (files.length == 0) {
         if (config.input_fail_on_unmatched_files) {
-          throw new Error(`⚠️ ${config.input_files} not include valid file.`);
+          throw new Error(
+            `⚠️ ${config.input_files} does not include a valid file.`,
+          );
         } else {
-          console.warn(`🤔 ${config.input_files} not include valid file.`);
+          console.warn(
+            `🤔 ${config.input_files} does not include a valid file.`,
+          );
         }
       }
       const currentAssets = rel.assets;

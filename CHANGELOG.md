@@ -1,3 +1,16 @@
+## 2.2.1
+
+## What's Changed
+
+### Bug fixes 🐛
+
+* fix: big file uploads by @xen0n in https://github.com/softprops/action-gh-release/pull/562
+
+### Other Changes 🔄
+* chore(deps): bump @types/node from 22.10.1 to 22.10.2 by @dependabot in https://github.com/softprops/action-gh-release/pull/559
+* chore(deps): bump @types/node from 22.10.2 to 22.10.5 by @dependabot in https://github.com/softprops/action-gh-release/pull/569
+* chore: update error and warning messages for not matching files in files field by @ytimocin in https://github.com/softprops/action-gh-release/pull/568
+
 ## 2.2.0
 
 ## What's Changed
