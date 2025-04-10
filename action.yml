@@ -13,13 +13,16 @@ inputs:
     description: "Gives the release a custom name. Defaults to tag name"
     required: false
   tag_name:
-    description: "Gives a tag name. Defaults to github.GITHUB_REF"
+    description: "Gives a tag name. Defaults to github.ref_name"
     required: false
   draft:
     description: "Creates a draft release. Defaults to false"
     required: false
   prerelease:
     description: "Identify the release as a prerelease. Defaults to false"
+    required: false
+  preserve_order:
+    description: "Preserver the order of the artifacts when uploading"
     required: false
   files:
     description: "Newline-delimited list of path globs for asset files to upload"

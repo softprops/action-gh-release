@@ -1,6 +1,5 @@
-//import * as assert from "assert";
-//const assert = require('assert');
 import * as assert from "assert";
+import { text } from "stream/consumers";
 import { mimeOrDefault, asset } from "../src/github";
 
 describe("github", () => {
@@ -15,11 +14,10 @@ describe("github", () => {
 
   describe("asset", () => {
     it("derives asset info from a path", async () => {
-      const { name, mime, size, data } = asset("tests/data/foo/bar.txt");
+      const { name, mime, size } = asset("tests/data/foo/bar.txt");
       assert.equal(name, "bar.txt");
       assert.equal(mime, "text/plain");
       assert.equal(size, 10);
-      assert.equal(data.toString(), "release me");
     });
   });
 });

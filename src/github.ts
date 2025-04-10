@@ -1,6 +1,7 @@
 import { GitHub } from "@actions/github/lib/utils";
-import { Config, isTag, releaseBody } from "./util";
-import { statSync, readFileSync } from "fs";
+import { Config, isTag, releaseBody, alignAssetName } from "./util";
+import { statSync } from "fs";
+import { open } from "fs/promises";
 import { getType } from "mime";
 import { basename } from "path";
 
@@ -10,7 +11,6 @@ export interface ReleaseAsset {
   name: string;
   mime: string;
   size: number;
-  data: Buffer;
 }
 
 export interface Release {
@@ -44,7 +44,7 @@ export interface Releaser {
     target_commitish: string | undefined;
     discussion_category_name: string | undefined;
     generate_release_notes: boolean | undefined;
-    make_latest: string | undefined;
+    make_latest: "true" | "false" | "legacy" | undefined;
   }): Promise<{ data: Release }>;
 
   updateRelease(params: {
@@ -59,7 +59,7 @@ export interface Releaser {
     prerelease: boolean | undefined;
     discussion_category_name: string | undefined;
     generate_release_notes: boolean | undefined;
-    make_latest: string | undefined;
+    make_latest: "true" | "false" | "legacy" | undefined;
   }): Promise<{ data: Release }>;
 
   allReleases(params: {
@@ -93,8 +93,15 @@ export class GitHubReleaser implements Releaser {
     target_commitish: string | undefined;
     discussion_category_name: string | undefined;
     generate_release_notes: boolean | undefined;
-    make_latest: string | undefined;
+    make_latest: "true" | "false" | "legacy" | undefined;
   }): Promise<{ data: Release }> {
+    if (
+      typeof params.make_latest === "string" &&
+      !["true", "false", "legacy"].includes(params.make_latest)
+    ) {
+      params.make_latest = undefined;
+    }
+
     return this.github.rest.repos.createRelease(params);
   }
 
@@ -110,8 +117,15 @@ export class GitHubReleaser implements Releaser {
     prerelease: boolean | undefined;
     discussion_category_name: string | undefined;
     generate_release_notes: boolean | undefined;
-    make_latest: string | undefined;
+    make_latest: "true" | "false" | "legacy" | undefined;
   }): Promise<{ data: Release }> {
+    if (
+      typeof params.make_latest === "string" &&
+      !["true", "false", "legacy"].includes(params.make_latest)
+    ) {
+      params.make_latest = undefined;
+    }
+
     return this.github.rest.repos.updateRelease(params);
   }
 
@@ -121,7 +135,7 @@ export class GitHubReleaser implements Releaser {
   }): AsyncIterableIterator<{ data: Release[] }> {
     const updatedParams = { per_page: 100, ...params };
     return this.github.paginate.iterator(
-      this.github.rest.repos.listReleases.endpoint.merge(updatedParams)
+      this.github.rest.repos.listReleases.endpoint.merge(updatedParams),
     );
   }
 }
@@ -131,7 +145,6 @@ export const asset = (path: string): ReleaseAsset => {
     name: basename(path),
     mime: mimeOrDefault(path),
     size: statSync(path).size,
-    data: readFileSync(path),
   };
 };
 
@@ -144,15 +157,15 @@ export const upload = async (
   github: GitHub,
   url: string,
   path: string,
-  currentAssets: Array<{ id: number; name: string }>
+  currentAssets: Array<{ id: number; name: string }>,
 ): Promise<any> => {
   const [owner, repo] = config.github_repository.split("/");
-  const { name, size, mime, data: body } = asset(path);
+  const { name, mime, size } = asset(path);
   const currentAsset = currentAssets.find(
     // note: GitHub renames asset filenames that have special characters, non-alphanumeric characters, and leading or trailing periods. The "List release assets" endpoint lists the renamed filenames.
     // due to this renaming we need to be mindful when we compare the file name we're uploading with a name github may already have rewritten for logical comparison
     // see https://docs.github.com/en/rest/releases/assets?apiVersion=2022-11-28#upload-a-release-asset
-    ({ name: currentName }) => currentName == name.replace(" ", ".")
+    ({ name: currentName }) => currentName == alignAssetName(name),
   );
   if (currentAsset) {
     console.log(`♻️ Deleting previously uploaded asset ${name}...`);
@@ -165,31 +178,37 @@ export const upload = async (
   console.log(`⬆️ Uploading ${name}...`);
   const endpoint = new URL(url);
   endpoint.searchParams.append("name", name);
-  const resp = await github.request({
-    method: "POST",
-    url: endpoint.toString(),
-    headers: {
-      "content-length": `${size}`,
-      "content-type": mime,
-      authorization: `token ${config.github_token}`,
-    },
-    data: body,
-  });
-  const json = resp.data;
-  if (resp.status !== 201) {
-    throw new Error(
-      `Failed to upload release asset ${name}. received status code ${
-        resp.status
-      }\n${json.message}\n${JSON.stringify(json.errors)}`
-    );
+  const fh = await open(path);
+  try {
+    const resp = await github.request({
+      method: "POST",
+      url: endpoint.toString(),
+      headers: {
+        "content-length": `${size}`,
+        "content-type": mime,
+        authorization: `token ${config.github_token}`,
+      },
+      data: fh.readableWebStream({ type: "bytes" }),
+    });
+    const json = resp.data;
+    if (resp.status !== 201) {
+      throw new Error(
+        `Failed to upload release asset ${name}. received status code ${
+          resp.status
+        }\n${json.message}\n${JSON.stringify(json.errors)}`,
+      );
+    }
+    console.log(`✅ Uploaded ${name}`);
+    return json;
+  } finally {
+    await fh.close();
   }
-  return json;
 };
 
 export const release = async (
   config: Config,
   releaser: Releaser,
-  maxRetries: number = 3
+  maxRetries: number = 3,
 ): Promise<Release> => {
   if (maxRetries <= 0) {
     console.log(`❌ Too many retries. Aborting...`);
@@ -227,13 +246,13 @@ export const release = async (
         repo,
         discussion_category_name,
         generate_release_notes,
-        maxRetries
+        maxRetries,
       );
     }
 
     let existingRelease: Release = _release!;
     console.log(
-      `Found release ${existingRelease.name} (with id=${existingRelease.id})`
+      `Found release ${existingRelease.name} (with id=${existingRelease.id})`,
     );
 
     const release_id = existingRelease.id;
@@ -243,7 +262,7 @@ export const release = async (
       config.input_target_commitish !== existingRelease.target_commitish
     ) {
       console.log(
-        `Updating commit from "${existingRelease.target_commitish}" to "${config.input_target_commitish}"`
+        `Updating commit from "${existingRelease.target_commitish}" to "${config.input_target_commitish}"`,
       );
       target_commitish = config.input_target_commitish;
     } else {
@@ -294,7 +313,7 @@ export const release = async (
   } catch (error) {
     if (error.status !== 404) {
       console.log(
-        `⚠️ Unexpected error fetching GitHub release for tag ${config.github_ref}: ${error}`
+        `⚠️ Unexpected error fetching GitHub release for tag ${config.github_ref}: ${error}`,
       );
       throw error;
     }
@@ -307,7 +326,7 @@ export const release = async (
       repo,
       discussion_category_name,
       generate_release_notes,
-      maxRetries
+      maxRetries,
     );
   }
 };
@@ -320,7 +339,7 @@ async function createRelease(
   repo: string,
   discussion_category_name: string | undefined,
   generate_release_notes: boolean | undefined,
-  maxRetries: number
+  maxRetries: number,
 ) {
   const tag_name = tag;
   const name = config.input_name || tag;
@@ -334,7 +353,7 @@ async function createRelease(
     commitMessage = ` using commit "${target_commitish}"`;
   }
   console.log(
-    `👩‍🏭 Creating new GitHub release for tag ${tag_name}${commitMessage}...`
+    `👩‍🏭 Creating new GitHub release for tag ${tag_name}${commitMessage}...`,
   );
   try {
     let release = await releaser.createRelease({
@@ -359,7 +378,7 @@ async function createRelease(
     switch (error.status) {
       case 403:
         console.log(
-          "Skip retry — your GitHub token/PAT does not have the required permission to create a release"
+          "Skip retry — your GitHub token/PAT does not have the required permission to create a release",
         );
         throw error;
 
