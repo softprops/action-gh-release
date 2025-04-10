@@ -225,7 +225,7 @@ export const release = async (
   const discussion_category_name = config.input_discussion_category_name;
   const generate_release_notes = config.input_generate_release_notes;
   try {
-    // you can't get a an existing draft by tag
+    // you can't get an existing draft by tag
     // so we must find one in the list of all releases
     let _release: Release | undefined = undefined;
     if (config.input_draft) {
@@ -234,6 +234,10 @@ export const release = async (
         repo,
       })) {
         _release = response.data.find((release) => release.tag_name === tag);
+        // detect if we found a release - note that a draft release tag may be an empty string
+        if (typeof _release !== "undefined") {
+          break;
+        }
       }
     } else {
       _release = (
