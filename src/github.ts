@@ -225,26 +225,19 @@ export const release = async (
   const discussion_category_name = config.input_discussion_category_name;
   const generate_release_notes = config.input_generate_release_notes;
   try {
-    // you can't get a an existing draft by tag
+    // you can't get an existing draft by tag
     // so we must find one in the list of all releases
     let _release: Release | undefined = undefined;
-    if (config.input_draft) {
-      for await (const response of releaser.allReleases({
-        owner,
-        repo,
-      })) {
-        _release = response.data.find((release) => release.tag_name === tag);
+    for await (const response of releaser.allReleases({
+      owner,
+      repo,
+    })) {
+      _release = response.data.find((release) => release.tag_name === tag);
+      if (_release !== undefined) {
+        break;
       }
-    } else {
-      _release = (
-        await releaser.getReleaseByTag({
-          owner,
-          repo,
-          tag,
-        })
-      ).data;
     }
-    if (_release === null || _release === undefined) {
+    if (_release === undefined) {
       return await createRelease(
         tag,
         config,
