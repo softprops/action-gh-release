@@ -228,18 +228,16 @@ export const release = async (
     // you can't get an existing draft by tag
     // so we must find one in the list of all releases
     let _release: Release | undefined = undefined;
-    if (config.input_draft) {
-      _release = await findTagFromReleases(releaser, owner, repo, tag);
-    } else {
-      _release = (
-        await releaser.getReleaseByTag({
-          owner,
-          repo,
-          tag,
-        })
-      ).data;
+    for await (const response of releaser.allReleases({
+      owner,
+      repo,
+    })) {
+      _release = response.data.find((release) => release.tag_name === tag);
+      if (_release !== undefined) {
+        break;
+      }
     }
-    if (_release === null || _release === undefined) {
+    if (_release === undefined) {
       return await createRelease(
         tag,
         config,
