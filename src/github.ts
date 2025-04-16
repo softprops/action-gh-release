@@ -347,19 +347,17 @@ export async function findTagFromReleases(
   owner: string,
   repo: string,
   tag: string,
-) {
-  let _release: Release | undefined;
-  for await (const response of releaser.allReleases({
+): Promise<Release | undefined> {
+  for await (const { data: releases } of releaser.allReleases({
     owner,
     repo,
   })) {
-    _release = response.data.find((release) => release.tag_name === tag);
-    // detect if we found a release - note that a draft release tag may be an empty string
-    if (typeof _release !== "undefined") {
-      break;
+    const release = releases.find((release) => release.tag_name === tag);
+    if (release) {
+      return release;
     }
   }
-  return _release;
+  return undefined;
 }
 
 async function createRelease(
