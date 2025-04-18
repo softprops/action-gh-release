@@ -1,3 +1,18 @@
+## 2.2.2
+
+## What's Changed
+
+### Bug fixes 🐛
+
+* fix: updating release draft status from true to false by @galargh in https://github.com/softprops/action-gh-release/pull/316
+
+### Other Changes 🔄
+
+* chore: simplify ref_type test by @steinybot in https://github.com/softprops/action-gh-release/pull/598
+* fix(docs): clarify the default for tag_name by @muzimuzhi in https://github.com/softprops/action-gh-release/pull/599
+* test(release): add unit tests when searching for a release by @rwaskiewicz in https://github.com/softprops/action-gh-release/pull/603
+* dependency updates
+
 ## 2.2.1
 
 ## What's Changed
