@@ -1,3 +1,9 @@
+## 2.3.0
+
+* Migrate from jest to vitest
+* Bump to use node 24
+* Dependency updates
+
 ## 2.2.2
 
 ## What's Changed
