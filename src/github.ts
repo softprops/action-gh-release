@@ -1,9 +1,9 @@
 import { GitHub } from "@actions/github/lib/utils";
-import { Config, isTag, releaseBody, alignAssetName } from "./util";
 import { statSync } from "fs";
 import { open } from "fs/promises";
 import { lookup } from "mime-types";
 import { basename } from "path";
+import { alignAssetName, Config, isTag, releaseBody } from "./util";
 
 type GitHub = InstanceType<typeof GitHub>;
 
@@ -180,7 +180,6 @@ export const upload = async (
   endpoint.searchParams.append("name", name);
   const fh = await open(path);
   try {
-    const stream = fh.readableWebStream();
     const resp = await github.request({
       method: "POST",
       url: endpoint.toString(),
@@ -189,7 +188,7 @@ export const upload = async (
         "content-type": mime,
         authorization: `token ${config.github_token}`,
       },
-      data: stream,
+      data: fh.readableWebStream({ type: "bytes" }),
     });
     const json = resp.data;
     if (resp.status !== 201) {
@@ -202,7 +201,7 @@ export const upload = async (
     console.log(`✅ Uploaded ${name}`);
     return json;
   } finally {
-    await fh.close().catch(() => {});
+    await fh.close();
   }
 };
 
