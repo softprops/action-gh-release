@@ -202,8 +202,7 @@ export const upload = async (
     console.log(`✅ Uploaded ${name}`);
     return json;
   } finally {
-    await fh.close().catch(() => {
-    });
+    await fh.close().catch(() => {});
   }
 };
 
