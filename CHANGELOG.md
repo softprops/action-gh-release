@@ -1,3 +1,9 @@
+## 2.3.1
+
+### Bug fixes 🐛
+
+* fix: fix file closing issue by @WailGree in https://github.com/softprops/action-gh-release/pull/629
+
 ## 2.3.0
 
 * Migrate from jest to vitest
