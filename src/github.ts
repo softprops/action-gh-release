@@ -180,6 +180,7 @@ export const upload = async (
   endpoint.searchParams.append("name", name);
   const fh = await open(path);
   try {
+    const stream = fh.readableWebStream();
     const resp = await github.request({
       method: "POST",
       url: endpoint.toString(),
@@ -188,7 +189,7 @@ export const upload = async (
         "content-type": mime,
         authorization: `token ${config.github_token}`,
       },
-      data: fh.readableWebStream(),
+      data: stream,
     });
     const json = resp.data;
     if (resp.status !== 201) {
@@ -201,7 +202,7 @@ export const upload = async (
     console.log(`✅ Uploaded ${name}`);
     return json;
   } finally {
-    await fh.close();
+    await fh.close().catch(() => {});
   }
 };
 

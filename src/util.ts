@@ -91,7 +91,10 @@ const parseMakeLatest = (
 export const paths = (patterns: string[]): string[] => {
   return patterns.reduce((acc: string[], pattern: string): string[] => {
     return acc.concat(
-      glob.sync(pattern).filter((path) => statSync(path).isFile()),
+      glob
+        .sync(pattern)
+        .filter((path) => statSync(path).isFile())
+        .map((path) => path.replace(/\\/g, "/")),
     );
   }, []);
 };
