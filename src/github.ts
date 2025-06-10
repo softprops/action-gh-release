@@ -3,6 +3,7 @@ import { statSync } from "fs";
 import { open } from "fs/promises";
 import { lookup } from "mime-types";
 import { basename } from "path";
+import { Readable } from "stream";
 import { alignAssetName, Config, isTag, releaseBody } from "./util";
 
 type GitHub = InstanceType<typeof GitHub>;
@@ -180,7 +181,7 @@ export const upload = async (
   endpoint.searchParams.append("name", name);
   const fh = await open(path);
   try {
-    const stream = fh.readableWebStream();
+    const stream = Readable.fromWeb(fh.readableWebStream());
     const resp = await github.request({
       method: "POST",
       url: endpoint.toString(),
