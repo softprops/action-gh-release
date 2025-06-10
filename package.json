@@ -5,7 +5,7 @@
   "description": "GitHub Action for creating GitHub Releases",
   "main": "lib/main.js",
   "scripts": {
-    "build": "ncc build src/main.ts --minify",
+    "build": "ncc build src/main.ts --minify --target es2022",
     "build-debug": "ncc build src/main.ts --v8-cache --source-map",
     "typecheck": "tsc --noEmit",
     "test": "vitest --coverage",
