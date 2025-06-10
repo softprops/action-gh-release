@@ -7,6 +7,8 @@ import {
   findTagFromReleases,
 } from "../src/github";
 
+import { describe, it } from "vitest";
+
 describe("github", () => {
   describe("mimeOrDefault", () => {
     it("returns a specific mime for common path", async () => {

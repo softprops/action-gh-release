@@ -10,6 +10,8 @@ import {
 } from "../src/util";
 import * as assert from "assert";
 
+import { describe, it, expect } from "vitest";
+
 describe("util", () => {
   describe("uploadUrl", () => {
     it("strips template", () => {
