@@ -1,9 +1,9 @@
 import { GitHub } from "@actions/github/lib/utils";
-import { Config, isTag, releaseBody, alignAssetName } from "./util";
 import { statSync } from "fs";
 import { open } from "fs/promises";
 import { lookup } from "mime-types";
 import { basename } from "path";
+import { alignAssetName, Config, isTag, releaseBody } from "./util";
 
 type GitHub = InstanceType<typeof GitHub>;
 
@@ -188,7 +188,7 @@ export const upload = async (
         "content-type": mime,
         authorization: `token ${config.github_token}`,
       },
-      data: fh.readableWebStream(),
+      data: fh.readableWebStream({ type: "bytes" }),
     });
     const json = resp.data;
     if (resp.status !== 201) {
