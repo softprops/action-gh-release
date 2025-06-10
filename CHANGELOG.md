@@ -1,3 +1,7 @@
+## 2.3.2
+
+* fix: revert fs `readableWebStream` change
+
 ## 2.3.1
 
 ### Bug fixes 🐛
