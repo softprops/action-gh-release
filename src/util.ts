@@ -12,6 +12,7 @@ export interface Config {
   input_body?: string;
   input_body_path?: string;
   input_files?: string[];
+  input_overwrite_files?: boolean;
   input_draft?: boolean;
   input_preserve_order?: boolean;
   input_prerelease?: boolean;
@@ -62,6 +63,9 @@ export const parseConfig = (env: Env): Config => {
     input_body: env.INPUT_BODY,
     input_body_path: env.INPUT_BODY_PATH,
     input_files: parseInputFiles(env.INPUT_FILES || ""),
+    input_overwrite_files: env.INPUT_OVERWRITE_FILES
+      ? env.INPUT_OVERWRITE_FILES == "true"
+      : undefined,
     input_draft: env.INPUT_DRAFT ? env.INPUT_DRAFT === "true" : undefined,
     input_preserve_order: env.INPUT_PRESERVE_ORDER
       ? env.INPUT_PRESERVE_ORDER == "true"
