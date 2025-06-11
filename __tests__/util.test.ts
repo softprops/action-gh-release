@@ -1,13 +1,15 @@
 import {
-  releaseBody,
+  alignAssetName,
   isTag,
-  paths,
   parseConfig,
   parseInputFiles,
+  paths,
+  releaseBody,
   unmatchedPatterns,
   uploadUrl,
 } from "../src/util";
-import * as assert from "assert";
+
+import { assert, describe, expect, it } from "vitest";
 
 describe("util", () => {
   describe("uploadUrl", () => {
@@ -46,6 +48,7 @@ describe("util", () => {
           input_body_path: undefined,
           input_draft: false,
           input_prerelease: false,
+          input_preserve_order: undefined,
           input_files: [],
           input_overwrite_files: undefined,
           input_name: undefined,
@@ -53,6 +56,7 @@ describe("util", () => {
           input_target_commitish: undefined,
           input_discussion_category_name: undefined,
           input_generate_release_notes: false,
+          input_make_latest: undefined,
         })
       );
     });
@@ -67,6 +71,7 @@ describe("util", () => {
           input_body_path: "__tests__/release.txt",
           input_draft: false,
           input_prerelease: false,
+          input_preserve_order: undefined,
           input_files: [],
           input_overwrite_files: undefined,
           input_name: undefined,
@@ -74,6 +79,7 @@ describe("util", () => {
           input_target_commitish: undefined,
           input_discussion_category_name: undefined,
           input_generate_release_notes: false,
+          input_make_latest: undefined,
         })
       );
     });
@@ -88,6 +94,7 @@ describe("util", () => {
           input_body_path: "__tests__/release.txt",
           input_draft: false,
           input_prerelease: false,
+          input_preserve_order: undefined,
           input_files: [],
           input_overwrite_files: undefined,
           input_name: undefined,
@@ -95,6 +102,7 @@ describe("util", () => {
           input_target_commitish: undefined,
           input_discussion_category_name: undefined,
           input_generate_release_notes: false,
+          input_make_latest: undefined,
         })
       );
     });
@@ -121,6 +129,7 @@ describe("util", () => {
           input_body_path: undefined,
           input_draft: undefined,
           input_prerelease: undefined,
+          input_preserve_order: undefined,
           input_files: [],
           input_overwrite_files: undefined,
           input_name: undefined,
@@ -129,6 +138,7 @@ describe("util", () => {
           input_target_commitish: undefined,
           input_discussion_category_name: undefined,
           input_generate_release_notes: false,
+          input_make_latest: undefined,
         }
       );
     });
@@ -149,12 +159,14 @@ describe("util", () => {
           input_prerelease: undefined,
           input_files: [],
           input_overwrite_files: undefined,
+          input_preserve_order: undefined,
           input_name: undefined,
           input_tag_name: undefined,
           input_fail_on_unmatched_files: false,
           input_target_commitish: "affa18ef97bc9db20076945705aba8c516139abd",
           input_discussion_category_name: undefined,
           input_generate_release_notes: false,
+          input_make_latest: undefined,
         }
       );
     });
@@ -173,13 +185,14 @@ describe("util", () => {
           input_draft: undefined,
           input_prerelease: undefined,
           input_files: [],
-          input_overwrite_files: undefined,
+          input_preserve_order: undefined,
           input_name: undefined,
           input_tag_name: undefined,
           input_fail_on_unmatched_files: false,
           input_target_commitish: undefined,
           input_discussion_category_name: "releases",
           input_generate_release_notes: false,
+          input_make_latest: undefined,
         }
       );
     });
@@ -198,6 +211,7 @@ describe("util", () => {
           input_body_path: undefined,
           input_draft: undefined,
           input_prerelease: undefined,
+          input_preserve_order: undefined,
           input_files: [],
           input_overwrite_files: undefined,
           input_name: undefined,
@@ -206,6 +220,7 @@ describe("util", () => {
           input_target_commitish: undefined,
           input_discussion_category_name: undefined,
           input_generate_release_notes: true,
+          input_make_latest: undefined,
         }
       );
     });
@@ -215,6 +230,7 @@ describe("util", () => {
         parseConfig({
           INPUT_DRAFT: "false",
           INPUT_PRERELEASE: "true",
+          INPUT_PRESERVE_ORDER: "true",
           GITHUB_TOKEN: "env-token",
           INPUT_TOKEN: "input-token",
         }),
@@ -227,6 +243,7 @@ describe("util", () => {
           input_body_path: undefined,
           input_draft: false,
           input_prerelease: true,
+          input_preserve_order: true,
           input_files: [],
           input_overwrite_files: undefined,
           input_name: undefined,
@@ -235,6 +252,7 @@ describe("util", () => {
           input_target_commitish: undefined,
           input_discussion_category_name: undefined,
           input_generate_release_notes: false,
+          input_make_latest: undefined,
         }
       );
     });
@@ -254,6 +272,7 @@ describe("util", () => {
           input_body_path: undefined,
           input_draft: false,
           input_prerelease: true,
+          input_preserve_order: undefined,
           input_files: [],
           input_overwrite_files: undefined,
           input_name: undefined,
@@ -262,6 +281,7 @@ describe("util", () => {
           input_target_commitish: undefined,
           input_discussion_category_name: undefined,
           input_generate_release_notes: false,
+          input_make_latest: undefined,
         }
       );
     });
@@ -280,6 +300,7 @@ describe("util", () => {
           input_body_path: undefined,
           input_draft: false,
           input_prerelease: true,
+          input_preserve_order: undefined,
           input_files: [],
           input_overwrite_files: undefined,
           input_name: undefined,
@@ -288,6 +309,33 @@ describe("util", () => {
           input_target_commitish: undefined,
           input_discussion_category_name: undefined,
           input_generate_release_notes: false,
+          input_make_latest: undefined,
+        }
+      );
+    });
+    it("parses basic config where make_latest is passed", () => {
+      assert.deepStrictEqual(
+        parseConfig({
+          INPUT_MAKE_LATEST: "false",
+        }),
+        {
+          github_ref: "",
+          github_repository: "",
+          github_token: "",
+          input_append_body: false,
+          input_body: undefined,
+          input_body_path: undefined,
+          input_draft: undefined,
+          input_prerelease: undefined,
+          input_preserve_order: undefined,
+          input_files: [],
+          input_name: undefined,
+          input_tag_name: undefined,
+          input_fail_on_unmatched_files: false,
+          input_target_commitish: undefined,
+          input_discussion_category_name: undefined,
+          input_generate_release_notes: false,
+          input_make_latest: "false",
         }
       );
     });
@@ -305,6 +353,7 @@ describe("util", () => {
           input_body_path: undefined,
           input_draft: undefined,
           input_prerelease: undefined,
+          input_preserve_order: undefined,
           input_files: [],
           input_overwrite_files: undefined,
           input_name: undefined,
@@ -313,6 +362,7 @@ describe("util", () => {
           input_target_commitish: undefined,
           input_discussion_category_name: undefined,
           input_generate_release_notes: false,
+          input_make_latest: undefined,
         }
       );
     });
@@ -341,6 +391,22 @@ describe("util", () => {
         unmatchedPatterns(["tests/data/**/*", "tests/data/does/not/exist/*"]),
         ["tests/data/does/not/exist/*"]
       );
+    });
+  });
+
+  describe("replaceSpacesWithDots", () => {
+    it("replaces all spaces with dots", () => {
+      expect(alignAssetName("John Doe.bla")).toBe("John.Doe.bla");
+    });
+
+    it("handles names with multiple spaces", () => {
+      expect(alignAssetName("John William Doe.bla")).toBe(
+        "John.William.Doe.bla"
+      );
+    });
+
+    it("returns the same string if there are no spaces", () => {
+      expect(alignAssetName("JohnDoe")).toBe("JohnDoe");
     });
   });
 });
