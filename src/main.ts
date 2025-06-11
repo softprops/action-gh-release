@@ -1,13 +1,13 @@
+import { setFailed, setOutput } from "@actions/core";
+import { getOctokit } from "@actions/github";
+import { GitHubReleaser, release, upload } from "./github";
 import {
-  paths,
-  parseConfig,
   isTag,
+  parseConfig,
+  paths,
   unmatchedPatterns,
   uploadUrl,
 } from "./util";
-import { release, upload, GitHubReleaser } from "./github";
-import { getOctokit } from "@actions/github";
-import { setFailed, setOutput } from "@actions/core";
 
 import { env } from "process";
 
@@ -86,19 +86,23 @@ async function run() {
           path,
           currentAssets,
         );
-        delete json.uploader;
+        if (json) {
+          delete json.uploader;
+        }
         return json;
       };
 
-      let assets;
+      let results: (any | null)[];
       if (!config.input_preserve_order) {
-        assets = await Promise.all(files.map(uploadFile));
+        results = await Promise.all(files.map(uploadFile));
       } else {
-        assets = [];
+        results = [];
         for (const path of files) {
-          assets.push(await uploadFile(path));
+          results.push(await uploadFile(path));
         }
       }
+
+      const assets = results.filter(Boolean);
       setOutput("assets", assets);
     }
     console.log(`🎉 Release ready at ${rel.html_url}`);
