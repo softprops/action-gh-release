@@ -49,7 +49,7 @@ export const parseInputFiles = (files: string): string[] => {
         .concat(line.split(","))
         .filter((pat) => pat)
         .map((pat) => pat.trim()),
-    []
+    [],
   );
 };
 
@@ -82,7 +82,7 @@ export const parseConfig = (env: Env): Config => {
 };
 
 const parseMakeLatest = (
-  value: string | undefined
+  value: string | undefined,
 ): "true" | "false" | "legacy" | undefined => {
   if (value === "true" || value === "false" || value === "legacy") {
     return value;
@@ -93,7 +93,7 @@ const parseMakeLatest = (
 export const paths = (patterns: string[]): string[] => {
   return patterns.reduce((acc: string[], pattern: string): string[] => {
     return acc.concat(
-      glob.sync(pattern).filter((path) => statSync(path).isFile())
+      glob.sync(pattern).filter((path) => statSync(path).isFile()),
     );
   }, []);
 };
@@ -103,7 +103,7 @@ export const unmatchedPatterns = (patterns: string[]): string[] => {
     return acc.concat(
       glob.sync(pattern).filter((path) => statSync(path).isFile()).length == 0
         ? [pattern]
-        : []
+        : [],
     );
   }, []);
 };

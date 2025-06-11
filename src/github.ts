@@ -94,7 +94,7 @@ export class GitHubReleaser implements Releaser {
   }): AsyncIterableIterator<{ data: Release[] }> {
     const updatedParams = { per_page: 100, ...params };
     return this.github.paginate.iterator(
-      this.github.rest.repos.listReleases.endpoint.merge(updatedParams as any)
+      this.github.rest.repos.listReleases.endpoint.merge(updatedParams as any),
     );
   }
 
@@ -104,7 +104,7 @@ export class GitHubReleaser implements Releaser {
   }): Promise<undefined | string> {
     try {
       const release = await this.github.rest.repos.getLatestRelease(
-        params as any
+        params as any,
       );
 
       if (!release?.data) {
@@ -120,11 +120,11 @@ export class GitHubReleaser implements Releaser {
   }
 
   async generateReleaseBody(
-    params: GenerateReleaseNotesParams
+    params: GenerateReleaseNotesParams,
   ): Promise<string> {
     try {
       const { data } = await this.github.rest.repos.generateReleaseNotes(
-        params as any
+        params as any,
       );
 
       if (!data.body) {
@@ -155,7 +155,7 @@ export const upload = async (
   github: GitHub,
   url: string,
   path: string,
-  currentAssets: Array<{ id: number; name: string }>
+  currentAssets: Array<{ id: number; name: string }>,
 ): Promise<any> => {
   const [owner, repo] = config.github_repository.split("/");
   const { name, mime, size } = asset(path);
@@ -163,7 +163,7 @@ export const upload = async (
     // note: GitHub renames asset filenames that have special characters, non-alphanumeric characters, and leading or trailing periods. The "List release assets" endpoint lists the renamed filenames.
     // due to this renaming we need to be mindful when we compare the file name we're uploading with a name github may already have rewritten for logical comparison
     // see https://docs.github.com/en/rest/releases/assets?apiVersion=2022-11-28#upload-a-release-asset
-    ({ name: currentName }) => currentName == alignAssetName(name)
+    ({ name: currentName }) => currentName == alignAssetName(name),
   );
   if (currentAsset) {
     console.log(`♻️ Deleting previously uploaded asset ${name}...`);
@@ -193,7 +193,7 @@ export const upload = async (
       throw new Error(
         `Failed to upload release asset ${name}. received status code ${
           resp.status
-        }\n${json.message}\n${JSON.stringify(json.errors)}`
+        }\n${json.message}\n${JSON.stringify(json.errors)}`,
       );
     }
     console.log(`✅ Uploaded ${name}`);
@@ -206,7 +206,7 @@ export const upload = async (
 export const release = async (
   config: Config,
   releaser: Releaser,
-  maxRetries: number = 3
+  maxRetries: number = 3,
 ): Promise<Release> => {
   if (maxRetries <= 0) {
     console.log(`❌ Too many retries. Aborting...`);
@@ -252,7 +252,7 @@ export const release = async (
     console.log(
       `Will generate release notes using ${
         previous_tag || latestTag
-      } as previous tag`
+      } as previous tag`,
     );
   }
 
@@ -263,7 +263,7 @@ export const release = async (
       releaser,
       owner,
       repo,
-      tag
+      tag,
     );
 
     if (_release === undefined) {
@@ -275,13 +275,13 @@ export const release = async (
         repo,
         discussion_category_name,
         generate_release_notes,
-        maxRetries
+        maxRetries,
       );
     }
 
     let existingRelease: Release = _release!;
     console.log(
-      `Found release ${existingRelease.name} (with id=${existingRelease.id})`
+      `Found release ${existingRelease.name} (with id=${existingRelease.id})`,
     );
 
     const release_id = existingRelease.id;
@@ -291,7 +291,7 @@ export const release = async (
       config.input_target_commitish !== existingRelease.target_commitish
     ) {
       console.log(
-        `Updating commit from "${existingRelease.target_commitish}" to "${config.input_target_commitish}"`
+        `Updating commit from "${existingRelease.target_commitish}" to "${config.input_target_commitish}"`,
       );
       target_commitish = config.input_target_commitish;
     } else {
@@ -311,7 +311,7 @@ export const release = async (
       body = body + existingReleaseBody + "\n" + workflowBody;
     } else {
       console.log(
-        `➕ Using ${workflowBody ? "workflow body" : "existing release body"}`
+        `➕ Using ${workflowBody ? "workflow body" : "existing release body"}`,
       );
       body = body + (workflowBody || existingReleaseBody);
     }
@@ -361,7 +361,7 @@ export const release = async (
         commitMessage = ` using commit "${target_commitish}"`;
       }
       console.log(
-        `👩‍🏭 Creating new GitHub release for tag ${tag_name}${commitMessage}...`
+        `👩‍🏭 Creating new GitHub release for tag ${tag_name}${commitMessage}...`,
       );
       try {
         let release = await releaser.createRelease({
@@ -384,13 +384,13 @@ export const release = async (
             error.status
           }\n${JSON.stringify(error.response.data.errors)}\nretrying... (${
             maxRetries - 1
-          } retries remaining)`
+          } retries remaining)`,
         );
         return release(config, releaser, maxRetries - 1);
       }
     } else {
       console.log(
-        `⚠️ Unexpected error fetching GitHub release for tag ${config.github_ref}: ${error}`
+        `⚠️ Unexpected error fetching GitHub release for tag ${config.github_ref}: ${error}`,
       );
       throw error;
     }
@@ -403,7 +403,7 @@ export const release = async (
       repo,
       discussion_category_name,
       generate_release_notes,
-      maxRetries
+      maxRetries,
     );
   }
 };
@@ -421,7 +421,7 @@ export async function findTagFromReleases(
   releaser: Releaser,
   owner: string,
   repo: string,
-  tag: string
+  tag: string,
 ): Promise<Release | undefined> {
   for await (const { data: releases } of releaser.allReleases({
     owner,
@@ -443,7 +443,7 @@ async function createRelease(
   repo: string,
   discussion_category_name: string | undefined,
   generate_release_notes: boolean | undefined,
-  maxRetries: number
+  maxRetries: number,
 ) {
   const tag_name = tag;
   const name = config.input_name || tag;
@@ -457,7 +457,7 @@ async function createRelease(
     commitMessage = ` using commit "${target_commitish}"`;
   }
   console.log(
-    `👩‍🏭 Creating new GitHub release for tag ${tag_name}${commitMessage}...`
+    `👩‍🏭 Creating new GitHub release for tag ${tag_name}${commitMessage}...`,
   );
   try {
     let release = await releaser.createRelease({
@@ -481,7 +481,7 @@ async function createRelease(
     switch (error.status) {
       case 403:
         console.log(
-          "Skip retry — your GitHub token/PAT does not have the required permission to create a release"
+          "Skip retry — your GitHub token/PAT does not have the required permission to create a release",
         );
         throw error;
 

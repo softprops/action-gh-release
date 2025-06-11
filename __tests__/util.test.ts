@@ -303,6 +303,7 @@ describe("util", () => {
           input_draft: false,
           input_prerelease: true,
           input_preserve_order: undefined,
+          input_previous_tag: undefined,
           input_files: [],
           input_name: undefined,
           input_tag_name: undefined,
