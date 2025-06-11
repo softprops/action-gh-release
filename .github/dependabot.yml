@@ -1,14 +1,29 @@
 version: 2
 updates:
-- package-ecosystem: npm
-  directory: "/"
-  schedule:
-    interval: weekly
-  ignore:
-  - dependency-name: node-fetch
-    versions:
-    - ">=3.0.0"
-- package-ecosystem: github-actions
-  directory: "/"
-  schedule:
-    interval: weekly
+  - package-ecosystem: npm
+    directory: "/"
+    schedule:
+      interval: weekly
+    groups:
+      npm:
+        patterns:
+          - "*"
+    ignore:
+      - dependency-name: node-fetch
+        versions:
+          - ">=3.0.0"
+      - dependency-name: "@types/node"
+        versions:
+          - ">=22.0.0"
+    commit-message:
+      prefix: "chore(deps)"
+  - package-ecosystem: github-actions
+    directory: "/"
+    schedule:
+      interval: weekly
+    groups:
+      github-actions:
+        patterns:
+          - "*"
+    commit-message:
+      prefix: "chore(deps)"

@@ -1,13 +1,16 @@
+import * as assert from "assert";
 import {
-  releaseBody,
+  alignAssetName,
   isTag,
-  paths,
   parseConfig,
   parseInputFiles,
+  paths,
+  releaseBody,
   unmatchedPatterns,
   uploadUrl,
 } from "../src/util";
-import * as assert from "assert";
+
+import { describe, expect, it } from "vitest";
 
 describe("util", () => {
   describe("uploadUrl", () => {
@@ -46,6 +49,7 @@ describe("util", () => {
           input_body_path: undefined,
           input_draft: false,
           input_prerelease: false,
+          input_preserve_order: undefined,
           input_files: [],
           input_name: undefined,
           input_tag_name: undefined,
@@ -68,6 +72,7 @@ describe("util", () => {
           input_body_path: "__tests__/release.txt",
           input_draft: false,
           input_prerelease: false,
+          input_preserve_order: undefined,
           input_files: [],
           input_name: undefined,
           input_tag_name: undefined,
@@ -90,6 +95,7 @@ describe("util", () => {
           input_body_path: "__tests__/release.txt",
           input_draft: false,
           input_prerelease: false,
+          input_preserve_order: undefined,
           input_files: [],
           input_name: undefined,
           input_tag_name: undefined,
@@ -124,6 +130,7 @@ describe("util", () => {
           input_body_path: undefined,
           input_draft: undefined,
           input_prerelease: undefined,
+          input_preserve_order: undefined,
           input_files: [],
           input_name: undefined,
           input_tag_name: undefined,
@@ -152,6 +159,7 @@ describe("util", () => {
           input_draft: undefined,
           input_prerelease: undefined,
           input_files: [],
+          input_preserve_order: undefined,
           input_name: undefined,
           input_tag_name: undefined,
           input_fail_on_unmatched_files: false,
@@ -178,6 +186,7 @@ describe("util", () => {
           input_draft: undefined,
           input_prerelease: undefined,
           input_files: [],
+          input_preserve_order: undefined,
           input_name: undefined,
           input_tag_name: undefined,
           input_fail_on_unmatched_files: false,
@@ -204,6 +213,7 @@ describe("util", () => {
           input_body_path: undefined,
           input_draft: undefined,
           input_prerelease: undefined,
+          input_preserve_order: undefined,
           input_files: [],
           input_name: undefined,
           input_tag_name: undefined,
@@ -222,6 +232,7 @@ describe("util", () => {
         parseConfig({
           INPUT_DRAFT: "false",
           INPUT_PRERELEASE: "true",
+          INPUT_PRESERVE_ORDER: "true",
           GITHUB_TOKEN: "env-token",
           INPUT_TOKEN: "input-token",
         }),
@@ -234,6 +245,7 @@ describe("util", () => {
           input_body_path: undefined,
           input_draft: false,
           input_prerelease: true,
+          input_preserve_order: true,
           input_files: [],
           input_name: undefined,
           input_tag_name: undefined,
@@ -262,6 +274,7 @@ describe("util", () => {
           input_body_path: undefined,
           input_draft: false,
           input_prerelease: true,
+          input_preserve_order: undefined,
           input_files: [],
           input_name: undefined,
           input_tag_name: undefined,
@@ -289,6 +302,7 @@ describe("util", () => {
           input_body_path: undefined,
           input_draft: false,
           input_prerelease: true,
+          input_preserve_order: undefined,
           input_files: [],
           input_name: undefined,
           input_tag_name: undefined,
@@ -314,6 +328,7 @@ describe("util", () => {
           input_body_path: undefined,
           input_draft: undefined,
           input_prerelease: undefined,
+          input_preserve_order: undefined,
           input_files: [],
           input_name: undefined,
           input_tag_name: undefined,
@@ -340,6 +355,7 @@ describe("util", () => {
           input_body_path: undefined,
           input_draft: undefined,
           input_prerelease: undefined,
+          input_preserve_order: undefined,
           input_files: [],
           input_name: undefined,
           input_tag_name: undefined,
@@ -377,6 +393,22 @@ describe("util", () => {
         unmatchedPatterns(["tests/data/**/*", "tests/data/does/not/exist/*"]),
         ["tests/data/does/not/exist/*"]
       );
+    });
+  });
+
+  describe("replaceSpacesWithDots", () => {
+    it("replaces all spaces with dots", () => {
+      expect(alignAssetName("John Doe.bla")).toBe("John.Doe.bla");
+    });
+
+    it("handles names with multiple spaces", () => {
+      expect(alignAssetName("John William Doe.bla")).toBe(
+        "John.William.Doe.bla"
+      );
+    });
+
+    it("returns the same string if there are no spaces", () => {
+      expect(alignAssetName("JohnDoe")).toBe("JohnDoe");
     });
   });
 });

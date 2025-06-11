@@ -21,6 +21,16 @@
 
 <br />
 
+- [🤸 Usage](#-usage)
+  - [🚥 Limit releases to pushes to tags](#-limit-releases-to-pushes-to-tags)
+  - [⬆️ Uploading release assets](#️-uploading-release-assets)
+  - [📝 External release notes](#-external-release-notes)
+  - [💅 Customizing](#-customizing)
+    - [inputs](#inputs)
+    - [outputs](#outputs)
+    - [environment variables](#environment-variables)
+  - [Permissions](#permissions)
+
 ## 🤸 Usage
 
 ### 🚥 Limit releases to pushes to tags
@@ -44,7 +54,7 @@ jobs:
         uses: actions/checkout@v4
       - name: Release
         uses: softprops/action-gh-release@v2
-        if: startsWith(github.ref, 'refs/tags/')
+        if: github.ref_type == 'tag'
 ```
 
 You can also use push config tag filter
@@ -75,6 +85,7 @@ GitHub release and all are optional.
 A common case for GitHub releases is to upload your binary after its been validated and packaged.
 Use the `with.files` input to declare a newline-delimited list of glob expressions matching the files
 you wish to upload to GitHub releases. If you'd like you can just list the files by name directly.
+If a tag already has a GitHub release, the existing release will be updated with the release assets.
 
 Below is an example of uploading a single asset named `Release.txt`
 
@@ -95,7 +106,7 @@ jobs:
         run: cat Release.txt
       - name: Release
         uses: softprops/action-gh-release@v2
-        if: startsWith(github.ref, 'refs/tags/')
+        if: github.ref_type == 'tag'
         with:
           files: Release.txt
 ```
@@ -119,7 +130,7 @@ jobs:
         run: cat Release.txt
       - name: Release
         uses: softprops/action-gh-release@v2
-        if: startsWith(github.ref, 'refs/tags/')
+        if: github.ref_type == 'tag'
         with:
           files: |
             Release.txt
@@ -151,14 +162,13 @@ jobs:
         run: echo "# Good things have arrived" > ${{ github.workspace }}-CHANGELOG.txt
       - name: Release
         uses: softprops/action-gh-release@v2
-        if: startsWith(github.ref, 'refs/tags/')
+        if: github.ref_type == 'tag'
         with:
           body_path: ${{ github.workspace }}-CHANGELOG.txt
+          repository: my_gh_org/my_gh_repo
           # note you'll typically need to create a personal access token
           # with permissions to create releases in the other repo
           token: ${{ secrets.CUSTOM_GITHUB_TOKEN }}
-        env:
-          GITHUB_REPOSITORY: my_gh_org/my_gh_repo
 ```
 
 ### 💅 Customizing
@@ -173,9 +183,10 @@ The following are optional as `step.with` keys
 | `body_path`                | String  | Path to load text communicating notable changes in this release                                                                                                                                                                                                                                                                                                                                                                                 |
 | `draft`                    | Boolean | Indicator of whether or not this release is a draft                                                                                                                                                                                                                                                                                                                                                                                             |
 | `prerelease`               | Boolean | Indicator of whether or not is a prerelease                                                                                                                                                                                                                                                                                                                                                                                                     |
+| `preserve_order`           | Boolean | Indicator of whether order of files should be preserved when uploading assets                                                                                                                                                                                                                                                                                                                                                                   |
 | `files`                    | String  | Newline-delimited globs of paths to assets to upload for release                                                                                                                                                                                                                                                                                                                                                                                |
 | `name`                     | String  | Name of the release. defaults to tag name                                                                                                                                                                                                                                                                                                                                                                                                       |
-| `tag_name`                 | String  | Name of a tag. defaults to `github.ref`                                                                                                                                                                                                                                                                                                                                                                                                         |
+| `tag_name`                 | String  | Name of a tag. defaults to `github.ref_name`                                                                                                                                                                                                                                                                                                                                                                                                         |
 | `fail_on_unmatched_files`  | Boolean | Indicator of whether to fail if any of the `files` globs match nothing                                                                                                                                                                                                                                                                                                                                                                          |
 | `repository`               | String  | Name of a target repository in `<owner>/<repo>` format. Defaults to GITHUB_REPOSITORY env variable                                                                                                                                                                                                                                                                                                                                              |
 | `target_commitish`         | String  | Commitish value that determines where the Git tag is created from. Can be any branch or commit SHA. Defaults to repository default branch.                                                                                                                                                                                                                                                                                                      |

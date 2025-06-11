@@ -1,5 +1,5 @@
+import { readFileSync, statSync } from "fs";
 import * as glob from "glob";
-import { statSync, readFileSync } from "fs";
 
 export interface Config {
   github_token: string;
@@ -13,6 +13,7 @@ export interface Config {
   input_body_path?: string;
   input_files?: string[];
   input_draft?: boolean;
+  input_preserve_order?: boolean;
   input_prerelease?: boolean;
   input_fail_on_unmatched_files?: boolean;
   input_target_commitish?: string;
@@ -63,6 +64,9 @@ export const parseConfig = (env: Env): Config => {
     input_body_path: env.INPUT_BODY_PATH,
     input_files: parseInputFiles(env.INPUT_FILES || ""),
     input_draft: env.INPUT_DRAFT ? env.INPUT_DRAFT === "true" : undefined,
+    input_preserve_order: env.INPUT_PRESERVE_ORDER
+      ? env.INPUT_PRESERVE_ORDER == "true"
+      : undefined,
     input_prerelease: env.INPUT_PRERELEASE
       ? env.INPUT_PRERELEASE == "true"
       : undefined,
@@ -72,11 +76,18 @@ export const parseConfig = (env: Env): Config => {
       env.INPUT_DISCUSSION_CATEGORY_NAME || undefined,
     input_generate_release_notes: env.INPUT_GENERATE_RELEASE_NOTES == "true",
     input_append_body: env.INPUT_APPEND_BODY == "true",
-    input_make_latest: env.INPUT_MAKE_LATEST
-      ? env.INPUT_MAKE_LATEST
-      : undefined,
+    input_make_latest: parseMakeLatest(env.INPUT_MAKE_LATEST),
     input_previous_tag: env.INPUT_PREVIOUS_TAG?.trim() || undefined,
   };
+};
+
+const parseMakeLatest = (
+  value: string | undefined
+): "true" | "false" | "legacy" | undefined => {
+  if (value === "true" || value === "false" || value === "legacy") {
+    return value;
+  }
+  return undefined;
 };
 
 export const paths = (patterns: string[]): string[] => {
@@ -99,4 +110,8 @@ export const unmatchedPatterns = (patterns: string[]): string[] => {
 
 export const isTag = (ref: string): boolean => {
   return ref.startsWith("refs/tags/");
+};
+
+export const alignAssetName = (assetName: string): string => {
+  return assetName.replace(/ /g, ".");
 };
