@@ -1,12 +1,14 @@
 {
   "name": "action-gh-release",
-  "version": "2.0.5",
+  "version": "2.3.2",
   "private": true,
   "description": "GitHub Action for creating GitHub Releases",
   "main": "lib/main.js",
   "scripts": {
-    "build": "ncc build src/main.ts --minify",
-    "test": "jest",
+    "build": "ncc build src/main.ts --minify --target es2022",
+    "build-debug": "ncc build src/main.ts --v8-cache --source-map",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest --coverage",
     "fmt": "prettier --write \"src/**/*.ts\" \"__tests__/**/*.ts\"",
     "fmtcheck": "prettier --check \"src/**/*.ts\" \"__tests__/**/*.ts\"",
     "updatetag": "git tag -d v2 && git push origin :v2 && git tag -a v2 -m '' && git push origin v2"
@@ -20,24 +22,23 @@
   ],
   "author": "softprops",
   "dependencies": {
-    "@actions/core": "^1.10.1",
-    "@actions/github": "^6.0.0",
-    "@octokit/plugin-retry": "^7.0.3",
-    "@octokit/plugin-throttling": "^9.0.3",
-    "glob": "^10.3.10",
-    "mime": "^4.0.1"
+    "@actions/core": "^1.11.1",
+    "@actions/github": "^6.0.1",
+    "@octokit/plugin-retry": "^8.0.1",
+    "@octokit/plugin-throttling": "^11.0.1",
+    "glob": "^11.0.2",
+    "mime-types": "^3.0.1"
   },
   "devDependencies": {
     "@types/glob": "^8.1.0",
-    "@types/jest": "^29.5.12",
-    "@types/mime": "^3.0.4",
-    "@types/node": "^20.11.28",
-    "@vercel/ncc": "^0.38.1",
-    "jest": "^29.7.0",
-    "jest-circus": "^29.7.0",
-    "prettier": "3.2.5",
-    "ts-jest": "^29.1.2",
-    "typescript": "^5.4.2",
-    "typescript-formatter": "^7.2.2"
+    "@types/mime-types": "^3.0.1",
+    "@types/node": "^20.17.32",
+    "@vercel/ncc": "^0.38.3",
+    "@vitest/coverage-v8": "^3.1.4",
+    "prettier": "3.5.3",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.8.3",
+    "typescript-formatter": "^7.2.2",
+    "vitest": "^3.1.4"
   }
 }

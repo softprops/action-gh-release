@@ -298,7 +298,6 @@ export const release = async (
       target_commitish = existingRelease.target_commitish;
     }
 
-    const tag_name = tag;
     const name = config.input_name || existingRelease.name || tag;
     // revisit: support a new body-concat-strategy input for accumulating
     // body parts as a release gets updated. some users will likely want this while
@@ -306,7 +305,7 @@ export const release = async (
     // no one wants
     const workflowBody = releaseBody(config) || "";
     const existingReleaseBody = existingRelease.body || "";
-    let body: string;
+
     if (config.input_append_body && workflowBody && existingReleaseBody) {
       console.log("➕ Appending existing release body");
       body = body + existingReleaseBody + "\n" + workflowBody;
@@ -452,7 +451,7 @@ async function createRelease(
   const draft = config.input_draft;
   const prerelease = config.input_prerelease;
   const target_commitish = config.input_target_commitish;
-  const make_latest = config.input_make_latest;
+  const make_latest = config.input_make_latest!;
   let commitMessage: string = "";
   if (target_commitish) {
     commitMessage = ` using commit "${target_commitish}"`;
@@ -471,9 +470,8 @@ async function createRelease(
       prerelease,
       target_commitish,
       discussion_category_name,
-      generate_release_notes,
       make_latest,
-    });
+    } as CreateReleaseParams);
     return release.data;
   } catch (error) {
     // presume a race with competing matrix runs
