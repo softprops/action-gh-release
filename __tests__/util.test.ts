@@ -1,16 +1,15 @@
 import {
-  releaseBody,
+  alignAssetName,
   isTag,
-  paths,
   parseConfig,
   parseInputFiles,
+  paths,
+  releaseBody,
   unmatchedPatterns,
   uploadUrl,
-  alignAssetName,
 } from "../src/util";
-import * as assert from "assert";
 
-import { describe, it, expect } from "vitest";
+import { assert, describe, expect, it } from "vitest";
 
 describe("util", () => {
   describe("uploadUrl", () => {
