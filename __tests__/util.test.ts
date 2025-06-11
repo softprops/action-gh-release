@@ -61,6 +61,7 @@ describe('util', () => {
           input_discussion_category_name: undefined,
           input_generate_release_notes: false,
           input_make_latest: undefined,
+          input_previous_tag: undefined,
         }),
       );
     });
@@ -84,6 +85,7 @@ describe('util', () => {
           input_discussion_category_name: undefined,
           input_generate_release_notes: false,
           input_make_latest: undefined,
+          input_previous_tag: undefined,
         }),
       );
     });
@@ -107,6 +109,7 @@ describe('util', () => {
           input_discussion_category_name: undefined,
           input_generate_release_notes: false,
           input_make_latest: undefined,
+          input_previous_tag: undefined,
         }),
       );
     });
@@ -143,6 +146,7 @@ describe('util', () => {
           input_discussion_category_name: undefined,
           input_generate_release_notes: false,
           input_make_latest: undefined,
+          input_previous_tag: undefined,
         },
       );
     });
@@ -171,6 +175,7 @@ describe('util', () => {
           input_discussion_category_name: undefined,
           input_generate_release_notes: false,
           input_make_latest: undefined,
+          input_previous_tag: undefined,
         },
       );
     });
@@ -198,6 +203,7 @@ describe('util', () => {
           input_discussion_category_name: 'releases',
           input_generate_release_notes: false,
           input_make_latest: undefined,
+          input_previous_tag: undefined,
         },
       );
     });
@@ -226,6 +232,7 @@ describe('util', () => {
           input_discussion_category_name: undefined,
           input_generate_release_notes: true,
           input_make_latest: undefined,
+          input_previous_tag: undefined,
         },
       );
     });
@@ -258,6 +265,7 @@ describe('util', () => {
           input_discussion_category_name: undefined,
           input_generate_release_notes: false,
           input_make_latest: undefined,
+          input_previous_tag: undefined,
         },
       );
     });
@@ -287,6 +295,7 @@ describe('util', () => {
           input_discussion_category_name: undefined,
           input_generate_release_notes: false,
           input_make_latest: undefined,
+          input_previous_tag: undefined,
         },
       );
     });
@@ -306,6 +315,7 @@ describe('util', () => {
           input_draft: false,
           input_prerelease: true,
           input_preserve_order: undefined,
+          input_previous_tag: undefined,
           input_files: [],
           input_overwrite_files: undefined,
           input_name: undefined,
@@ -342,6 +352,7 @@ describe('util', () => {
           input_discussion_category_name: undefined,
           input_generate_release_notes: false,
           input_make_latest: 'false',
+          input_previous_tag: undefined,
         },
       );
     });
@@ -369,6 +380,7 @@ describe('util', () => {
           input_discussion_category_name: undefined,
           input_generate_release_notes: false,
           input_make_latest: undefined,
+          input_previous_tag: undefined,
         },
       );
     });
