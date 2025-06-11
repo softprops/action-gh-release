@@ -20,8 +20,8 @@ export interface Config {
   input_discussion_category_name?: string;
   input_generate_release_notes?: boolean;
   input_append_body?: boolean;
+  input_make_latest: "true" | "false" | "legacy" | undefined;
   input_previous_tag?: string;
-  input_make_latest?: string;
 }
 
 export const uploadUrl = (url: string): string => {
