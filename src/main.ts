@@ -45,7 +45,7 @@ async function run() {
       throttle: {
         onRateLimit: (retryAfter, options) => {
           console.warn(
-            `Request quota exhausted for request ${options.method} ${options.url}`
+            `Request quota exhausted for request ${options.method} ${options.url}`,
           );
           if (options.request.retryCount === 0) {
             // only retries once
@@ -56,7 +56,7 @@ async function run() {
         onAbuseLimit: (retryAfter, options) => {
           // does not retry, only logs a warning
           console.warn(
-            `Abuse detected for request ${options.method} ${options.url}`
+            `Abuse detected for request ${options.method} ${options.url}`,
           );
         },
       },
@@ -68,11 +68,11 @@ async function run() {
       if (files.length == 0) {
         if (config.input_fail_on_unmatched_files) {
           throw new Error(
-            `⚠️ ${config.input_files} does not include a valid file.`
+            `⚠️ ${config.input_files} does not include a valid file.`,
           );
         } else {
           console.warn(
-            `🤔 ${config.input_files} does not include a valid file.`
+            `🤔 ${config.input_files} does not include a valid file.`,
           );
         }
       }
@@ -84,7 +84,7 @@ async function run() {
           gh,
           uploadUrl(rel.upload_url),
           path,
-          currentAssets
+          currentAssets,
         );
         if (json) {
           delete json.uploader;

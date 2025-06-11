@@ -170,7 +170,7 @@ export const upload = async (
   if (currentAsset) {
     if (config.input_overwrite_files === false) {
       console.log(
-        `Asset ${name} already exists and overwrite_files is false...`
+        `Asset ${name} already exists and overwrite_files is false...`,
       );
       return null;
     } else {

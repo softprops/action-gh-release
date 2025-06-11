@@ -16,9 +16,9 @@ describe("util", () => {
     it("strips template", () => {
       assert.equal(
         uploadUrl(
-          "https://uploads.github.com/repos/octocat/Hello-World/releases/1/assets{?name,label}"
+          "https://uploads.github.com/repos/octocat/Hello-World/releases/1/assets{?name,label}",
         ),
-        "https://uploads.github.com/repos/octocat/Hello-World/releases/1/assets"
+        "https://uploads.github.com/repos/octocat/Hello-World/releases/1/assets",
       );
     });
   });
@@ -32,7 +32,7 @@ describe("util", () => {
     it("parses newline and comma-delimited (and then some)", () => {
       assert.deepStrictEqual(
         parseInputFiles("foo,bar\nbaz,boom,\n\ndoom,loom "),
-        ["foo", "bar", "baz", "boom", "doom", "loom"]
+        ["foo", "bar", "baz", "boom", "doom", "loom"],
       );
     });
   });
@@ -57,7 +57,7 @@ describe("util", () => {
           input_discussion_category_name: undefined,
           input_generate_release_notes: false,
           input_make_latest: undefined,
-        })
+        }),
       );
     });
     it("uses input body path", () => {
@@ -80,7 +80,7 @@ describe("util", () => {
           input_discussion_category_name: undefined,
           input_generate_release_notes: false,
           input_make_latest: undefined,
-        })
+        }),
       );
     });
     it("defaults to body path when both body and body path are provided", () => {
@@ -103,7 +103,7 @@ describe("util", () => {
           input_discussion_category_name: undefined,
           input_generate_release_notes: false,
           input_make_latest: undefined,
-        })
+        }),
       );
     });
   });
@@ -139,7 +139,7 @@ describe("util", () => {
           input_discussion_category_name: undefined,
           input_generate_release_notes: false,
           input_make_latest: undefined,
-        }
+        },
       );
     });
 
@@ -167,7 +167,7 @@ describe("util", () => {
           input_discussion_category_name: undefined,
           input_generate_release_notes: false,
           input_make_latest: undefined,
-        }
+        },
       );
     });
     it("supports discussion category names", () => {
@@ -187,13 +187,14 @@ describe("util", () => {
           input_files: [],
           input_preserve_order: undefined,
           input_name: undefined,
+          input_overwrite_files: undefined,
           input_tag_name: undefined,
           input_fail_on_unmatched_files: false,
           input_target_commitish: undefined,
           input_discussion_category_name: "releases",
           input_generate_release_notes: false,
           input_make_latest: undefined,
-        }
+        },
       );
     });
 
@@ -221,7 +222,7 @@ describe("util", () => {
           input_discussion_category_name: undefined,
           input_generate_release_notes: true,
           input_make_latest: undefined,
-        }
+        },
       );
     });
 
@@ -253,7 +254,7 @@ describe("util", () => {
           input_discussion_category_name: undefined,
           input_generate_release_notes: false,
           input_make_latest: undefined,
-        }
+        },
       );
     });
     it("uses input token as the source of GITHUB_TOKEN by default", () => {
@@ -282,7 +283,7 @@ describe("util", () => {
           input_discussion_category_name: undefined,
           input_generate_release_notes: false,
           input_make_latest: undefined,
-        }
+        },
       );
     });
     it("parses basic config with draft and prerelease", () => {
@@ -310,7 +311,7 @@ describe("util", () => {
           input_discussion_category_name: undefined,
           input_generate_release_notes: false,
           input_make_latest: undefined,
-        }
+        },
       );
     });
     it("parses basic config where make_latest is passed", () => {
@@ -330,13 +331,14 @@ describe("util", () => {
           input_preserve_order: undefined,
           input_files: [],
           input_name: undefined,
+          input_overwrite_files: undefined,
           input_tag_name: undefined,
           input_fail_on_unmatched_files: false,
           input_target_commitish: undefined,
           input_discussion_category_name: undefined,
           input_generate_release_notes: false,
           input_make_latest: "false",
-        }
+        },
       );
     });
     it("parses basic config with append_body", () => {
@@ -363,7 +365,7 @@ describe("util", () => {
           input_discussion_category_name: undefined,
           input_generate_release_notes: false,
           input_make_latest: undefined,
-        }
+        },
       );
     });
   });
@@ -380,7 +382,7 @@ describe("util", () => {
     it("resolves files given a set of paths", async () => {
       assert.deepStrictEqual(
         paths(["tests/data/**/*", "tests/data/does/not/exist/*"]),
-        ["tests/data/foo/bar.txt"]
+        ["tests/data/foo/bar.txt"],
       );
     });
   });
@@ -389,7 +391,7 @@ describe("util", () => {
     it("returns the patterns that don't match any files", async () => {
       assert.deepStrictEqual(
         unmatchedPatterns(["tests/data/**/*", "tests/data/does/not/exist/*"]),
-        ["tests/data/does/not/exist/*"]
+        ["tests/data/does/not/exist/*"],
       );
     });
   });
@@ -401,7 +403,7 @@ describe("util", () => {
 
     it("handles names with multiple spaces", () => {
       expect(alignAssetName("John William Doe.bla")).toBe(
-        "John.William.Doe.bla"
+        "John.William.Doe.bla",
       );
     });
 
