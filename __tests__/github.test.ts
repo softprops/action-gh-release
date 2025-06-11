@@ -1,13 +1,12 @@
-import * as assert from "assert";
 import {
-  mimeOrDefault,
   asset,
-  Releaser,
-  Release,
   findTagFromReleases,
+  mimeOrDefault,
+  Release,
+  Releaser,
 } from "../src/github";
 
-import { describe, it } from "vitest";
+import { assert, describe, it } from "vitest";
 
 describe("github", () => {
   describe("mimeOrDefault", () => {
