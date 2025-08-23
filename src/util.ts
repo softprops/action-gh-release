@@ -1,7 +1,7 @@
 import * as glob from 'glob';
 import { statSync, readFileSync } from 'fs';
 
-import { Config } from './interfaces/configInterface';
+import { Config } from './interfaces';
 
 export const uploadUrl = (url: string): string => {
   const templateMarkerPos = url.indexOf('{');
