@@ -3,63 +3,10 @@ import { statSync } from 'fs';
 import { open } from 'fs/promises';
 import { lookup } from 'mime-types';
 import { basename } from 'path';
-import { alignAssetName, Config, isTag, releaseBody } from './util';
+import { alignAssetName, isTag, releaseBody } from './util';
+import { ReleaseAsset, Config, Releaser, Release } from './interfaces';
 
 type GitHub = InstanceType<typeof GitHub>;
-
-export interface ReleaseAsset {
-  name: string;
-  mime: string;
-  size: number;
-}
-
-export interface Release {
-  id: number;
-  upload_url: string;
-  html_url: string;
-  tag_name: string;
-  name: string | null;
-  body?: string | null | undefined;
-  target_commitish: string;
-  draft: boolean;
-  prerelease: boolean;
-  assets: Array<{ id: number; name: string }>;
-}
-
-export interface Releaser {
-  getReleaseByTag(params: { owner: string; repo: string; tag: string }): Promise<{ data: Release }>;
-
-  createRelease(params: {
-    owner: string;
-    repo: string;
-    tag_name: string;
-    name: string;
-    body: string | undefined;
-    draft: boolean | undefined;
-    prerelease: boolean | undefined;
-    target_commitish: string | undefined;
-    discussion_category_name: string | undefined;
-    generate_release_notes: boolean | undefined;
-    make_latest: 'true' | 'false' | 'legacy' | undefined;
-  }): Promise<{ data: Release }>;
-
-  updateRelease(params: {
-    owner: string;
-    repo: string;
-    release_id: number;
-    tag_name: string;
-    target_commitish: string;
-    name: string;
-    body: string | undefined;
-    draft: boolean | undefined;
-    prerelease: boolean | undefined;
-    discussion_category_name: string | undefined;
-    generate_release_notes: boolean | undefined;
-    make_latest: 'true' | 'false' | 'legacy' | undefined;
-  }): Promise<{ data: Release }>;
-
-  allReleases(params: { owner: string; repo: string }): AsyncIterableIterator<{ data: Release[] }>;
-}
 
 export class GitHubReleaser implements Releaser {
   github: GitHub;
