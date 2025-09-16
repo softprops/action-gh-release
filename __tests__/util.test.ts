@@ -10,6 +10,7 @@ import {
 } from '../src/util';
 
 import { assert, describe, expect, it } from 'vitest';
+import * as path from 'path';
 
 describe('util', () => {
   describe('uploadUrl', () => {
@@ -385,7 +386,7 @@ describe('util', () => {
   describe('paths', () => {
     it('resolves files given a set of paths', async () => {
       assert.deepStrictEqual(paths(['tests/data/**/*', 'tests/data/does/not/exist/*']), [
-        'tests/data/foo/bar.txt',
+        path.join('tests', 'data', 'foo', 'bar.txt'),
       ]);
     });
   });
