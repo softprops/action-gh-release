@@ -1,3 +1,15 @@
+## 2.3.3
+
+## What's Changed
+
+### Exciting New Features 🎉
+
+* feat: add input option `overwrite_files` by @asfernandes in https://github.com/softprops/action-gh-release/pull/343
+
+### Other Changes 🔄
+
+- dependency updates
+
 ## 2.3.2
 
 * fix: revert fs `readableWebStream` change
