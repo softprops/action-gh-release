@@ -1,0 +1,54 @@
+name: NodeJS with Gulp
+
+on:
+  push:
+    branches: [ "master" ]
+  pull_request:
+    branches: [ "master" ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version: [18.x, 20.x, 22.x]
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Use Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ matrix.node-version }}
+
+    - name: Buildname: Main
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+      - name: Release
+        uses: softprops/action-gh-release@v2- name: Bytebase Create Plan From Release
+  uses: bytebase/create-plan-from-release-action@v1.0.1            - name: Add To GitHub projects
+  uses: actions/add-to-project@v1.0.2
+  with:
+    # URL of the project to add issues to
+    project-url: 
+    # A GitHub personal access token with write access to the project
+    github-token: 
+    # A comma-separated list of labels to use as a filter for issue to be added
+    labeled: # optional
+    # The behavior of the labels filter, AND to match all labels, OR to match any label, NOT to exclude any listed label (default is OR)
+    label-operator: # optional
+          
+      run: |
+        npm install
+        gulp
