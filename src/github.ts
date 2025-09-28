@@ -388,8 +388,18 @@ async function createRelease(
         throw error;
 
       case 422:
-        console.log('Skip retry - validation failed');
-        throw error;
+        // Check if this is a race condition with "already_exists" error
+        const errorData = error.response?.data;
+        if (errorData?.errors?.[0]?.code === 'already_exists') {
+          console.log(
+            '⚠️ Release already exists (race condition detected), retrying to find and update existing release...',
+          );
+          // Don't throw - allow retry to find existing release
+        } else {
+          console.log('Skip retry - validation failed');
+          throw error;
+        }
+        break;
     }
 
     console.log(`retrying... (${maxRetries - 1} retries remaining)`);
