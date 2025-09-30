@@ -24,15 +24,15 @@
   "dependencies": {
     "@actions/core": "^1.11.1",
     "@actions/github": "^6.0.1",
-    "@octokit/plugin-retry": "^8.0.1",
-    "@octokit/plugin-throttling": "^11.0.1",
+    "@octokit/plugin-retry": "^8.0.2",
+    "@octokit/plugin-throttling": "^11.0.2",
     "glob": "^11.0.3",
     "mime-types": "^3.0.1"
   },
   "devDependencies": {
     "@types/glob": "^9.0.0",
     "@types/mime-types": "^3.0.1",
-    "@types/node": "^20.19.17",
+    "@types/node": "^20.19.18",
     "@vercel/ncc": "^0.38.4",
     "@vitest/coverage-v8": "^3.2.4",
     "prettier": "3.6.2",
