@@ -1,3 +1,15 @@
+## 2.3.4
+
+## What's Changed
+
+### Bug fixes 🐛
+
+* fix(action): handle 422 already_exists race condition by @stephenway in https://github.com/softprops/action-gh-release/pull/665
+
+### Other Changes 🔄
+
+- dependency updates
+
 ## 2.3.3
 
 ## What's Changed
