@@ -1,4 +1,11 @@
-import { asset, findTagFromReleases, mimeOrDefault, Release, Releaser } from '../src/github';
+import {
+  asset,
+  findTagFromReleases,
+  mimeOrDefault,
+  release,
+  Release,
+  Releaser,
+} from '../src/github';
 
 import { assert, describe, it } from 'vitest';
 
@@ -225,6 +232,77 @@ describe('github', () => {
 
         assert.strictEqual(result, undefined);
       });
+    });
+  });
+
+  describe('error handling', () => {
+    it('handles 422 already_exists error gracefully', async () => {
+      const mockReleaser: Releaser = {
+        getReleaseByTag: () => Promise.reject('Not implemented'),
+        createRelease: () =>
+          Promise.reject({
+            status: 422,
+            response: { data: { errors: [{ code: 'already_exists' }] } },
+          }),
+        updateRelease: () =>
+          Promise.resolve({
+            data: {
+              id: 1,
+              upload_url: 'test',
+              html_url: 'test',
+              tag_name: 'v1.0.0',
+              name: 'test',
+              body: 'test',
+              target_commitish: 'main',
+              draft: false,
+              prerelease: false,
+              assets: [],
+            },
+          }),
+        allReleases: async function* () {
+          yield {
+            data: [
+              {
+                id: 1,
+                upload_url: 'test',
+                html_url: 'test',
+                tag_name: 'v1.0.0',
+                name: 'test',
+                body: 'test',
+                target_commitish: 'main',
+                draft: false,
+                prerelease: false,
+                assets: [],
+              },
+            ],
+          };
+        },
+      } as const;
+
+      const config = {
+        github_token: 'test-token',
+        github_ref: 'refs/tags/v1.0.0',
+        github_repository: 'owner/repo',
+        input_tag_name: undefined,
+        input_name: undefined,
+        input_body: undefined,
+        input_body_path: undefined,
+        input_files: [],
+        input_draft: undefined,
+        input_prerelease: undefined,
+        input_preserve_order: undefined,
+        input_overwrite_files: undefined,
+        input_fail_on_unmatched_files: false,
+        input_target_commitish: undefined,
+        input_discussion_category_name: undefined,
+        input_generate_release_notes: false,
+        input_append_body: false,
+        input_make_latest: undefined,
+      };
+
+      const result = await release(config, mockReleaser, 1);
+      assert.ok(result);
+      assert.equal(result.id, 1);
     });
   });
 });
