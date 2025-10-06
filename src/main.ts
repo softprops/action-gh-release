@@ -12,7 +12,7 @@ async function run() {
       throw new Error(`⚠️ GitHub Releases requires a tag`);
     }
     if (config.input_files) {
-      const patterns = unmatchedPatterns(config.input_files);
+      const patterns = unmatchedPatterns(config.input_files, config.input_working_directory);
       patterns.forEach((pattern) => {
         if (config.input_fail_on_unmatched_files) {
           throw new Error(`⚠️  Pattern '${pattern}' does not match any files.`);
@@ -50,7 +50,7 @@ async function run() {
     //);
     const rel = await release(config, new GitHubReleaser(gh));
     if (config.input_files && config.input_files.length > 0) {
-      const files = paths(config.input_files);
+      const files = paths(config.input_files, config.input_working_directory);
       if (files.length == 0) {
         if (config.input_fail_on_unmatched_files) {
           throw new Error(`⚠️ ${config.input_files} does not include a valid file.`);
