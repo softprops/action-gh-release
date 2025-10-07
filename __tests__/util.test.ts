@@ -128,6 +128,7 @@ describe('util', () => {
           github_ref: '',
           github_repository: '',
           github_token: '',
+          input_working_directory: undefined,
           input_append_body: false,
           input_body: undefined,
           input_body_path: undefined,
@@ -156,6 +157,7 @@ describe('util', () => {
           github_ref: '',
           github_repository: '',
           github_token: '',
+          input_working_directory: undefined,
           input_append_body: false,
           input_body: undefined,
           input_body_path: undefined,
@@ -183,6 +185,7 @@ describe('util', () => {
           github_ref: '',
           github_repository: '',
           github_token: '',
+          input_working_directory: undefined,
           input_append_body: false,
           input_body: undefined,
           input_body_path: undefined,
@@ -211,6 +214,7 @@ describe('util', () => {
           github_ref: '',
           github_repository: '',
           github_token: '',
+          input_working_directory: undefined,
           input_append_body: false,
           input_body: undefined,
           input_body_path: undefined,
@@ -243,6 +247,7 @@ describe('util', () => {
           github_ref: '',
           github_repository: '',
           github_token: 'env-token',
+          input_working_directory: undefined,
           input_append_body: false,
           input_body: undefined,
           input_body_path: undefined,
@@ -272,6 +277,7 @@ describe('util', () => {
           github_ref: '',
           github_repository: '',
           github_token: 'input-token',
+          input_working_directory: undefined,
           input_append_body: false,
           input_body: undefined,
           input_body_path: undefined,
@@ -300,6 +306,7 @@ describe('util', () => {
           github_ref: '',
           github_repository: '',
           github_token: '',
+          input_working_directory: undefined,
           input_append_body: false,
           input_body: undefined,
           input_body_path: undefined,
@@ -327,6 +334,7 @@ describe('util', () => {
           github_ref: '',
           github_repository: '',
           github_token: '',
+          input_working_directory: undefined,
           input_append_body: false,
           input_body: undefined,
           input_body_path: undefined,
@@ -354,6 +362,7 @@ describe('util', () => {
           github_ref: '',
           github_repository: '',
           github_token: '',
+          input_working_directory: undefined,
           input_append_body: true,
           input_body: undefined,
           input_body_path: undefined,
@@ -388,6 +397,10 @@ describe('util', () => {
         'tests/data/foo/bar.txt',
       ]);
     });
+
+    it('resolves files relative to working_directory', async () => {
+      assert.deepStrictEqual(paths(['data/**/*'], 'tests'), ['tests/data/foo/bar.txt']);
+    });
   });
 
   describe('unmatchedPatterns', () => {
@@ -396,6 +409,12 @@ describe('util', () => {
         unmatchedPatterns(['tests/data/**/*', 'tests/data/does/not/exist/*']),
         ['tests/data/does/not/exist/*'],
       );
+    });
+
+    it('resolves unmatched relative to working_directory', async () => {
+      assert.deepStrictEqual(unmatchedPatterns(['data/does/not/exist/*'], 'tests'), [
+        'data/does/not/exist/*',
+      ]);
     });
   });
 

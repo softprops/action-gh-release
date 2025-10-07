@@ -1,5 +1,6 @@
 import * as glob from 'glob';
 import { statSync, readFileSync } from 'fs';
+import * as pathLib from 'path';
 
 export interface Config {
   github_token: string;
@@ -12,6 +13,7 @@ export interface Config {
   input_body?: string;
   input_body_path?: string;
   input_files?: string[];
+  input_working_directory?: string;
   input_overwrite_files?: boolean;
   input_draft?: boolean;
   input_preserve_order?: boolean;
@@ -62,6 +64,7 @@ export const parseConfig = (env: Env): Config => {
     input_body: env.INPUT_BODY,
     input_body_path: env.INPUT_BODY_PATH,
     input_files: parseInputFiles(env.INPUT_FILES || ''),
+    input_working_directory: env.INPUT_WORKING_DIRECTORY || undefined,
     input_overwrite_files: env.INPUT_OVERWRITE_FILES
       ? env.INPUT_OVERWRITE_FILES == 'true'
       : undefined,
@@ -84,17 +87,34 @@ const parseMakeLatest = (value: string | undefined): 'true' | 'false' | 'legacy'
   return undefined;
 };
 
-export const paths = (patterns: string[]): string[] => {
+export const paths = (patterns: string[], cwd?: string): string[] => {
   return patterns.reduce((acc: string[], pattern: string): string[] => {
-    return acc.concat(glob.sync(pattern).filter((path) => statSync(path).isFile()));
+    const matches = glob.sync(pattern, { cwd, dot: true, absolute: false });
+    const resolved = matches
+      .map((p) => (cwd ? pathLib.join(cwd, p) : p))
+      .filter((p) => {
+        try {
+          return statSync(p).isFile();
+        } catch {
+          return false;
+        }
+      });
+    return acc.concat(resolved);
   }, []);
 };
 
-export const unmatchedPatterns = (patterns: string[]): string[] => {
+export const unmatchedPatterns = (patterns: string[], cwd?: string): string[] => {
   return patterns.reduce((acc: string[], pattern: string): string[] => {
-    return acc.concat(
-      glob.sync(pattern).filter((path) => statSync(path).isFile()).length == 0 ? [pattern] : [],
-    );
+    const matches = glob.sync(pattern, { cwd, dot: true, absolute: false });
+    const files = matches.filter((p) => {
+      try {
+        const full = cwd ? pathLib.join(cwd, p) : p;
+        return statSync(full).isFile();
+      } catch {
+        return false;
+      }
+    });
+    return acc.concat(files.length == 0 ? [pattern] : []);
   }, []);
 };
 
