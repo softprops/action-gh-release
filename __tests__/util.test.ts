@@ -122,6 +122,52 @@ describe('util', () => {
         }),
       );
     });
+    it('falls back to body when body_path is missing', () => {
+      assert.equal(
+        releaseBody({
+          github_ref: '',
+          github_repository: '',
+          github_token: '',
+          input_body: 'fallback-body',
+          input_body_path: '__tests__/does-not-exist.txt',
+          input_draft: false,
+          input_prerelease: false,
+          input_files: [],
+          input_overwrite_files: undefined,
+          input_preserve_order: undefined,
+          input_name: undefined,
+          input_tag_name: undefined,
+          input_target_commitish: undefined,
+          input_discussion_category_name: undefined,
+          input_generate_release_notes: false,
+          input_make_latest: undefined,
+        }),
+        'fallback-body',
+      );
+    });
+    it('returns undefined when body_path is missing and body is not provided', () => {
+      assert.equal(
+        releaseBody({
+          github_ref: '',
+          github_repository: '',
+          github_token: '',
+          input_body: undefined,
+          input_body_path: '__tests__/does-not-exist.txt',
+          input_draft: false,
+          input_prerelease: false,
+          input_files: [],
+          input_overwrite_files: undefined,
+          input_preserve_order: undefined,
+          input_name: undefined,
+          input_tag_name: undefined,
+          input_target_commitish: undefined,
+          input_discussion_category_name: undefined,
+          input_generate_release_notes: false,
+          input_make_latest: undefined,
+        }),
+        undefined,
+      );
+    });
   });
   describe('parseConfig', () => {
     it('parses basic config', () => {
