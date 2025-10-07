@@ -39,6 +39,18 @@ describe('util', () => {
         'loom',
       ]);
     });
+    it('handles globs with brace groups containing commas', () => {
+      assert.deepStrictEqual(parseInputFiles('./**/*.{exe,deb,tar.gz}\nfoo,bar'), [
+        './**/*.{exe,deb,tar.gz}',
+        'foo',
+        'bar',
+      ]);
+    });
+    it('handles single-line brace pattern correctly', () => {
+      assert.deepStrictEqual(parseInputFiles('./**/*.{exe,deb,tar.gz}'), [
+        './**/*.{exe,deb,tar.gz}',
+      ]);
+    });
   });
   describe('releaseBody', () => {
     it('uses input body', () => {
