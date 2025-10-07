@@ -43,15 +43,38 @@ export const releaseBody = (config: Config): string | undefined => {
 
 type Env = { [key: string]: string | undefined };
 
+const smartSplit = (input: string): string[] => {
+  const result: string[] = [];
+  let current = '';
+  let braceDepth = 0;
+
+  for (const ch of input) {
+    if (ch === '{') {
+      braceDepth++;
+    }
+    if (ch === '}') {
+      braceDepth--;
+    }
+    if (ch === ',' && braceDepth === 0) {
+      if (current.trim()) {
+        result.push(current.trim());
+      }
+      current = '';
+    } else {
+      current += ch;
+    }
+  }
+  if (current.trim()) {
+    result.push(current.trim());
+  }
+  return result;
+};
+
 export const parseInputFiles = (files: string): string[] => {
-  return files.split(/\r?\n/).reduce<string[]>(
-    (acc, line) =>
-      acc
-        .concat(line.split(','))
-        .filter((pat) => pat)
-        .map((pat) => pat.trim()),
-    [],
-  );
+  return files
+    .split(/\r?\n/)
+    .flatMap((line) => smartSplit(line))
+    .filter((pat) => pat.trim() !== '');
 };
 
 export const parseConfig = (env: Env): Config => {
