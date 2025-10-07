@@ -444,3 +444,36 @@ describe('util', () => {
     });
   });
 });
+
+describe('parseInputFiles edge cases', () => {
+  it('handles multiple brace groups on same line', () => {
+    assert.deepStrictEqual(parseInputFiles('./**/*.{exe,deb},./dist/**/*.{zip,tar.gz}'), [
+      './**/*.{exe,deb}',
+      './dist/**/*.{zip,tar.gz}',
+    ]);
+  });
+
+  it('handles nested braces', () => {
+    assert.deepStrictEqual(parseInputFiles('path/{a,{b,c}}/file.txt'), ['path/{a,{b,c}}/file.txt']);
+  });
+
+  it('handles empty comma-separated values', () => {
+    assert.deepStrictEqual(parseInputFiles('foo,,bar'), ['foo', 'bar']);
+  });
+
+  it('handles commas with spaces around braces', () => {
+    assert.deepStrictEqual(parseInputFiles(' ./**/*.{exe,deb} , file.txt '), [
+      './**/*.{exe,deb}',
+      'file.txt',
+    ]);
+  });
+
+  it('handles mixed newlines and commas with braces', () => {
+    assert.deepStrictEqual(parseInputFiles('file1.txt\n./**/*.{exe,deb},file2.txt\nfile3.txt'), [
+      'file1.txt',
+      './**/*.{exe,deb}',
+      'file2.txt',
+      'file3.txt',
+    ]);
+  });
+});
