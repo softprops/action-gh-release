@@ -5,8 +5,8 @@
   "description": "GitHub Action for creating GitHub Releases",
   "main": "lib/main.js",
   "scripts": {
-    "build": "esbuild src/main.ts --bundle --platform=node --format=cjs --target=node20 --outfile=dist/index.js --minify",
-    "build-debug": "esbuild src/main.ts --bundle --platform=node --format=cjs --target=node20 --outfile=dist/index.js --sourcemap --keep-names",
+    "build": "esbuild src/main.ts --bundle --platform=node --format=cjs --target=node24 --outfile=dist/index.js --minify",
+    "build-debug": "esbuild src/main.ts --bundle --platform=node --format=cjs --target=node24 --outfile=dist/index.js --sourcemap --keep-names",
     "typecheck": "tsc --noEmit",
     "test": "vitest --coverage",
     "fmt": "prettier --write \"src/**/*.ts\" \"__tests__/**/*.ts\"",
@@ -35,7 +35,7 @@
   "devDependencies": {
     "@types/glob": "^9.0.0",
     "@types/mime-types": "^3.0.1",
-    "@types/node": "^20.19.39",
+    "@types/node": "^24",
     "@vitest/coverage-v8": "^4.1.4",
     "esbuild": "^0.28.0",
     "prettier": "3.8.2",
