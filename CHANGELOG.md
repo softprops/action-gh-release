@@ -1,3 +1,11 @@
+## 2.4.0
+
+## What's Changed
+
+### Exciting New Features 🎉
+
+* feat(action): respect working_directory for files globs by @stephenway in https://github.com/softprops/action-gh-release/pull/667
+
 ## 2.3.4
 
 ## What's Changed
