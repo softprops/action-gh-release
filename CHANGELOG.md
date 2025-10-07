@@ -6,6 +6,12 @@
 
 * feat(action): respect working_directory for files globs by @stephenway in https://github.com/softprops/action-gh-release/pull/667
 
+### Other Changes 🔄
+
+* Move action runtime to node24 and require Node >=24
+* Update @types/node to ^22 for Node 24 compatibility
+* Enable Dependabot updates for @types/node >=22
+
 ## 2.3.4
 
 ## What's Changed
