@@ -12,9 +12,6 @@ updates:
       - dependency-name: node-fetch
         versions:
           - ">=3.0.0"
-      - dependency-name: "@types/node"
-        versions:
-          - ">=22.0.0"
     commit-message:
       prefix: "chore(deps)"
   - package-ecosystem: github-actions
