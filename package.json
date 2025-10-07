@@ -21,6 +21,9 @@
     "actions"
   ],
   "author": "softprops",
+  "engines": {
+    "node": ">=24"
+  },
   "dependencies": {
     "@actions/core": "^3.0.0",
     "@actions/github": "^9.1.0",
