@@ -1,3 +1,12 @@
+## 2.4.1
+
+## What's Changed
+
+### Other Changes 🔄
+
+* fix(util): support brace expansion globs containing commas in parseInputFiles by @Copilot in https://github.com/softprops/action-gh-release/pull/672
+* fix: gracefully fallback to body when body_path cannot be read by @Copilot in https://github.com/softprops/action-gh-release/pull/671
+
 ## 2.4.0
 
 ## What's Changed
