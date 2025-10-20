@@ -32,7 +32,7 @@
   "devDependencies": {
     "@types/glob": "^9.0.0",
     "@types/mime-types": "^3.0.1",
-    "@types/node": "^20.19.21",
+    "@types/node": "^20.19.22",
     "@vercel/ncc": "^0.38.4",
     "@vitest/coverage-v8": "^3.2.4",
     "prettier": "3.6.2",
