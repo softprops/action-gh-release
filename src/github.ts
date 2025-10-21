@@ -86,33 +86,13 @@ export class GitHubReleaser implements Releaser {
       body: string;
     };
   }> {
-    const response = await this.github.rest.repos.generateReleaseNotes(params);
-    // release notes can be a maximum of 125000 characters
-    const noteSections = response.data.body?.split('\n\n');
-    const trimmedSections: string[] = [];
-    const githubNotesMaxCharLength = 125000;
-    const maxSectionLength = githubNotesMaxCharLength / noteSections.length;
-    for (let i = 0; i < noteSections.length; i++) {
-      if (noteSections[i].length > githubNotesMaxCharLength) {
-        const lastLineIndex = noteSections[i].substring(0, maxSectionLength).split('\n').length - 1;
-        const trimmed =
-          noteSections[i]
-            .split('\n')
-            .slice(0, lastLineIndex - 1)
-            .join('\n') +
-          `\n... (+${noteSections[i].split('\n').length - (lastLineIndex + 1)} others)`;
-        trimmedSections.push(trimmed);
-        continue;
-      }
+    return await this.github.rest.repos.generateReleaseNotes(params);
+  }
 
-      trimmedSections.push(noteSections[i]);
-    }
-    return {
-      data: {
-        name: response.data.name,
-        body: trimmedSections.join('\n\n'),
-      },
-    };
+  truncateReleaseNotes(input: string): string {
+    // release notes can be a maximum of 125000 characters
+    const githubNotesMaxCharLength = 125000;
+    return input.substring(0, githubNotesMaxCharLength - 1);
   }
 
   async createRelease(params: {
@@ -143,6 +123,7 @@ export class GitHubReleaser implements Releaser {
         params.body = releaseNotes.data.body;
       }
     }
+    params.body = params.body ? this.truncateReleaseNotes(params.body) : undefined;
     return this.github.rest.repos.createRelease(params);
   }
 
@@ -175,6 +156,7 @@ export class GitHubReleaser implements Releaser {
         params.body = releaseNotes.data.body;
       }
     }
+    params.body = params.body ? this.truncateReleaseNotes(params.body) : undefined;
     return this.github.rest.repos.updateRelease(params);
   }
 
