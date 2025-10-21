@@ -75,7 +75,47 @@ export class GitHubReleaser implements Releaser {
     return this.github.rest.repos.getReleaseByTag(params);
   }
 
-  createRelease(params: {
+  async getReleaseNotes(params: {
+    owner: string;
+    repo: string;
+    tag_name: string;
+    target_commitish: string | undefined;
+  }): Promise<{
+    data: {
+      name: string;
+      body: string;
+    };
+  }> {
+    const response = await this.github.rest.repos.generateReleaseNotes(params);
+    // release notes can be a maximum of 125000 characters
+    const noteSections = response.data.body?.split('\n\n');
+    const trimmedSections: string[] = [];
+    const githubNotesMaxCharLength = 125000;
+    const maxSectionLength = githubNotesMaxCharLength / noteSections.length;
+    for (let i = 0; i < noteSections.length; i++) {
+      if (noteSections[i].length > githubNotesMaxCharLength) {
+        const lastLineIndex = noteSections[i].substring(0, maxSectionLength).split('\n').length - 1;
+        const trimmed =
+          noteSections[i]
+            .split('\n')
+            .slice(0, lastLineIndex - 1)
+            .join('\n') +
+          `\n... (+${noteSections[i].split('\n').length - (lastLineIndex + 1)} others)`;
+        trimmedSections.push(trimmed);
+        continue;
+      }
+
+      trimmedSections.push(noteSections[i]);
+    }
+    return {
+      data: {
+        name: response.data.name,
+        body: trimmedSections.join('\n\n'),
+      },
+    };
+  }
+
+  async createRelease(params: {
     owner: string;
     repo: string;
     tag_name: string;
@@ -94,11 +134,19 @@ export class GitHubReleaser implements Releaser {
     ) {
       params.make_latest = undefined;
     }
-
+    if (params.generate_release_notes) {
+      const releaseNotes = await this.getReleaseNotes(params);
+      params.generate_release_notes = false;
+      if (params.body) {
+        params.body = `${params.body}\n\n${releaseNotes.data.body}`;
+      } else {
+        params.body = releaseNotes.data.body;
+      }
+    }
     return this.github.rest.repos.createRelease(params);
   }
 
-  updateRelease(params: {
+  async updateRelease(params: {
     owner: string;
     repo: string;
     release_id: number;
@@ -118,7 +166,15 @@ export class GitHubReleaser implements Releaser {
     ) {
       params.make_latest = undefined;
     }
-
+    if (params.generate_release_notes) {
+      const releaseNotes = await this.getReleaseNotes(params);
+      params.generate_release_notes = false;
+      if (params.body) {
+        params.body = `${params.body}\n\n${releaseNotes.data.body}`;
+      } else {
+        params.body = releaseNotes.data.body;
+      }
+    }
     return this.github.rest.repos.updateRelease(params);
   }
 
