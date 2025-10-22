@@ -1,3 +1,44 @@
+## 2.4.1
+
+## What's Changed
+
+### Other Changes 🔄
+
+* fix(util): support brace expansion globs containing commas in parseInputFiles by @Copilot in https://github.com/softprops/action-gh-release/pull/672
+* fix: gracefully fallback to body when body_path cannot be read by @Copilot in https://github.com/softprops/action-gh-release/pull/671
+
+## 2.4.0
+
+## What's Changed
+
+### Exciting New Features 🎉
+
+* feat(action): respect working_directory for files globs by @stephenway in https://github.com/softprops/action-gh-release/pull/667
+
+## 2.3.4
+
+## What's Changed
+
+### Bug fixes 🐛
+
+* fix(action): handle 422 already_exists race condition by @stephenway in https://github.com/softprops/action-gh-release/pull/665
+
+### Other Changes 🔄
+
+- dependency updates
+
+## 2.3.3
+
+## What's Changed
+
+### Exciting New Features 🎉
+
+* feat: add input option `overwrite_files` by @asfernandes in https://github.com/softprops/action-gh-release/pull/343
+
+### Other Changes 🔄
+
+- dependency updates
+
 ## 2.3.2
 
 * fix: revert fs `readableWebStream` change

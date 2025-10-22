@@ -1,5 +1,6 @@
 import { readFileSync, statSync } from 'fs';
 import * as glob from 'glob';
+import * as pathLib from 'path';
 
 export interface Config {
   github_token: string;
@@ -12,6 +13,7 @@ export interface Config {
   input_body?: string;
   input_body_path?: string;
   input_files?: string[];
+  input_working_directory?: string;
   input_overwrite_files?: boolean;
   input_draft?: boolean;
   input_preserve_order?: boolean;
@@ -34,23 +36,53 @@ export const uploadUrl = (url: string): string => {
 };
 
 export const releaseBody = (config: Config): string | undefined => {
-  return (
-    (config.input_body_path && readFileSync(config.input_body_path).toString('utf8')) ||
-    config.input_body
-  );
+  if (config.input_body_path) {
+    try {
+      const contents = readFileSync(config.input_body_path, 'utf8');
+      return contents;
+    } catch (err: any) {
+      console.warn(
+        `⚠️ Failed to read body_path "${config.input_body_path}" (${err?.code ?? 'ERR'}). Falling back to 'body' input.`,
+      );
+    }
+  }
+  return config.input_body;
 };
 
 type Env = { [key: string]: string | undefined };
 
+const smartSplit = (input: string): string[] => {
+  const result: string[] = [];
+  let current = '';
+  let braceDepth = 0;
+
+  for (const ch of input) {
+    if (ch === '{') {
+      braceDepth++;
+    }
+    if (ch === '}') {
+      braceDepth--;
+    }
+    if (ch === ',' && braceDepth === 0) {
+      if (current.trim()) {
+        result.push(current.trim());
+      }
+      current = '';
+    } else {
+      current += ch;
+    }
+  }
+  if (current.trim()) {
+    result.push(current.trim());
+  }
+  return result;
+};
+
 export const parseInputFiles = (files: string): string[] => {
-  return files.split(/\r?\n/).reduce<string[]>(
-    (acc, line) =>
-      acc
-        .concat(line.split(','))
-        .filter((pat) => pat)
-        .map((pat) => pat.trim()),
-    [],
-  );
+  return files
+    .split(/\r?\n/)
+    .flatMap((line) => smartSplit(line))
+    .filter((pat) => pat.trim() !== '');
 };
 
 export const parseConfig = (env: Env): Config => {
@@ -63,6 +95,7 @@ export const parseConfig = (env: Env): Config => {
     input_body: env.INPUT_BODY,
     input_body_path: env.INPUT_BODY_PATH,
     input_files: parseInputFiles(env.INPUT_FILES || ''),
+    input_working_directory: env.INPUT_WORKING_DIRECTORY || undefined,
     input_overwrite_files: env.INPUT_OVERWRITE_FILES
       ? env.INPUT_OVERWRITE_FILES == 'true'
       : undefined,
@@ -86,17 +119,34 @@ const parseMakeLatest = (value: string | undefined): 'true' | 'false' | 'legacy'
   return undefined;
 };
 
-export const paths = (patterns: string[]): string[] => {
+export const paths = (patterns: string[], cwd?: string): string[] => {
   return patterns.reduce((acc: string[], pattern: string): string[] => {
-    return acc.concat(glob.sync(pattern).filter((path) => statSync(path).isFile()));
+    const matches = glob.sync(pattern, { cwd, dot: true, absolute: false });
+    const resolved = matches
+      .map((p) => (cwd ? pathLib.join(cwd, p) : p))
+      .filter((p) => {
+        try {
+          return statSync(p).isFile();
+        } catch {
+          return false;
+        }
+      });
+    return acc.concat(resolved);
   }, []);
 };
 
-export const unmatchedPatterns = (patterns: string[]): string[] => {
+export const unmatchedPatterns = (patterns: string[], cwd?: string): string[] => {
   return patterns.reduce((acc: string[], pattern: string): string[] => {
-    return acc.concat(
-      glob.sync(pattern).filter((path) => statSync(path).isFile()).length == 0 ? [pattern] : [],
-    );
+    const matches = glob.sync(pattern, { cwd, dot: true, absolute: false });
+    const files = matches.filter((p) => {
+      try {
+        const full = cwd ? pathLib.join(cwd, p) : p;
+        return statSync(full).isFile();
+      } catch {
+        return false;
+      }
+    });
+    return acc.concat(files.length == 0 ? [pattern] : []);
   }, []);
 };
 
