@@ -1,5 +1,5 @@
+import { readFileSync, statSync } from 'fs';
 import * as glob from 'glob';
-import { statSync, readFileSync } from 'fs';
 import * as pathLib from 'path';
 
 export interface Config {
@@ -24,6 +24,7 @@ export interface Config {
   input_generate_release_notes?: boolean;
   input_append_body?: boolean;
   input_make_latest: 'true' | 'false' | 'legacy' | undefined;
+  input_previous_tag?: string;
 }
 
 export const uploadUrl = (url: string): string => {
@@ -107,6 +108,7 @@ export const parseConfig = (env: Env): Config => {
     input_generate_release_notes: env.INPUT_GENERATE_RELEASE_NOTES == 'true',
     input_append_body: env.INPUT_APPEND_BODY == 'true',
     input_make_latest: parseMakeLatest(env.INPUT_MAKE_LATEST),
+    input_previous_tag: env.INPUT_PREVIOUS_TAG?.trim() || undefined,
   };
 };
 
