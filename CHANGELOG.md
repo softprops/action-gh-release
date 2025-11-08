@@ -1,3 +1,15 @@
+## 2.4.2
+
+## What's Changed
+
+### Exciting New Features 🎉
+
+* feat: Ensure generated release notes cannot be over 125000 characters by @BeryJu in https://github.com/softprops/action-gh-release/pull/684
+
+### Other Changes 🔄
+
+- dependency updates
+
 ## 2.4.1
 
 ## What's Changed
