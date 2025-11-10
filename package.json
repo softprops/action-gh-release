@@ -34,7 +34,7 @@
     "@types/mime-types": "^3.0.1",
     "@types/node": "^20.19.24",
     "@vercel/ncc": "^0.38.4",
-    "@vitest/coverage-v8": "^4.0.6",
+    "@vitest/coverage-v8": "^4.0.8",
     "prettier": "3.6.2",
     "ts-node": "^10.9.2",
     "typescript": "^5.9.3",
