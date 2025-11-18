@@ -364,15 +364,17 @@ async function findTagByPagination(
   // Manually paginate to avoid hitting GitHub's 10,000 result limit
   // The github.paginate.iterator can hit the limit before we can stop it
   // So we manually paginate with strict limits
+  // Stop immediately on empty pages to avoid iterating through hundreds of empty pages
   const maxPages = 30; // Stop after 30 pages (3000 releases max) to avoid hitting limits
-  const minPagesBeforeEmptyPageStop = 5; // After checking at least 5 pages, stop immediately on first empty page
   const perPage = 100;
 
   // Use the GitHub API directly for manual pagination
   const github = (releaser as GitHubReleaser).github;
   if (!github) {
     // Fallback to iterator if we can't access github directly
+    // Stop immediately on empty pages to avoid iterating through hundreds of empty pages
     let pageCount = 0;
+    let foundAnyReleases = false;
     for await (const { data: releases } of releaser.allReleases({
       owner,
       repo,
@@ -384,12 +386,18 @@ async function findTagByPagination(
         );
         break;
       }
-      if (releases.length === 0 && pageCount >= minPagesBeforeEmptyPageStop) {
-        console.log(
-          `Stopped pagination after encountering empty page at page ${pageCount}`,
-        );
-        break;
+      // Stop immediately on empty pages if we've found releases before
+      if (releases.length === 0) {
+        if (foundAnyReleases || pageCount > 1) {
+          console.log(
+            `Stopped pagination after encountering empty page at page ${pageCount} (to avoid iterating through empty pages)`,
+          );
+          break;
+        }
+        // Page 1 is empty, no releases exist
+        return undefined;
       }
+      foundAnyReleases = true;
       const release = releases.find((release) => release.tag_name === tag);
       if (release) {
         return release;
@@ -399,8 +407,9 @@ async function findTagByPagination(
   }
 
   // Manual pagination with full control
+  // Stop immediately on empty pages to avoid iterating through hundreds of empty pages
   let page = 1;
-  let consecutiveEmptyPages = 0;
+  let foundAnyReleases = false;
 
   while (page <= maxPages) {
     try {
@@ -413,22 +422,21 @@ async function findTagByPagination(
 
       const releases = response.data;
 
-      // If we get an empty page, stop immediately if we've already checked enough pages
+      // If we get an empty page:
+      // - If we've found releases before, stop immediately (we've hit a gap or the end)
+      // - If page 1 is empty, that's fine (no releases exist), return undefined
       if (releases.length === 0) {
-        consecutiveEmptyPages++;
-        if (page >= minPagesBeforeEmptyPageStop) {
+        if (foundAnyReleases || page > 1) {
           console.log(
-            `Stopped pagination after encountering empty page at page ${page} (to avoid hitting GitHub's result limit)`,
+            `Stopped pagination after encountering empty page at page ${page} (to avoid iterating through empty pages)`,
           );
           break;
         }
-        // If we haven't checked many pages yet, continue (might be at the very end)
-        page++;
-        continue;
+        // Page 1 is empty, no releases exist
+        return undefined;
       }
 
-      // Reset empty page counter when we find releases
-      consecutiveEmptyPages = 0;
+      foundAnyReleases = true;
 
       const release = releases.find((release) => release.tag_name === tag);
       if (release) {
