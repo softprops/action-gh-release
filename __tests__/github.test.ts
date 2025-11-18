@@ -49,6 +49,7 @@ describe('github', () => {
       getReleaseByTag: () => Promise.reject('Not implemented'),
       createRelease: () => Promise.reject('Not implemented'),
       updateRelease: () => Promise.reject('Not implemented'),
+      finalizeRelease: () => Promise.reject('Not implemented'),
       allReleases: async function* () {
         yield { data: [mockRelease] };
       },
@@ -254,11 +255,12 @@ describe('github', () => {
               name: 'test',
               body: 'test',
               target_commitish: 'main',
-              draft: false,
+              draft: true,
               prerelease: false,
               assets: [],
             },
           }),
+        finalizeRelease: async () => {},
         allReleases: async function* () {
           yield {
             data: [
