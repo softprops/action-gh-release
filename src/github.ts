@@ -103,12 +103,28 @@ export class GitHubReleaser implements Releaser {
       params.make_latest = undefined;
     }
     if (params.generate_release_notes) {
-      const releaseNotes = await this.getReleaseNotes(params);
-      params.generate_release_notes = false;
-      if (params.body) {
-        params.body = `${params.body}\n\n${releaseNotes.data.body}`;
-      } else {
-        params.body = releaseNotes.data.body;
+      try {
+        const releaseNotes = await this.getReleaseNotes(params);
+        params.generate_release_notes = false;
+        if (params.body) {
+          params.body = `${params.body}\n\n${releaseNotes.data.body}`;
+        } else {
+          params.body = releaseNotes.data.body;
+        }
+      } catch (error: any) {
+        // Handle GitHub API error when there are more than 10,000 commits
+        const status = error?.status || error?.response?.status;
+        const message = error?.message || error?.response?.data?.message || '';
+        if (status === 422 && (message.includes('10000') || message.includes('10000 results'))) {
+          console.warn(
+            `⚠️  Unable to generate release notes: GitHub API limit exceeded (more than 10,000 commits since last release). Proceeding without generated release notes.`,
+          );
+          params.generate_release_notes = false;
+          // Continue with existing body or leave it empty
+        } else {
+          // Re-throw other errors
+          throw error;
+        }
       }
     }
     params.body = params.body ? this.truncateReleaseNotes(params.body) : undefined;
@@ -136,12 +152,28 @@ export class GitHubReleaser implements Releaser {
       params.make_latest = undefined;
     }
     if (params.generate_release_notes) {
-      const releaseNotes = await this.getReleaseNotes(params);
-      params.generate_release_notes = false;
-      if (params.body) {
-        params.body = `${params.body}\n\n${releaseNotes.data.body}`;
-      } else {
-        params.body = releaseNotes.data.body;
+      try {
+        const releaseNotes = await this.getReleaseNotes(params);
+        params.generate_release_notes = false;
+        if (params.body) {
+          params.body = `${params.body}\n\n${releaseNotes.data.body}`;
+        } else {
+          params.body = releaseNotes.data.body;
+        }
+      } catch (error: any) {
+        // Handle GitHub API error when there are more than 10,000 commits
+        const status = error?.status || error?.response?.status;
+        const message = error?.message || error?.response?.data?.message || '';
+        if (status === 422 && (message.includes('10000') || message.includes('10000 results'))) {
+          console.warn(
+            `⚠️  Unable to generate release notes: GitHub API limit exceeded (more than 10,000 commits since last release). Proceeding without generated release notes.`,
+          );
+          params.generate_release_notes = false;
+          // Continue with existing body or leave it empty
+        } else {
+          // Re-throw other errors
+          throw error;
+        }
       }
     }
     params.body = params.body ? this.truncateReleaseNotes(params.body) : undefined;
