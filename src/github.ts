@@ -346,6 +346,63 @@ export const release = async (
 };
 
 /**
+ * Paginates through releases with safeguards to avoid hitting GitHub's 10,000 result limit.
+ * Stops early if encountering too many consecutive empty pages.
+ *
+ * @param releaser - The GitHub API wrapper for release operations
+ * @param owner - The owner of the repository
+ * @param repo - The name of the repository
+ * @param tag - The tag name to search for
+ * @returns The release with the given tag name, or undefined if no release with that tag name is found
+ */
+async function findTagByPagination(
+  releaser: Releaser,
+  owner: string,
+  repo: string,
+  tag: string,
+): Promise<Release | undefined> {
+  // Limit pagination to avoid hitting GitHub's 10,000 result limit
+  // Stop aggressively on empty pages to prevent CI blocking
+  let pageCount = 0;
+  const maxPages = 30; // Stop after 30 pages (3000 releases max) to avoid hitting limits
+  const minPagesBeforeEmptyPageStop = 5; // After checking at least 5 pages, stop immediately on first empty page
+
+  for await (const { data: releases } of releaser.allReleases({
+    owner,
+    repo,
+  })) {
+    pageCount++;
+    
+    // Stop if we've checked too many pages
+    if (pageCount > maxPages) {
+      console.warn(
+        `⚠️ Stopped pagination after ${maxPages} pages to avoid hitting GitHub's result limit`,
+      );
+      break;
+    }
+
+    // If we get an empty page, stop immediately if we've already checked enough pages
+    // This prevents getting stuck on empty pages (like pages 300-1000) which blocks CI
+    if (releases.length === 0) {
+      if (pageCount >= minPagesBeforeEmptyPageStop) {
+        console.log(
+          `Stopped pagination after encountering empty page at page ${pageCount} (to avoid hitting GitHub's result limit)`,
+        );
+        break;
+      }
+      // If we haven't checked many pages yet, continue (might be at the very end)
+      continue;
+    }
+
+    const release = releases.find((release) => release.tag_name === tag);
+    if (release) {
+      return release;
+    }
+  }
+  return undefined;
+}
+
+/**
  * Finds a release by tag name from all a repository's releases.
  *
  * @param releaser - The GitHub API wrapper for release operations
@@ -360,16 +417,28 @@ export async function findTagFromReleases(
   repo: string,
   tag: string,
 ): Promise<Release | undefined> {
-  for await (const { data: releases } of releaser.allReleases({
-    owner,
-    repo,
-  })) {
-    const release = releases.find((release) => release.tag_name === tag);
-    if (release) {
-      return release;
-    }
+  // If tag is empty, skip direct lookup and go straight to pagination
+  // (some releases may not have tags)
+  if (!tag) {
+    return await findTagByPagination(releaser, owner, repo, tag);
   }
-  return undefined;
+
+  // First try to get the release directly by tag (much more efficient than paginating)
+  try {
+    const { data } = await releaser.getReleaseByTag({ owner, repo, tag });
+    return data;
+  } catch (error: any) {
+    // If the release doesn't exist (404), return undefined
+    // For other errors, fall back to pagination as a safety measure
+    if (error.status === 404) {
+      return undefined;
+    }
+    // For non-404 errors, fall back to pagination (though this should rarely happen)
+    console.warn(
+      `⚠️ Direct tag lookup failed (status: ${error.status}), falling back to pagination...`,
+    );
+    return await findTagByPagination(releaser, owner, repo, tag);
+  }
 }
 
 async function createRelease(
