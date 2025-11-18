@@ -255,94 +255,17 @@ export const release = async (
 
   const discussion_category_name = config.input_discussion_category_name;
   const generate_release_notes = config.input_generate_release_notes;
-  try {
-    const _release: Release | undefined = await findTagFromReleases(releaser, owner, repo, tag);
 
-    if (_release === undefined) {
-      return await createRelease(
-        tag,
-        config,
-        releaser,
-        owner,
-        repo,
-        discussion_category_name,
-        generate_release_notes,
-        maxRetries,
-      );
-    }
-
-    let existingRelease: Release = _release!;
-    console.log(`Found release ${existingRelease.name} (with id=${existingRelease.id})`);
-
-    const release_id = existingRelease.id;
-    let target_commitish: string;
-    if (
-      config.input_target_commitish &&
-      config.input_target_commitish !== existingRelease.target_commitish
-    ) {
-      console.log(
-        `Updating commit from "${existingRelease.target_commitish}" to "${config.input_target_commitish}"`,
-      );
-      target_commitish = config.input_target_commitish;
-    } else {
-      target_commitish = existingRelease.target_commitish;
-    }
-
-    const tag_name = tag;
-    const name = config.input_name || existingRelease.name || tag;
-    // revisit: support a new body-concat-strategy input for accumulating
-    // body parts as a release gets updated. some users will likely want this while
-    // others won't previously this was duplicating content for most which
-    // no one wants
-    const workflowBody = releaseBody(config) || '';
-    const existingReleaseBody = existingRelease.body || '';
-    let body: string;
-    if (config.input_append_body && workflowBody && existingReleaseBody) {
-      body = existingReleaseBody + '\n' + workflowBody;
-    } else {
-      body = workflowBody || existingReleaseBody;
-    }
-
-    const draft = config.input_draft !== undefined ? config.input_draft : existingRelease.draft;
-    const prerelease =
-      config.input_prerelease !== undefined ? config.input_prerelease : existingRelease.prerelease;
-
-    const make_latest = config.input_make_latest;
-
-    const release = await releaser.updateRelease({
-      owner,
-      repo,
-      release_id,
-      tag_name,
-      target_commitish,
-      name,
-      body,
-      draft,
-      prerelease,
-      discussion_category_name,
-      generate_release_notes,
-      make_latest,
-    });
-    return release.data;
-  } catch (error) {
-    if (error.status !== 404) {
-      console.log(
-        `⚠️ Unexpected error fetching GitHub release for tag ${tag}: ${error}`,
-      );
-      throw error;
-    }
-
-    return await createRelease(
-      tag,
-      config,
-      releaser,
-      owner,
-      repo,
-      discussion_category_name,
-      generate_release_notes,
-      maxRetries,
-    );
-  }
+  return await createRelease(
+    tag,
+    config,
+    releaser,
+    owner,
+    repo,
+    discussion_category_name,
+    generate_release_notes,
+    maxRetries,
+  );
 };
 
 /**
