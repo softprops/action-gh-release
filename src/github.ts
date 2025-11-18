@@ -361,44 +361,106 @@ async function findTagByPagination(
   repo: string,
   tag: string,
 ): Promise<Release | undefined> {
-  // Limit pagination to avoid hitting GitHub's 10,000 result limit
-  // Stop aggressively on empty pages to prevent CI blocking
-  let pageCount = 0;
+  // Manually paginate to avoid hitting GitHub's 10,000 result limit
+  // The github.paginate.iterator can hit the limit before we can stop it
+  // So we manually paginate with strict limits
+  // Stop immediately on empty pages to avoid iterating through hundreds of empty pages
   const maxPages = 30; // Stop after 30 pages (3000 releases max) to avoid hitting limits
-  const minPagesBeforeEmptyPageStop = 5; // After checking at least 5 pages, stop immediately on first empty page
+  const perPage = 100;
 
-  for await (const { data: releases } of releaser.allReleases({
-    owner,
-    repo,
-  })) {
-    pageCount++;
-    
-    // Stop if we've checked too many pages
-    if (pageCount > maxPages) {
-      console.warn(
-        `⚠️ Stopped pagination after ${maxPages} pages to avoid hitting GitHub's result limit`,
-      );
-      break;
-    }
-
-    // If we get an empty page, stop immediately if we've already checked enough pages
-    // This prevents getting stuck on empty pages (like pages 300-1000) which blocks CI
-    if (releases.length === 0) {
-      if (pageCount >= minPagesBeforeEmptyPageStop) {
-        console.log(
-          `Stopped pagination after encountering empty page at page ${pageCount} (to avoid hitting GitHub's result limit)`,
+  // Use the GitHub API directly for manual pagination
+  const github = (releaser as GitHubReleaser).github;
+  if (!github) {
+    // Fallback to iterator if we can't access github directly
+    // Stop immediately on empty pages to avoid iterating through hundreds of empty pages
+    let pageCount = 0;
+    let foundAnyReleases = false;
+    for await (const { data: releases } of releaser.allReleases({
+      owner,
+      repo,
+    })) {
+      pageCount++;
+      if (pageCount > maxPages) {
+        console.warn(
+          `⚠️ Stopped pagination after ${maxPages} pages to avoid hitting GitHub's result limit`,
         );
         break;
       }
-      // If we haven't checked many pages yet, continue (might be at the very end)
-      continue;
+      // Stop immediately on empty pages if we've found releases before
+      if (releases.length === 0) {
+        if (foundAnyReleases || pageCount > 1) {
+          console.log(
+            `Stopped pagination after encountering empty page at page ${pageCount} (to avoid iterating through empty pages)`,
+          );
+          break;
+        }
+        // Page 1 is empty, no releases exist
+        return undefined;
+      }
+      foundAnyReleases = true;
+      const release = releases.find((release) => release.tag_name === tag);
+      if (release) {
+        return release;
+      }
     }
+    return undefined;
+  }
 
-    const release = releases.find((release) => release.tag_name === tag);
-    if (release) {
-      return release;
+  // Manual pagination with full control
+  // Stop immediately on empty pages to avoid iterating through hundreds of empty pages
+  let page = 1;
+  let foundAnyReleases = false;
+
+  while (page <= maxPages) {
+    try {
+      const response = await github.rest.repos.listReleases({
+        owner,
+        repo,
+        per_page: perPage,
+        page: page,
+      });
+
+      const releases = response.data;
+
+      // If we get an empty page:
+      // - If we've found releases before, stop immediately (we've hit a gap or the end)
+      // - If page 1 is empty, that's fine (no releases exist), return undefined
+      if (releases.length === 0) {
+        if (foundAnyReleases || page > 1) {
+          console.log(
+            `Stopped pagination after encountering empty page at page ${page} (to avoid iterating through empty pages)`,
+          );
+          break;
+        }
+        // Page 1 is empty, no releases exist
+        return undefined;
+      }
+
+      foundAnyReleases = true;
+
+      const release = releases.find((release) => release.tag_name === tag);
+      if (release) {
+        return release;
+      }
+
+      // If we got fewer results than per_page, we've reached the end
+      if (releases.length < perPage) {
+        break;
+      }
+
+      page++;
+    } catch (error: any) {
+      // If we hit the 10,000 result limit, stop immediately
+      if (error.status === 422 && error.message?.includes('10000')) {
+        console.warn(
+          `⚠️ Stopped pagination at page ${page} due to GitHub's 10,000 result limit`,
+        );
+        break;
+      }
+      throw error;
     }
   }
+
   return undefined;
 }
 
