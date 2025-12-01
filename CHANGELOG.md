@@ -1,3 +1,15 @@
+## 2.5.0
+
+## What's Changed
+
+### Exciting New Features 🎉
+
+* feat: mark release as draft until all artifacts are uploaded by @dumbmoron in https://github.com/softprops/action-gh-release/pull/692
+
+### Other Changes 🔄
+
+* dependency updates
+
 ## 2.4.2
 
 ## What's Changed
@@ -8,7 +20,7 @@
 
 ### Other Changes 🔄
 
-- dependency updates
+* dependency updates
 
 ## 2.4.1
 
