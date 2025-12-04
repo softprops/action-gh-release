@@ -39,6 +39,18 @@ describe('util', () => {
         'loom',
       ]);
     });
+    it('handles globs with brace groups containing commas', () => {
+      assert.deepStrictEqual(parseInputFiles('./**/*.{exe,deb,tar.gz}\nfoo,bar'), [
+        './**/*.{exe,deb,tar.gz}',
+        'foo',
+        'bar',
+      ]);
+    });
+    it('handles single-line brace pattern correctly', () => {
+      assert.deepStrictEqual(parseInputFiles('./**/*.{exe,deb,tar.gz}'), [
+        './**/*.{exe,deb,tar.gz}',
+      ]);
+    });
   });
   describe('releaseBody', () => {
     it('uses input body', () => {
@@ -110,6 +122,52 @@ describe('util', () => {
         }),
       );
     });
+    it('falls back to body when body_path is missing', () => {
+      assert.equal(
+        releaseBody({
+          github_ref: '',
+          github_repository: '',
+          github_token: '',
+          input_body: 'fallback-body',
+          input_body_path: '__tests__/does-not-exist.txt',
+          input_draft: false,
+          input_prerelease: false,
+          input_files: [],
+          input_overwrite_files: undefined,
+          input_preserve_order: undefined,
+          input_name: undefined,
+          input_tag_name: undefined,
+          input_target_commitish: undefined,
+          input_discussion_category_name: undefined,
+          input_generate_release_notes: false,
+          input_make_latest: undefined,
+        }),
+        'fallback-body',
+      );
+    });
+    it('returns undefined when body_path is missing and body is not provided', () => {
+      assert.equal(
+        releaseBody({
+          github_ref: '',
+          github_repository: '',
+          github_token: '',
+          input_body: undefined,
+          input_body_path: '__tests__/does-not-exist.txt',
+          input_draft: false,
+          input_prerelease: false,
+          input_files: [],
+          input_overwrite_files: undefined,
+          input_preserve_order: undefined,
+          input_name: undefined,
+          input_tag_name: undefined,
+          input_target_commitish: undefined,
+          input_discussion_category_name: undefined,
+          input_generate_release_notes: false,
+          input_make_latest: undefined,
+        }),
+        undefined,
+      );
+    });
   });
   describe('parseConfig', () => {
     it('parses basic config', () => {
@@ -128,6 +186,7 @@ describe('util', () => {
           github_ref: '',
           github_repository: '',
           github_token: '',
+          input_working_directory: undefined,
           input_append_body: false,
           input_body: undefined,
           input_body_path: undefined,
@@ -156,6 +215,7 @@ describe('util', () => {
           github_ref: '',
           github_repository: '',
           github_token: '',
+          input_working_directory: undefined,
           input_append_body: false,
           input_body: undefined,
           input_body_path: undefined,
@@ -183,6 +243,7 @@ describe('util', () => {
           github_ref: '',
           github_repository: '',
           github_token: '',
+          input_working_directory: undefined,
           input_append_body: false,
           input_body: undefined,
           input_body_path: undefined,
@@ -211,6 +272,7 @@ describe('util', () => {
           github_ref: '',
           github_repository: '',
           github_token: '',
+          input_working_directory: undefined,
           input_append_body: false,
           input_body: undefined,
           input_body_path: undefined,
@@ -243,6 +305,7 @@ describe('util', () => {
           github_ref: '',
           github_repository: '',
           github_token: 'env-token',
+          input_working_directory: undefined,
           input_append_body: false,
           input_body: undefined,
           input_body_path: undefined,
@@ -272,6 +335,7 @@ describe('util', () => {
           github_ref: '',
           github_repository: '',
           github_token: 'input-token',
+          input_working_directory: undefined,
           input_append_body: false,
           input_body: undefined,
           input_body_path: undefined,
@@ -300,6 +364,7 @@ describe('util', () => {
           github_ref: '',
           github_repository: '',
           github_token: '',
+          input_working_directory: undefined,
           input_append_body: false,
           input_body: undefined,
           input_body_path: undefined,
@@ -327,6 +392,7 @@ describe('util', () => {
           github_ref: '',
           github_repository: '',
           github_token: '',
+          input_working_directory: undefined,
           input_append_body: false,
           input_body: undefined,
           input_body_path: undefined,
@@ -354,6 +420,7 @@ describe('util', () => {
           github_ref: '',
           github_repository: '',
           github_token: '',
+          input_working_directory: undefined,
           input_append_body: true,
           input_body: undefined,
           input_body_path: undefined,
@@ -388,6 +455,10 @@ describe('util', () => {
         'tests/data/foo/bar.txt',
       ]);
     });
+
+    it('resolves files relative to working_directory', async () => {
+      assert.deepStrictEqual(paths(['data/**/*'], 'tests'), ['tests/data/foo/bar.txt']);
+    });
   });
 
   describe('unmatchedPatterns', () => {
@@ -396,6 +467,12 @@ describe('util', () => {
         unmatchedPatterns(['tests/data/**/*', 'tests/data/does/not/exist/*']),
         ['tests/data/does/not/exist/*'],
       );
+    });
+
+    it('resolves unmatched relative to working_directory', async () => {
+      assert.deepStrictEqual(unmatchedPatterns(['data/does/not/exist/*'], 'tests'), [
+        'data/does/not/exist/*',
+      ]);
     });
   });
 
@@ -411,5 +488,38 @@ describe('util', () => {
     it('returns the same string if there are no spaces', () => {
       expect(alignAssetName('JohnDoe')).toBe('JohnDoe');
     });
+  });
+});
+
+describe('parseInputFiles edge cases', () => {
+  it('handles multiple brace groups on same line', () => {
+    assert.deepStrictEqual(parseInputFiles('./**/*.{exe,deb},./dist/**/*.{zip,tar.gz}'), [
+      './**/*.{exe,deb}',
+      './dist/**/*.{zip,tar.gz}',
+    ]);
+  });
+
+  it('handles nested braces', () => {
+    assert.deepStrictEqual(parseInputFiles('path/{a,{b,c}}/file.txt'), ['path/{a,{b,c}}/file.txt']);
+  });
+
+  it('handles empty comma-separated values', () => {
+    assert.deepStrictEqual(parseInputFiles('foo,,bar'), ['foo', 'bar']);
+  });
+
+  it('handles commas with spaces around braces', () => {
+    assert.deepStrictEqual(parseInputFiles(' ./**/*.{exe,deb} , file.txt '), [
+      './**/*.{exe,deb}',
+      'file.txt',
+    ]);
+  });
+
+  it('handles mixed newlines and commas with braces', () => {
+    assert.deepStrictEqual(parseInputFiles('file1.txt\n./**/*.{exe,deb},file2.txt\nfile3.txt'), [
+      'file1.txt',
+      './**/*.{exe,deb}',
+      'file2.txt',
+      'file3.txt',
+    ]);
   });
 });

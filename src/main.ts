@@ -1,6 +1,6 @@
 import { setFailed, setOutput } from '@actions/core';
 import { getOctokit } from '@actions/github';
-import { GitHubReleaser, release, upload } from './github';
+import { GitHubReleaser, release, finalizeRelease, upload } from './github';
 import { isTag, parseConfig, paths, unmatchedPatterns, uploadUrl } from './util';
 
 import { env } from 'process';
@@ -12,7 +12,7 @@ async function run() {
       throw new Error(`⚠️ GitHub Releases requires a tag`);
     }
     if (config.input_files) {
-      const patterns = unmatchedPatterns(config.input_files);
+      const patterns = unmatchedPatterns(config.input_files, config.input_working_directory);
       patterns.forEach((pattern) => {
         if (config.input_fail_on_unmatched_files) {
           throw new Error(`⚠️  Pattern '${pattern}' does not match any files.`);
@@ -48,9 +48,10 @@ async function run() {
       },
     });
     //);
-    const rel = await release(config, new GitHubReleaser(gh));
+    const releaser = new GitHubReleaser(gh);
+    let rel = await release(config, releaser);
     if (config.input_files && config.input_files.length > 0) {
-      const files = paths(config.input_files);
+      const files = paths(config.input_files, config.input_working_directory);
       if (files.length == 0) {
         if (config.input_fail_on_unmatched_files) {
           throw new Error(`⚠️ ${config.input_files} does not include a valid file.`);
@@ -81,6 +82,10 @@ async function run() {
       const assets = results.filter(Boolean);
       setOutput('assets', assets);
     }
+
+    console.log('Finalizing release...');
+    rel = await finalizeRelease(config, releaser, rel);
+
     console.log(`🎉 Release ready at ${rel.html_url}`);
     setOutput('url', rel.html_url);
     setOutput('id', rel.id.toString());

@@ -58,6 +58,12 @@ export interface Releaser {
     make_latest: 'true' | 'false' | 'legacy' | undefined;
   }): Promise<{ data: Release }>;
 
+  finalizeRelease(params: {
+    owner: string;
+    repo: string;
+    release_id: number;
+  }): Promise<{ data: Release }>;
+
   allReleases(params: { owner: string; repo: string }): AsyncIterableIterator<{ data: Release[] }>;
 }
 
@@ -75,7 +81,27 @@ export class GitHubReleaser implements Releaser {
     return this.github.rest.repos.getReleaseByTag(params);
   }
 
-  createRelease(params: {
+  async getReleaseNotes(params: {
+    owner: string;
+    repo: string;
+    tag_name: string;
+    target_commitish: string | undefined;
+  }): Promise<{
+    data: {
+      name: string;
+      body: string;
+    };
+  }> {
+    return await this.github.rest.repos.generateReleaseNotes(params);
+  }
+
+  truncateReleaseNotes(input: string): string {
+    // release notes can be a maximum of 125000 characters
+    const githubNotesMaxCharLength = 125000;
+    return input.substring(0, githubNotesMaxCharLength - 1);
+  }
+
+  async createRelease(params: {
     owner: string;
     repo: string;
     tag_name: string;
@@ -94,11 +120,20 @@ export class GitHubReleaser implements Releaser {
     ) {
       params.make_latest = undefined;
     }
-
+    if (params.generate_release_notes) {
+      const releaseNotes = await this.getReleaseNotes(params);
+      params.generate_release_notes = false;
+      if (params.body) {
+        params.body = `${params.body}\n\n${releaseNotes.data.body}`;
+      } else {
+        params.body = releaseNotes.data.body;
+      }
+    }
+    params.body = params.body ? this.truncateReleaseNotes(params.body) : undefined;
     return this.github.rest.repos.createRelease(params);
   }
 
-  updateRelease(params: {
+  async updateRelease(params: {
     owner: string;
     repo: string;
     release_id: number;
@@ -118,8 +153,26 @@ export class GitHubReleaser implements Releaser {
     ) {
       params.make_latest = undefined;
     }
-
+    if (params.generate_release_notes) {
+      const releaseNotes = await this.getReleaseNotes(params);
+      params.generate_release_notes = false;
+      if (params.body) {
+        params.body = `${params.body}\n\n${releaseNotes.data.body}`;
+      } else {
+        params.body = releaseNotes.data.body;
+      }
+    }
+    params.body = params.body ? this.truncateReleaseNotes(params.body) : undefined;
     return this.github.rest.repos.updateRelease(params);
+  }
+
+  async finalizeRelease(params: { owner: string; repo: string; release_id: number }) {
+    return await this.github.rest.repos.updateRelease({
+      owner: params.owner,
+      repo: params.repo,
+      release_id: params.release_id,
+      draft: false,
+    });
   }
 
   allReleases(params: { owner: string; repo: string }): AsyncIterableIterator<{ data: Release[] }> {
@@ -265,7 +318,6 @@ export const release = async (
       body = workflowBody || existingReleaseBody;
     }
 
-    const draft = config.input_draft !== undefined ? config.input_draft : existingRelease.draft;
     const prerelease =
       config.input_prerelease !== undefined ? config.input_prerelease : existingRelease.prerelease;
 
@@ -279,7 +331,7 @@ export const release = async (
       target_commitish,
       name,
       body,
-      draft,
+      draft: existingRelease.draft,
       prerelease,
       discussion_category_name,
       generate_release_notes,
@@ -304,6 +356,45 @@ export const release = async (
       generate_release_notes,
       maxRetries,
     );
+  }
+};
+
+/**
+ * Finalizes a release by unmarking it as "draft" (if relevant)
+ * after all artifacts have been uploaded.
+ *
+ * @param config - Release configuration as specified by user
+ * @param releaser - The GitHub API wrapper for release operations
+ * @param release - The existing release to be finalized
+ * @param maxRetries - The maximum number of attempts to finalize the release
+ */
+export const finalizeRelease = async (
+  config: Config,
+  releaser: Releaser,
+  release: Release,
+  maxRetries: number = 3,
+): Promise<Release> => {
+  if (config.input_draft === true) {
+    return release;
+  }
+
+  if (maxRetries <= 0) {
+    console.log(`❌ Too many retries. Aborting...`);
+    throw new Error('Too many retries.');
+  }
+
+  const [owner, repo] = config.github_repository.split('/');
+  try {
+    const { data } = await releaser.finalizeRelease({
+      owner,
+      repo,
+      release_id: release.id,
+    });
+
+    return data;
+  } catch {
+    console.log(`retrying... (${maxRetries - 1} retries remaining)`);
+    return finalizeRelease(config, releaser, release, maxRetries - 1);
   }
 };
 
@@ -347,7 +438,6 @@ async function createRelease(
   const tag_name = tag;
   const name = config.input_name || tag;
   const body = releaseBody(config);
-  const draft = config.input_draft;
   const prerelease = config.input_prerelease;
   const target_commitish = config.input_target_commitish;
   const make_latest = config.input_make_latest;
@@ -363,7 +453,7 @@ async function createRelease(
       tag_name,
       name,
       body,
-      draft,
+      draft: true,
       prerelease,
       target_commitish,
       discussion_category_name,
@@ -388,8 +478,18 @@ async function createRelease(
         throw error;
 
       case 422:
-        console.log('Skip retry - validation failed');
-        throw error;
+        // Check if this is a race condition with "already_exists" error
+        const errorData = error.response?.data;
+        if (errorData?.errors?.[0]?.code === 'already_exists') {
+          console.log(
+            '⚠️ Release already exists (race condition detected), retrying to find and update existing release...',
+          );
+          // Don't throw - allow retry to find existing release
+        } else {
+          console.log('Skip retry - validation failed');
+          throw error;
+        }
+        break;
     }
 
     console.log(`retrying... (${maxRetries - 1} retries remaining)`);
