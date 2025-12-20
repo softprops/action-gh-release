@@ -22,7 +22,7 @@
   ],
   "author": "softprops",
   "dependencies": {
-    "@actions/core": "^1.11.1",
+    "@actions/core": "^2.0.1",
     "@actions/github": "^6.0.1",
     "@octokit/plugin-retry": "^8.0.3",
     "@octokit/plugin-throttling": "^11.0.3",
@@ -32,10 +32,10 @@
   "devDependencies": {
     "@types/glob": "^9.0.0",
     "@types/mime-types": "^3.0.1",
-    "@types/node": "^20.19.25",
+    "@types/node": "^20.19.27",
     "@vercel/ncc": "^0.38.4",
-    "@vitest/coverage-v8": "^4.0.14",
-    "prettier": "3.7.3",
+    "@vitest/coverage-v8": "^4.0.15",
+    "prettier": "3.7.4",
     "ts-node": "^10.9.2",
     "typescript": "^5.9.3",
     "typescript-formatter": "^7.2.2",
