@@ -392,7 +392,8 @@ export const finalizeRelease = async (
     });
 
     return data;
-  } catch {
+  } catch (error) {
+    console.warn(`error finalizing release: ${error}`)
     console.log(`retrying... (${maxRetries - 1} retries remaining)`);
     return finalizeRelease(config, releaser, release, maxRetries - 1);
   }
