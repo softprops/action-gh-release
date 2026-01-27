@@ -400,7 +400,11 @@ export const finalizeRelease = async (
 };
 
 /**
- * Finds a release by tag name from all a repository's releases.
+ * Finds a release by tag name.
+ *
+ * Uses the direct getReleaseByTag API for O(1) lookup instead of iterating
+ * through all releases. This also avoids GitHub's API pagination limit of
+ * 10000 results which would cause failures for repositories with many releases.
  *
  * @param releaser - The GitHub API wrapper for release operations
  * @param owner - The owner of the repository
@@ -414,16 +418,17 @@ export async function findTagFromReleases(
   repo: string,
   tag: string,
 ): Promise<Release | undefined> {
-  for await (const { data: releases } of releaser.allReleases({
-    owner,
-    repo,
-  })) {
-    const release = releases.find((release) => release.tag_name === tag);
-    if (release) {
-      return release;
+  try {
+    const { data: release } = await releaser.getReleaseByTag({ owner, repo, tag });
+    return release;
+  } catch (error) {
+    // Release not found (404) or other error - return undefined to allow creation
+    if (error.status === 404) {
+      return undefined;
     }
+    // Re-throw unexpected errors
+    throw error;
   }
-  return undefined;
 }
 
 async function createRelease(
