@@ -68,7 +68,7 @@ describe('github', () => {
     } as const;
 
     const mockReleaser: Releaser = {
-      getReleaseByTag: () => Promise.reject('Not implemented'),
+      getReleaseByTag: () => Promise.reject({ status: 404 }),
       createRelease: () => Promise.reject('Not implemented'),
       updateRelease: () => Promise.reject('Not implemented'),
       finalizeRelease: () => Promise.reject('Not implemented'),
@@ -80,184 +80,63 @@ describe('github', () => {
       uploadReleaseAsset: () => Promise.reject('Not implemented'),
     } as const;
 
-    describe('when the tag_name is not an empty string', () => {
+    it('finds a release by tag using direct API lookup', async () => {
       const targetTag = 'v1.0.0';
+      const targetRelease = {
+        ...mockRelease,
+        tag_name: targetTag,
+      };
 
-      it('finds a matching release in first batch of results', async () => {
-        const targetRelease = {
-          ...mockRelease,
-          owner,
-          repo,
-          tag_name: targetTag,
-        };
-        const otherRelease = {
-          ...mockRelease,
-          owner,
-          repo,
-          tag_name: 'v1.0.1',
-        };
+      const releaser = {
+        ...mockReleaser,
+        getReleaseByTag: () => Promise.resolve({ data: targetRelease }),
+      };
 
-        const releaser = {
-          ...mockReleaser,
-          allReleases: async function* () {
-            yield { data: [targetRelease] };
-            yield { data: [otherRelease] };
-          },
-        };
+      const result = await findTagFromReleases(releaser, owner, repo, targetTag);
 
-        const result = await findTagFromReleases(releaser, owner, repo, targetTag);
-
-        assert.deepStrictEqual(result, targetRelease);
-      });
-
-      it('finds a matching release in second batch of results', async () => {
-        const targetRelease = {
-          ...mockRelease,
-          owner,
-          repo,
-          tag_name: targetTag,
-        };
-        const otherRelease = {
-          ...mockRelease,
-          owner,
-          repo,
-          tag_name: 'v1.0.1',
-        };
-
-        const releaser = {
-          ...mockReleaser,
-          allReleases: async function* () {
-            yield { data: [otherRelease] };
-            yield { data: [targetRelease] };
-          },
-        };
-
-        const result = await findTagFromReleases(releaser, owner, repo, targetTag);
-        assert.deepStrictEqual(result, targetRelease);
-      });
-
-      it('returns undefined when a release is not found in any batch', async () => {
-        const otherRelease = {
-          ...mockRelease,
-          owner,
-          repo,
-          tag_name: 'v1.0.1',
-        };
-        const releaser = {
-          ...mockReleaser,
-          allReleases: async function* () {
-            yield { data: [otherRelease] };
-            yield { data: [otherRelease] };
-          },
-        };
-
-        const result = await findTagFromReleases(releaser, owner, repo, targetTag);
-
-        assert.strictEqual(result, undefined);
-      });
-
-      it('returns undefined when no releases are returned', async () => {
-        const releaser = {
-          ...mockReleaser,
-          allReleases: async function* () {
-            yield { data: [] };
-          },
-        };
-
-        const result = await findTagFromReleases(releaser, owner, repo, targetTag);
-
-        assert.strictEqual(result, undefined);
-      });
+      assert.deepStrictEqual(result, targetRelease);
     });
 
-    describe('when the tag_name is an empty string', () => {
+    it('returns undefined when release is not found (404)', async () => {
+      const releaser = {
+        ...mockReleaser,
+        getReleaseByTag: () => Promise.reject({ status: 404 }),
+      };
+
+      const result = await findTagFromReleases(releaser, owner, repo, 'nonexistent');
+
+      assert.strictEqual(result, undefined);
+    });
+
+    it('re-throws non-404 errors', async () => {
+      const releaser = {
+        ...mockReleaser,
+        getReleaseByTag: () => Promise.reject({ status: 500, message: 'Server error' }),
+      };
+
+      try {
+        await findTagFromReleases(releaser, owner, repo, 'v1.0.0');
+        assert.fail('Expected an error to be thrown');
+      } catch (error) {
+        assert.strictEqual(error.status, 500);
+      }
+    });
+
+    it('finds a release with empty tag name', async () => {
       const emptyTag = '';
+      const targetRelease = {
+        ...mockRelease,
+        tag_name: emptyTag,
+      };
 
-      it('finds a matching release in first batch of results', async () => {
-        const targetRelease = {
-          ...mockRelease,
-          owner,
-          repo,
-          tag_name: emptyTag,
-        };
-        const otherRelease = {
-          ...mockRelease,
-          owner,
-          repo,
-          tag_name: 'v1.0.1',
-        };
+      const releaser = {
+        ...mockReleaser,
+        getReleaseByTag: () => Promise.resolve({ data: targetRelease }),
+      };
 
-        const releaser = {
-          ...mockReleaser,
-          allReleases: async function* () {
-            yield { data: [targetRelease] };
-            yield { data: [otherRelease] };
-          },
-        };
+      const result = await findTagFromReleases(releaser, owner, repo, emptyTag);
 
-        const result = await findTagFromReleases(releaser, owner, repo, emptyTag);
-
-        assert.deepStrictEqual(result, targetRelease);
-      });
-
-      it('finds a matching release in second batch of results', async () => {
-        const targetRelease = {
-          ...mockRelease,
-          owner,
-          repo,
-          tag_name: emptyTag,
-        };
-        const otherRelease = {
-          ...mockRelease,
-          owner,
-          repo,
-          tag_name: 'v1.0.1',
-        };
-
-        const releaser = {
-          ...mockReleaser,
-          allReleases: async function* () {
-            yield { data: [otherRelease] };
-            yield { data: [targetRelease] };
-          },
-        };
-
-        const result = await findTagFromReleases(releaser, owner, repo, emptyTag);
-        assert.deepStrictEqual(result, targetRelease);
-      });
-
-      it('returns undefined when a release is not found in any batch', async () => {
-        const otherRelease = {
-          ...mockRelease,
-          owner,
-          repo,
-          tag_name: 'v1.0.1',
-        };
-        const releaser = {
-          ...mockReleaser,
-          allReleases: async function* () {
-            yield { data: [otherRelease] };
-            yield { data: [otherRelease] };
-          },
-        };
-
-        const result = await findTagFromReleases(releaser, owner, repo, emptyTag);
-
-        assert.strictEqual(result, undefined);
-      });
-
-      it('returns undefined when no releases are returned', async () => {
-        const releaser = {
-          ...mockReleaser,
-          allReleases: async function* () {
-            yield { data: [] };
-          },
-        };
-
-        const result = await findTagFromReleases(releaser, owner, repo, emptyTag);
-
-        assert.strictEqual(result, undefined);
-      });
+      assert.deepStrictEqual(result, targetRelease);
     });
   });
 
@@ -333,13 +212,35 @@ describe('github', () => {
 
   describe('error handling', () => {
     it('handles 422 already_exists error gracefully', async () => {
+      const existingRelease = {
+        id: 1,
+        upload_url: 'test',
+        html_url: 'test',
+        tag_name: 'v1.0.0',
+        name: 'test',
+        body: 'test',
+        target_commitish: 'main',
+        draft: false,
+        prerelease: false,
+        assets: [],
+      };
+
+      let createAttempts = 0;
       const mockReleaser: Releaser = {
-        getReleaseByTag: () => Promise.reject('Not implemented'),
-        createRelease: () =>
-          Promise.reject({
+        getReleaseByTag: ({ tag }) => {
+          // First call returns 404 (release doesn't exist yet), subsequent calls find it
+          if (createAttempts === 0) {
+            return Promise.reject({ status: 404 });
+          }
+          return Promise.resolve({ data: existingRelease });
+        },
+        createRelease: () => {
+          createAttempts++;
+          return Promise.reject({
             status: 422,
             response: { data: { errors: [{ code: 'already_exists' }] } },
-          }),
+          });
+        },
         updateRelease: () =>
           Promise.resolve({
             data: {
@@ -357,29 +258,14 @@ describe('github', () => {
           }),
         finalizeRelease: () => Promise.reject('Not implemented'),
         allReleases: async function* () {
-          yield {
-            data: [
-              {
-                id: 1,
-                upload_url: 'test',
-                html_url: 'test',
-                tag_name: 'v1.0.0',
-                name: 'test',
-                body: 'test',
-                target_commitish: 'main',
-                draft: false,
-                prerelease: false,
-                assets: [],
-              },
-            ],
-          };
+          yield { data: [existingRelease] };
         },
         listReleaseAssets: () => Promise.reject('Not implemented'),
         deleteReleaseAsset: () => Promise.reject('Not implemented'),
         uploadReleaseAsset: () => Promise.reject('Not implemented'),
       } as const;
 
-      const result = await release(config, mockReleaser, 1);
+      const result = await release(config, mockReleaser, 2);
       assert.ok(result);
       assert.equal(result.id, 1);
     });
