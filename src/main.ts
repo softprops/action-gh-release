@@ -1,4 +1,4 @@
-import { setFailed, setOutput } from '@actions/core';
+import { setFailed, setOutput, summary } from '@actions/core';
 import { getOctokit } from '@actions/github';
 import { GitHubReleaser, release, finalizeRelease, upload } from './github';
 import { isTag, parseConfig, paths, unmatchedPatterns, uploadUrl } from './util';
@@ -90,6 +90,9 @@ async function run() {
     setOutput('url', rel.html_url);
     setOutput('id', rel.id.toString());
     setOutput('upload_url', rel.upload_url);
+
+    summary.addRaw(`Release for tag \`${config.input_tag_name}\` published at: `, false)
+    summary.addLink(config.input_name || config.input_tag_name!, rel.html_url)
   } catch (error) {
     setFailed(error.message);
   }
