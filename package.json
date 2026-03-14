@@ -5,8 +5,8 @@
   "description": "GitHub Action for creating GitHub Releases",
   "main": "lib/main.js",
   "scripts": {
-    "build": "ncc build src/main.ts --minify --target es2022",
-    "build-debug": "ncc build src/main.ts --v8-cache --source-map",
+    "build": "esbuild src/main.ts --bundle --platform=node --format=cjs --target=node20 --outfile=dist/index.js --minify",
+    "build-debug": "esbuild src/main.ts --bundle --platform=node --format=cjs --target=node20 --outfile=dist/index.js --sourcemap --keep-names",
     "typecheck": "tsc --noEmit",
     "test": "vitest --coverage",
     "fmt": "prettier --write \"src/**/*.ts\" \"__tests__/**/*.ts\"",
@@ -35,6 +35,7 @@
     "@types/node": "^20.19.37",
     "@vercel/ncc": "^0.38.4",
     "@vitest/coverage-v8": "^4.1.0",
+    "esbuild": "^0.27.3",
     "prettier": "3.8.1",
     "ts-node": "^10.9.2",
     "typescript": "^5.9.3",
