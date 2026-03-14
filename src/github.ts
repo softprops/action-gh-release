@@ -64,7 +64,7 @@ export interface Releaser {
     release_id: number;
   }): Promise<{ data: Release }>;
 
-  allReleases(params: { owner: string; repo: string }): AsyncIterableIterator<{ data: Release[] }>;
+  allReleases(params: { owner: string; repo: string }): AsyncIterable<{ data: Release[] }>;
 }
 
 export class GitHubReleaser implements Releaser {
@@ -175,7 +175,7 @@ export class GitHubReleaser implements Releaser {
     });
   }
 
-  allReleases(params: { owner: string; repo: string }): AsyncIterableIterator<{ data: Release[] }> {
+  allReleases(params: { owner: string; repo: string }): AsyncIterable<{ data: Release[] }> {
     const updatedParams = { per_page: 100, ...params };
     return this.github.paginate.iterator(
       this.github.rest.repos.listReleases.endpoint.merge(updatedParams),
