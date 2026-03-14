@@ -64,7 +64,7 @@ export interface Releaser {
     release_id: number;
   }): Promise<{ data: Release }>;
 
-  allReleases(params: { owner: string; repo: string }): AsyncIterableIterator<{ data: Release[] }>;
+  allReleases(params: { owner: string; repo: string }): AsyncIterable<{ data: Release[] }>;
 
   listReleaseAssets(params: {
     owner: string;
