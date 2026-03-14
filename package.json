@@ -23,7 +23,7 @@
   "author": "softprops",
   "dependencies": {
     "@actions/core": "^2.0.2",
-    "@actions/github": "^7.0.0",
+    "@actions/github": "^9.0.0",
     "@octokit/plugin-retry": "^8.0.3",
     "@octokit/plugin-throttling": "^11.0.3",
     "glob": "^13.0.0",
