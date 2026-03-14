@@ -33,7 +33,6 @@
     "@types/glob": "^9.0.0",
     "@types/mime-types": "^3.0.1",
     "@types/node": "^20.19.37",
-    "@vercel/ncc": "^0.38.4",
     "@vitest/coverage-v8": "^4.1.0",
     "esbuild": "^0.27.3",
     "prettier": "3.8.1",
