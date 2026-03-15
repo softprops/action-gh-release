@@ -1,6 +1,7 @@
 import {
   alignAssetName,
   isTag,
+  normalizeGlobPattern,
   parseConfig,
   parseInputFiles,
   paths,
@@ -502,6 +503,26 @@ describe('util', () => {
       assert.deepStrictEqual(unmatchedPatterns(['data/does/not/exist/*'], 'tests'), [
         'data/does/not/exist/*',
       ]);
+    });
+  });
+
+  describe('normalizeGlobPattern', () => {
+    it('preserves posix-style patterns on non-windows platforms', () => {
+      assert.equal(normalizeGlobPattern('./dist/**/*.tgz', 'linux'), './dist/**/*.tgz');
+    });
+
+    it('normalizes relative windows-style glob patterns', () => {
+      assert.equal(
+        normalizeGlobPattern('.\\release-assets\\rssguard-*win7.exe', 'win32'),
+        './release-assets/rssguard-*win7.exe',
+      );
+    });
+
+    it('normalizes absolute windows-style glob patterns', () => {
+      assert.equal(
+        normalizeGlobPattern('D:\\a\\repo\\build\\packages\\*', 'win32'),
+        'D:/a/repo/build/packages/*',
+      );
     });
   });
 
