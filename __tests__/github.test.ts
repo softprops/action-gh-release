@@ -153,7 +153,7 @@ describe('github', () => {
       const generateReleaseNotes = vi.fn(async () => ({
         data: {
           name: 'Generated release',
-          body: '## What\\'s Changed\\n* Added support for previous_tag',
+          body: "## What's Changed\n* Added support for previous_tag",
         },
       }));
       const createRelease = vi.fn(async (params) => ({

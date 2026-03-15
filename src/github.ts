@@ -151,7 +151,9 @@ export class GitHubReleaser implements Releaser {
         releaseParams.body = releaseNotes.data.body;
       }
     }
-    releaseParams.body = releaseParams.body ? this.truncateReleaseNotes(releaseParams.body) : undefined;
+    releaseParams.body = releaseParams.body
+      ? this.truncateReleaseNotes(releaseParams.body)
+      : undefined;
     return releaseParams;
   }
 
