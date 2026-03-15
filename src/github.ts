@@ -75,6 +75,8 @@ export interface Releaser {
 
   deleteReleaseAsset(params: { owner: string; repo: string; asset_id: number }): Promise<void>;
 
+  deleteRelease(params: { owner: string; repo: string; release_id: number }): Promise<void>;
+
   uploadReleaseAsset(params: {
     url: string;
     size: number;
@@ -222,6 +224,10 @@ export class GitHubReleaser implements Releaser {
     asset_id: number;
   }): Promise<void> {
     await this.github.rest.repos.deleteReleaseAsset(params);
+  }
+
+  async deleteRelease(params: { owner: string; repo: string; release_id: number }): Promise<void> {
+    await this.github.rest.repos.deleteRelease(params);
   }
 
   async uploadReleaseAsset(params: {
@@ -525,6 +531,141 @@ export async function findTagFromReleases(
   }
 }
 
+const CREATED_RELEASE_DISCOVERY_RETRY_DELAY_MS = 1000;
+const RECENT_RELEASE_SCAN_PAGES = 2;
+
+async function sleep(ms: number): Promise<void> {
+  await new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+async function recentReleasesByTag(
+  releaser: Releaser,
+  owner: string,
+  repo: string,
+  tag: string,
+): Promise<Release[]> {
+  const matches: Release[] = [];
+  let pages = 0;
+
+  for await (const page of releaser.allReleases({ owner, repo })) {
+    matches.push(...page.data.filter((release) => release.tag_name === tag));
+    pages += 1;
+
+    if (pages >= RECENT_RELEASE_SCAN_PAGES) {
+      break;
+    }
+  }
+
+  return matches;
+}
+
+function pickCanonicalRelease(
+  releases: Release[],
+  releaseByTag: Release | undefined,
+): Release | undefined {
+  if (releaseByTag && releases.some((release) => release.id === releaseByTag.id)) {
+    return releaseByTag;
+  }
+
+  if (releases.length === 0) {
+    return releaseByTag;
+  }
+
+  return [...releases].sort((left, right) => {
+    if (left.draft !== right.draft) {
+      return Number(left.draft) - Number(right.draft);
+    }
+
+    return left.id - right.id;
+  })[0];
+}
+
+async function cleanupDuplicateDraftReleases(
+  releaser: Releaser,
+  owner: string,
+  repo: string,
+  tag: string,
+  canonicalReleaseId: number,
+  recentReleases: Release[],
+): Promise<void> {
+  for (const duplicate of recentReleases) {
+    if (duplicate.id === canonicalReleaseId || !duplicate.draft || duplicate.assets.length > 0) {
+      continue;
+    }
+
+    try {
+      console.log(`🧹 Removing duplicate draft release ${duplicate.id} for tag ${tag}...`);
+      await releaser.deleteRelease({
+        owner,
+        repo,
+        release_id: duplicate.id,
+      });
+    } catch (error) {
+      console.warn(`error deleting duplicate release ${duplicate.id}: ${error}`);
+    }
+  }
+}
+
+async function canonicalizeCreatedRelease(
+  releaser: Releaser,
+  owner: string,
+  repo: string,
+  tag: string,
+  createdRelease: Release,
+  maxRetries: number,
+): Promise<Release> {
+  const attempts = Math.max(maxRetries, 1);
+
+  for (let attempt = 1; attempt <= attempts; attempt += 1) {
+    let releaseByTag: Release | undefined;
+    try {
+      releaseByTag = await findTagFromReleases(releaser, owner, repo, tag);
+    } catch (error) {
+      console.warn(`error reloading release for tag ${tag}: ${error}`);
+    }
+
+    let recentReleases: Release[] = [];
+    try {
+      recentReleases = await recentReleasesByTag(releaser, owner, repo, tag);
+    } catch (error) {
+      console.warn(`error listing recent releases for tag ${tag}: ${error}`);
+    }
+
+    const canonicalRelease = pickCanonicalRelease(recentReleases, releaseByTag);
+    if (canonicalRelease) {
+      if (canonicalRelease.id !== createdRelease.id) {
+        console.log(
+          `↪️ Using release ${canonicalRelease.id} for tag ${tag} instead of duplicate draft ${createdRelease.id}`,
+        );
+      }
+
+      await cleanupDuplicateDraftReleases(
+        releaser,
+        owner,
+        repo,
+        tag,
+        canonicalRelease.id,
+        recentReleases,
+      );
+      return canonicalRelease;
+    }
+
+    if (attempt < attempts) {
+      console.log(
+        `Release ${createdRelease.id} is not yet discoverable by tag ${tag}, retrying... (${
+          attempts - attempt
+        } retries remaining)`,
+      );
+      await sleep(CREATED_RELEASE_DISCOVERY_RETRY_DELAY_MS);
+    }
+  }
+
+  console.log(
+    `⚠️ Continuing with newly created release ${createdRelease.id} because tag ${tag} is still not discoverable`,
+  );
+  return createdRelease;
+}
+
 async function createRelease(
   tag: string,
   config: Config,
@@ -547,7 +688,7 @@ async function createRelease(
   }
   console.log(`👩‍🏭 Creating new GitHub release for tag ${tag_name}${commitMessage}...`);
   try {
-    let release = await releaser.createRelease({
+    const release = await releaser.createRelease({
       owner,
       repo,
       tag_name,
@@ -560,7 +701,14 @@ async function createRelease(
       generate_release_notes,
       make_latest,
     });
-    return release.data;
+    return await canonicalizeCreatedRelease(
+      releaser,
+      owner,
+      repo,
+      tag_name,
+      release.data,
+      maxRetries,
+    );
   } catch (error) {
     // presume a race with competing matrix runs
     console.log(`⚠️ GitHub release failed with status: ${error.status}`);
