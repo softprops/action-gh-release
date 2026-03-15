@@ -707,9 +707,13 @@ async function cleanupDuplicateDraftReleases(
   repo: string,
   tag: string,
   canonicalReleaseId: number,
-  recentReleases: Release[],
+  releases: Release[],
 ): Promise<void> {
-  for (const duplicate of recentReleases) {
+  const uniqueReleases = Array.from(
+    new Map(releases.map((release) => [release.id, release])).values(),
+  );
+
+  for (const duplicate of uniqueReleases) {
     if (duplicate.id === canonicalReleaseId || !duplicate.draft || duplicate.assets.length > 0) {
       continue;
     }
@@ -724,34 +728,6 @@ async function cleanupDuplicateDraftReleases(
     } catch (error) {
       console.warn(`error deleting duplicate release ${duplicate.id}: ${error}`);
     }
-  }
-}
-
-async function cleanupCreatedDuplicateDraftRelease(
-  releaser: Releaser,
-  owner: string,
-  repo: string,
-  tag: string,
-  createdRelease: Release,
-  canonicalReleaseId: number,
-): Promise<void> {
-  if (
-    createdRelease.id === canonicalReleaseId ||
-    !createdRelease.draft ||
-    createdRelease.assets.length > 0
-  ) {
-    return;
-  }
-
-  try {
-    console.log(`🧹 Removing duplicate draft release ${createdRelease.id} for tag ${tag}...`);
-    await releaser.deleteRelease({
-      owner,
-      repo,
-      release_id: createdRelease.id,
-    });
-  } catch (error) {
-    console.warn(`error deleting duplicate release ${createdRelease.id}: ${error}`);
   }
 }
 
@@ -788,22 +764,10 @@ async function canonicalizeCreatedRelease(
         );
       }
 
-      await cleanupCreatedDuplicateDraftRelease(
-        releaser,
-        owner,
-        repo,
-        tag,
+      await cleanupDuplicateDraftReleases(releaser, owner, repo, tag, canonicalRelease.id, [
         createdRelease,
-        canonicalRelease.id,
-      );
-      await cleanupDuplicateDraftReleases(
-        releaser,
-        owner,
-        repo,
-        tag,
-        canonicalRelease.id,
-        recentReleases,
-      );
+        ...recentReleases,
+      ]);
       return canonicalRelease;
     }
 
