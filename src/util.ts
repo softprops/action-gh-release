@@ -1,5 +1,6 @@
 import * as glob from 'glob';
 import { statSync, readFileSync } from 'fs';
+import { homedir } from 'os';
 import * as pathLib from 'path';
 
 export interface Config {
@@ -135,11 +136,29 @@ export const normalizeGlobPattern = (
   return pattern;
 };
 
+export const expandHomePattern = (pattern: string, homeDirectory: string = homedir()): string => {
+  if (pattern === '~') {
+    return homeDirectory;
+  }
+  if (pattern.startsWith('~/') || pattern.startsWith('~\\')) {
+    return pathLib.join(homeDirectory, pattern.slice(2));
+  }
+  return pattern;
+};
+
+export const normalizeFilePattern = (
+  pattern: string,
+  platform: NodeJS.Platform = process.platform,
+  homeDirectory: string = homedir(),
+): string => {
+  return normalizeGlobPattern(expandHomePattern(pattern, homeDirectory), platform);
+};
+
 export const paths = (patterns: string[], cwd?: string): string[] => {
   return patterns.reduce((acc: string[], pattern: string): string[] => {
-    const matches = glob.sync(normalizeGlobPattern(pattern), { cwd, dot: true, absolute: false });
+    const matches = glob.sync(normalizeFilePattern(pattern), { cwd, dot: true, absolute: false });
     const resolved = matches
-      .map((p) => (cwd ? pathLib.join(cwd, p) : p))
+      .map((p) => (cwd && !pathLib.isAbsolute(p) ? pathLib.join(cwd, p) : p))
       .filter((p) => {
         try {
           return statSync(p).isFile();
@@ -153,10 +172,10 @@ export const paths = (patterns: string[], cwd?: string): string[] => {
 
 export const unmatchedPatterns = (patterns: string[], cwd?: string): string[] => {
   return patterns.reduce((acc: string[], pattern: string): string[] => {
-    const matches = glob.sync(normalizeGlobPattern(pattern), { cwd, dot: true, absolute: false });
+    const matches = glob.sync(normalizeFilePattern(pattern), { cwd, dot: true, absolute: false });
     const files = matches.filter((p) => {
       try {
-        const full = cwd ? pathLib.join(cwd, p) : p;
+        const full = cwd && !pathLib.isAbsolute(p) ? pathLib.join(cwd, p) : p;
         return statSync(full).isFile();
       } catch {
         return false;
