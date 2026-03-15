@@ -614,6 +614,78 @@ describe('github', () => {
       expect(uploadReleaseAsset).toHaveBeenCalledTimes(2);
     });
 
+    it('retries upload after deleting a conflicting renamed asset matched by label', async () => {
+      const tempDir = mkdtempSync(join(tmpdir(), 'gh-release-race-dotfile-'));
+      const dotfilePath = join(tempDir, '.config');
+      writeFileSync(dotfilePath, 'config');
+
+      const uploadReleaseAsset = vi
+        .fn()
+        .mockRejectedValueOnce({
+          status: 422,
+          response: { data: { errors: [{ code: 'already_exists' }] } },
+        })
+        .mockResolvedValueOnce({
+          status: 201,
+          data: { id: 123, name: 'default.config', label: '.config' },
+        });
+
+      const listReleaseAssets = vi
+        .fn()
+        .mockResolvedValue([{ id: 99, name: 'default.config', label: '.config' }]);
+      const deleteReleaseAsset = vi.fn().mockResolvedValue(undefined);
+      const updateReleaseAsset = vi.fn().mockResolvedValue({
+        data: { id: 123, name: 'default.config', label: '.config' },
+      });
+
+      const mockReleaser: Releaser = {
+        getReleaseByTag: () => Promise.reject('Not implemented'),
+        createRelease: () => Promise.reject('Not implemented'),
+        updateRelease: () => Promise.reject('Not implemented'),
+        finalizeRelease: () => Promise.reject('Not implemented'),
+        allReleases: async function* () {
+          throw new Error('Not implemented');
+        },
+        listReleaseAssets,
+        deleteReleaseAsset,
+        deleteRelease: () => Promise.reject('Not implemented'),
+        updateReleaseAsset,
+        uploadReleaseAsset,
+      };
+
+      try {
+        const result = await upload(
+          config,
+          mockReleaser,
+          'https://uploads.github.com/repos/owner/repo/releases/1/assets',
+          dotfilePath,
+          [],
+        );
+
+        expect(result).toStrictEqual({ id: 123, name: 'default.config', label: '.config' });
+        expect(listReleaseAssets).toHaveBeenCalledWith({
+          owner: 'owner',
+          repo: 'repo',
+          release_id: 1,
+        });
+        expect(deleteReleaseAsset).toHaveBeenCalledWith({
+          owner: 'owner',
+          repo: 'repo',
+          asset_id: 99,
+        });
+        expect(updateReleaseAsset).toHaveBeenCalledWith({
+          owner: 'owner',
+          repo: 'repo',
+          asset_id: 123,
+          name: 'default.config',
+          label: '.config',
+        });
+        expect(uploadReleaseAsset).toHaveBeenCalledTimes(2);
+      } finally {
+        rmSync(tempDir, { recursive: true, force: true });
+      }
+    });
+
     it('handles 422 already_exists error gracefully', async () => {
       const existingRelease = {
         id: 1,
@@ -955,6 +1027,263 @@ describe('github', () => {
         });
         expect(result).toEqual({
           id: 1,
+          name: 'default.config',
+          label: '.config',
+        });
+      } finally {
+        rmSync(tempDir, { recursive: true, force: true });
+      }
+    });
+
+    it('refreshes release assets when the uploaded renamed asset is not immediately patchable', async () => {
+      const tempDir = mkdtempSync(join(tmpdir(), 'gh-release-dotfile-'));
+      const dotfilePath = join(tempDir, '.config');
+      writeFileSync(dotfilePath, 'config');
+
+      const updateReleaseAssetSpy = vi
+        .fn()
+        .mockRejectedValueOnce({ status: 404 })
+        .mockResolvedValueOnce({
+          data: {
+            id: 2,
+            name: 'default.config',
+            label: '.config',
+          },
+        });
+      const listReleaseAssetsSpy = vi.fn().mockResolvedValue([
+        {
+          id: 2,
+          name: 'default.config',
+          label: '',
+        },
+      ]);
+      const releaser: Releaser = {
+        getReleaseByTag: () => Promise.reject('Not implemented'),
+        createRelease: () => Promise.reject('Not implemented'),
+        updateRelease: () => Promise.reject('Not implemented'),
+        finalizeRelease: () => Promise.reject('Not implemented'),
+        allReleases: async function* () {
+          throw new Error('Not implemented');
+        },
+        listReleaseAssets: listReleaseAssetsSpy,
+        deleteReleaseAsset: () => Promise.reject('Not implemented'),
+        deleteRelease: () => Promise.reject('Not implemented'),
+        updateReleaseAsset: updateReleaseAssetSpy,
+        uploadReleaseAsset: () =>
+          Promise.resolve({
+            status: 201,
+            data: {
+              id: 1,
+              name: 'default.config',
+              label: '',
+            },
+          }),
+      };
+
+      try {
+        const result = await upload(
+          config,
+          releaser,
+          'https://uploads.github.com/repos/owner/repo/releases/1/assets',
+          dotfilePath,
+          [],
+        );
+
+        expect(updateReleaseAssetSpy).toHaveBeenNthCalledWith(1, {
+          owner: 'owner',
+          repo: 'repo',
+          asset_id: 1,
+          name: 'default.config',
+          label: '.config',
+        });
+        expect(listReleaseAssetsSpy).toHaveBeenCalledWith({
+          owner: 'owner',
+          repo: 'repo',
+          release_id: 1,
+        });
+        expect(updateReleaseAssetSpy).toHaveBeenNthCalledWith(2, {
+          owner: 'owner',
+          repo: 'repo',
+          asset_id: 2,
+          name: 'default.config',
+          label: '.config',
+        });
+        expect(result).toEqual({
+          id: 2,
+          name: 'default.config',
+          label: '.config',
+        });
+      } finally {
+        rmSync(tempDir, { recursive: true, force: true });
+      }
+    });
+
+    it('treats update-a-release-asset 404 as success when a matching asset is present after refresh', async () => {
+      const tempDir = mkdtempSync(join(tmpdir(), 'gh-release-dotfile-'));
+      const dotfilePath = join(tempDir, '.config');
+      writeFileSync(dotfilePath, 'config');
+
+      const listReleaseAssetsSpy = vi.fn().mockResolvedValue([
+        {
+          id: 2,
+          name: 'default.config',
+          label: '.config',
+        },
+      ]);
+      const releaser: Releaser = {
+        getReleaseByTag: () => Promise.reject('Not implemented'),
+        createRelease: () => Promise.reject('Not implemented'),
+        updateRelease: () => Promise.reject('Not implemented'),
+        finalizeRelease: () => Promise.reject('Not implemented'),
+        allReleases: async function* () {
+          throw new Error('Not implemented');
+        },
+        listReleaseAssets: listReleaseAssetsSpy,
+        deleteReleaseAsset: () => Promise.reject('Not implemented'),
+        deleteRelease: () => Promise.reject('Not implemented'),
+        updateReleaseAsset: () => Promise.reject('Not implemented'),
+        uploadReleaseAsset: () =>
+          Promise.reject({
+            status: 404,
+            message:
+              'Not Found - https://docs.github.com/rest/releases/assets#update-a-release-asset',
+          }),
+      };
+
+      try {
+        const result = await upload(
+          config,
+          releaser,
+          'https://uploads.github.com/repos/owner/repo/releases/1/assets',
+          dotfilePath,
+          [],
+        );
+
+        expect(listReleaseAssetsSpy).toHaveBeenCalledWith({
+          owner: 'owner',
+          repo: 'repo',
+          release_id: 1,
+        });
+        expect(result).toEqual({
+          id: 2,
+          name: 'default.config',
+          label: '.config',
+        });
+      } finally {
+        rmSync(tempDir, { recursive: true, force: true });
+      }
+    });
+
+    it('treats upload-endpoint 404s as release asset metadata failures when the docs link matches', async () => {
+      const tempDir = mkdtempSync(join(tmpdir(), 'gh-release-dotfile-'));
+      const dotfilePath = join(tempDir, '.config');
+      writeFileSync(dotfilePath, 'config');
+
+      const listReleaseAssetsSpy = vi.fn().mockResolvedValue([
+        {
+          id: 2,
+          name: 'default.config',
+          label: '.config',
+        },
+      ]);
+      const releaser: Releaser = {
+        getReleaseByTag: () => Promise.reject('Not implemented'),
+        createRelease: () => Promise.reject('Not implemented'),
+        updateRelease: () => Promise.reject('Not implemented'),
+        finalizeRelease: () => Promise.reject('Not implemented'),
+        allReleases: async function* () {
+          throw new Error('Not implemented');
+        },
+        listReleaseAssets: listReleaseAssetsSpy,
+        deleteReleaseAsset: () => Promise.reject('Not implemented'),
+        deleteRelease: () => Promise.reject('Not implemented'),
+        updateReleaseAsset: () => Promise.reject('Not implemented'),
+        uploadReleaseAsset: () =>
+          Promise.reject({
+            status: 404,
+            message:
+              'Not Found - https://docs.github.com/rest/releases/assets#update-a-release-asset',
+            request: {
+              url: 'https://uploads.github.com/repos/owner/repo/releases/1/assets?name=.config',
+            },
+          }),
+      };
+
+      try {
+        const result = await upload(
+          config,
+          releaser,
+          'https://uploads.github.com/repos/owner/repo/releases/1/assets',
+          dotfilePath,
+          [],
+        );
+
+        expect(listReleaseAssetsSpy).toHaveBeenCalledWith({
+          owner: 'owner',
+          repo: 'repo',
+          release_id: 1,
+        });
+        expect(result).toEqual({
+          id: 2,
+          name: 'default.config',
+          label: '.config',
+        });
+      } finally {
+        rmSync(tempDir, { recursive: true, force: true });
+      }
+    });
+
+    it('polls for a matching asset after update-a-release-asset 404 before failing', async () => {
+      const tempDir = mkdtempSync(join(tmpdir(), 'gh-release-dotfile-'));
+      const dotfilePath = join(tempDir, '.config');
+      writeFileSync(dotfilePath, 'config');
+
+      const listReleaseAssetsSpy = vi
+        .fn()
+        .mockResolvedValueOnce([])
+        .mockResolvedValueOnce([
+          {
+            id: 2,
+            name: 'default.config',
+            label: '.config',
+          },
+        ]);
+      const releaser: Releaser = {
+        getReleaseByTag: () => Promise.reject('Not implemented'),
+        createRelease: () => Promise.reject('Not implemented'),
+        updateRelease: () => Promise.reject('Not implemented'),
+        finalizeRelease: () => Promise.reject('Not implemented'),
+        allReleases: async function* () {
+          throw new Error('Not implemented');
+        },
+        listReleaseAssets: listReleaseAssetsSpy,
+        deleteReleaseAsset: () => Promise.reject('Not implemented'),
+        deleteRelease: () => Promise.reject('Not implemented'),
+        updateReleaseAsset: () => Promise.reject('Not implemented'),
+        uploadReleaseAsset: () =>
+          Promise.reject({
+            status: 404,
+            message:
+              'Not Found - https://docs.github.com/rest/releases/assets#update-a-release-asset',
+          }),
+      };
+
+      try {
+        const resultPromise = upload(
+          config,
+          releaser,
+          'https://uploads.github.com/repos/owner/repo/releases/1/assets',
+          dotfilePath,
+          [],
+        );
+
+        await new Promise((resolve) => setTimeout(resolve, 1100));
+
+        const result = await resultPromise;
+
+        expect(listReleaseAssetsSpy).toHaveBeenCalledTimes(2);
+        expect(result).toEqual({
+          id: 2,
           name: 'default.config',
           label: '.config',
         });
