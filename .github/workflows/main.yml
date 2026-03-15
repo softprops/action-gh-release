@@ -19,14 +19,12 @@ jobs:
         run: npm ci
       - name: Build
         run: npm run build
+      - name: Check dist freshness
+        run: |
+          git diff --exit-code --stat -- dist/index.js \
+          || (echo "##[error] found changed dist/index.js after build. please run 'npm run build' and commit the updated bundle" \
+              && exit 1)
       - name: Test
         run: npm run test
       - name: Format
         run: npm run fmtcheck
-      # - name: "check for uncommitted changes"
-      #   # Ensure no changes, but ignore node_modules dir since dev/fresh ci deps installed.
-      #   run: |
-      #     git diff --exit-code --stat -- . ':!node_modules' \
-      #     || (echo "##[error] found changed files after build. please 'npm run build && npm run fmt'" \
-      #             "and check in all changes" \
-      #         && exit 1)
