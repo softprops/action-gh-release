@@ -25,7 +25,7 @@ inputs:
     description: "Upload artifacts sequentially in the provided order. This does not control the final display order GitHub uses for release assets."
     required: false
   files:
-    description: "Newline-delimited list of path globs for asset files to upload. Escape glob metacharacters when matching literal filenames that contain them. `~/...` expands to the runner home directory. On Windows, both \\ and / path separators are accepted."
+    description: "Newline-delimited list of path globs for asset files to upload. Escape glob metacharacters when matching literal filenames that contain them. `~/...` expands to the runner home directory. On Windows, both \\ and / path separators are accepted. GitHub may normalize raw asset filenames that contain special characters; the action restores the asset label when possible, but the final download name remains GitHub-controlled."
     required: false
   working_directory:
     description: "Base directory to resolve 'files' globs against (defaults to job working-directory)"
@@ -45,7 +45,7 @@ inputs:
     required: false
     default: ${{ github.token }}
   target_commitish:
-    description: "Commitish value that determines where the Git tag is created from. Can be any branch or commit SHA."
+    description: "Commitish value that determines where the Git tag is created from. Can be any branch or commit SHA. When creating a new tag for an older commit, `github.token` may not have permission to create the ref; use a PAT or another token with sufficient contents permissions if you hit 403 `Resource not accessible by integration`."
     required: false
   discussion_category_name:
     description: "If specified, a discussion of the specified category is created and linked to the release. The value must be a category that already exists in the repository. If there is already a discussion linked to the release, this parameter is ignored."
