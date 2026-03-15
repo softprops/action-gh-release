@@ -263,6 +263,26 @@ export const mimeOrDefault = (path: string): string => {
   return lookup(path) || 'application/octet-stream';
 };
 
+const releaseAssetMatchesName = (
+  name: string,
+  asset: { name: string; label?: string | null },
+): boolean => asset.name === name || asset.name === alignAssetName(name) || asset.label === name;
+
+const isReleaseAssetUpdateNotFound = (error: any): boolean => {
+  const errorStatus = error?.status ?? error?.response?.status;
+  const requestUrl = error?.request?.url;
+  const errorMessage = error?.message;
+  const isReleaseAssetRequest =
+    typeof requestUrl === 'string' &&
+    (/\/releases\/assets\//.test(requestUrl) || /\/releases\/\d+\/assets(?:\?|$)/.test(requestUrl));
+
+  return (
+    errorStatus === 404 &&
+    (isReleaseAssetRequest ||
+      (typeof errorMessage === 'string' && errorMessage.includes('update-a-release-asset')))
+  );
+};
+
 export const upload = async (
   config: Config,
   releaser: Releaser,
@@ -275,11 +295,9 @@ export const upload = async (
   const releaseIdMatch = url.match(/\/releases\/(\d+)\/assets/);
   const releaseId = releaseIdMatch ? Number(releaseIdMatch[1]) : undefined;
   const currentAsset = currentAssets.find(
-    // note: GitHub renames asset filenames that have special characters, non-alphanumeric characters, and leading or trailing periods. The "List release assets" endpoint lists the renamed filenames.
-    // due to this renaming we need to be mindful when we compare the file name we're uploading with a name github may already have rewritten for logical comparison
-    // see https://docs.github.com/en/rest/releases/assets?apiVersion=2022-11-28#upload-a-release-asset
-    ({ name: currentName, label: currentLabel }) =>
-      currentName === name || currentName === alignAssetName(name) || currentLabel === name,
+    // GitHub can rewrite uploaded asset names, so compare against both the raw name
+    // GitHub returns and the restored label we set when available.
+    (currentAsset) => releaseAssetMatchesName(name, currentAsset),
   );
   if (currentAsset) {
     if (config.input_overwrite_files === false) {
@@ -297,6 +315,32 @@ export const upload = async (
   console.log(`⬆️ Uploading ${name}...`);
   const endpoint = new URL(url);
   endpoint.searchParams.append('name', name);
+  const findReleaseAsset = async (
+    matches: (asset: { id: number; name: string; label?: string | null }) => boolean,
+    attempts: number = 3,
+  ) => {
+    if (releaseId === undefined) {
+      return undefined;
+    }
+
+    for (let attempt = 1; attempt <= attempts; attempt++) {
+      const latestAssets = await releaser.listReleaseAssets({
+        owner,
+        repo,
+        release_id: releaseId,
+      });
+      const latestAsset = latestAssets.find(matches);
+      if (latestAsset) {
+        return latestAsset;
+      }
+
+      if (attempt < attempts) {
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+      }
+    }
+
+    return undefined;
+  };
   const uploadAsset = async () => {
     const fh = await open(path);
     try {
@@ -312,8 +356,54 @@ export const upload = async (
     }
   };
 
-  try {
-    const resp = await uploadAsset();
+  const maybeRestoreAssetLabel = async (uploadedAsset: {
+    id?: number;
+    name?: string;
+    label?: string | null;
+    [key: string]: any;
+  }) => {
+    if (!uploadedAsset.name || uploadedAsset.name === name || !uploadedAsset.id) {
+      return uploadedAsset;
+    }
+
+    console.log(`✏️ Restoring asset label to ${name}...`);
+
+    const updateAssetLabel = async (assetId: number) => {
+      const { data } = await releaser.updateReleaseAsset({
+        owner,
+        repo,
+        asset_id: assetId,
+        name: uploadedAsset.name!,
+        label: name,
+      });
+      return data;
+    };
+
+    try {
+      return await updateAssetLabel(uploadedAsset.id);
+    } catch (error: any) {
+      const errorStatus = error?.status ?? error?.response?.status;
+
+      if (errorStatus === 404 && releaseId !== undefined) {
+        try {
+          const latestAsset = await findReleaseAsset(
+            (currentAsset) =>
+              currentAsset.id === uploadedAsset.id || currentAsset.name === uploadedAsset.name,
+          );
+          if (latestAsset) {
+            return await updateAssetLabel(latestAsset.id);
+          }
+        } catch (refreshError) {
+          console.warn(`error refreshing release assets for ${name}: ${refreshError}`);
+        }
+      }
+
+      console.warn(`error updating release asset label for ${name}: ${error}`);
+      return uploadedAsset;
+    }
+  };
+
+  const handleUploadedAsset = async (resp: { status: number; data: any }) => {
     const json = resp.data;
     if (resp.status !== 201) {
       throw new Error(
@@ -322,27 +412,34 @@ export const upload = async (
         }\n${json.message}\n${JSON.stringify(json.errors)}`,
       );
     }
-    if (json.name && json.name !== name && json.id) {
-      console.log(`✏️ Restoring asset label to ${name}...`);
-      try {
-        const { data } = await releaser.updateReleaseAsset({
-          owner,
-          repo,
-          asset_id: json.id,
-          name: json.name,
-          label: name,
-        });
-        console.log(`✅ Uploaded ${name}`);
-        return data;
-      } catch (error) {
-        console.warn(`error updating release asset label for ${name}: ${error}`);
-      }
-    }
+    const assetWithLabel = await maybeRestoreAssetLabel(json);
     console.log(`✅ Uploaded ${name}`);
-    return json;
+    return assetWithLabel;
+  };
+
+  try {
+    return await handleUploadedAsset(await uploadAsset());
   } catch (error: any) {
     const errorStatus = error?.status ?? error?.response?.status;
     const errorData = error?.response?.data;
+
+    if (releaseId !== undefined && isReleaseAssetUpdateNotFound(error)) {
+      try {
+        const latestAsset = await findReleaseAsset((currentAsset) =>
+          releaseAssetMatchesName(name, currentAsset),
+        );
+        if (latestAsset) {
+          console.warn(
+            `error updating release asset metadata for ${name}: ${error}. Matching asset is present after refresh; continuing...`,
+          );
+          return latestAsset;
+        }
+      } catch (refreshError) {
+        console.warn(
+          `error refreshing release assets after metadata update failure: ${refreshError}`,
+        );
+      }
+    }
 
     // Handle race conditions across concurrent workflows uploading the same asset.
     if (
@@ -359,8 +456,8 @@ export const upload = async (
         repo,
         release_id: releaseId,
       });
-      const latestAsset = latestAssets.find(
-        ({ name: currentName }) => currentName == alignAssetName(name),
+      const latestAsset = latestAssets.find((currentAsset) =>
+        releaseAssetMatchesName(name, currentAsset),
       );
       if (latestAsset) {
         await releaser.deleteReleaseAsset({
@@ -368,17 +465,7 @@ export const upload = async (
           repo,
           asset_id: latestAsset.id,
         });
-        const retryResp = await uploadAsset();
-        const retryJson = retryResp.data;
-        if (retryResp.status !== 201) {
-          throw new Error(
-            `Failed to upload release asset ${name}. received status code ${
-              retryResp.status
-            }\n${retryJson.message}\n${JSON.stringify(retryJson.errors)}`,
-          );
-        }
-        console.log(`✅ Uploaded ${name}`);
-        return retryJson;
+        return await handleUploadedAsset(await uploadAsset());
       }
     }
 
