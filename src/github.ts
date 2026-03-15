@@ -368,7 +368,9 @@ export const upload = async (
       errorData?.errors?.[0]?.code === 'already_exists' &&
       releaseId !== undefined
     ) {
-      console.log(`⚠️ Asset ${name} already exists (race condition), refreshing assets and retrying once...`);
+      console.log(
+        `⚠️ Asset ${name} already exists (race condition), refreshing assets and retrying once...`,
+      );
       const latestAssets = await releaser.listReleaseAssets({
         owner,
         repo,

@@ -291,9 +291,7 @@ describe('github', () => {
           data: { id: 123, name: 'release.txt' },
         });
 
-      const listReleaseAssets = vi.fn().mockResolvedValue([
-        { id: 99, name: 'release.txt' },
-      ]);
+      const listReleaseAssets = vi.fn().mockResolvedValue([{ id: 99, name: 'release.txt' }]);
       const deleteReleaseAsset = vi.fn().mockResolvedValue(undefined);
 
       const mockReleaser: Releaser = {
