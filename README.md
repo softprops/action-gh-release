@@ -186,7 +186,7 @@ The following are optional as `step.with` keys
 | `draft`                    | Boolean | Indicator of whether or not this release is a draft                                                                                                                                                                                                                                                                                                                                                                                             |
 | `prerelease`               | Boolean | Indicator of whether or not is a prerelease                                                                                                                                                                                                                                                                                                                                                                                                     |
 | `preserve_order`           | Boolean | Upload assets sequentially in the provided order. This controls the action's upload behavior, but it does not control the final asset ordering that GitHub may display on the release page or return from the Releases API.                                                                                                                                                                                                                 |
-| `files`                    | String  | Newline-delimited globs of paths to assets to upload for release                                                                                                                                                                                                                                                                                                                                                                                |
+| `files`                    | String  | Newline-delimited globs of paths to assets to upload for release. Escape glob metacharacters when you need to match a literal filename that contains them, such as `[` or `]`.                                                                                                                                                                                                                                                               |
 | `overwrite_files`          | Boolean | Indicator of whether files should be overwritten when they already exist. Defaults to true                                                                                                                                                                                                                                                                                                                                                      |
 | `name`                     | String  | Name of the release. defaults to tag name                                                                                                                                                                                                                                                                                                                                                                                                       |
 | `tag_name`                 | String  | Name of a tag. defaults to `github.ref_name`                                                                                                                                                                                                                                                                                                                                                                                                         |
@@ -205,6 +205,14 @@ attempted first, then falling back on `body` if the path can not be read from.
 💡 When the release info keys (such as `name`, `body`, `draft`, `prerelease`, etc.)
 are not explicitly set and there is already an existing release for the tag, the
 release will retain its original info.
+
+💡 `files` is glob-based, so literal filenames that contain glob metacharacters such as
+`[` or `]` must be escaped in the pattern.
+
+💡 GitHub may normalize or rewrite uploaded asset filenames that contain special or
+non-ASCII characters. This action uploads the requested file, but it cannot force the
+final asset name that GitHub stores or returns from the Releases API. In particular,
+4-byte Unicode characters such as emoji cannot currently be restored via asset labels.
 
 #### outputs
 

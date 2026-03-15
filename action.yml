@@ -25,7 +25,7 @@ inputs:
     description: "Upload artifacts sequentially in the provided order. This does not control the final display order GitHub uses for release assets."
     required: false
   files:
-    description: "Newline-delimited list of path globs for asset files to upload"
+    description: "Newline-delimited list of path globs for asset files to upload. Escape glob metacharacters when matching literal filenames that contain them."
     required: false
   working_directory:
     description: "Base directory to resolve 'files' globs against (defaults to job working-directory)"
