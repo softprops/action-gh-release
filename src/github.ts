@@ -707,9 +707,13 @@ async function cleanupDuplicateDraftReleases(
   repo: string,
   tag: string,
   canonicalReleaseId: number,
-  recentReleases: Release[],
+  releases: Release[],
 ): Promise<void> {
-  for (const duplicate of recentReleases) {
+  const uniqueReleases = Array.from(
+    new Map(releases.map((release) => [release.id, release])).values(),
+  );
+
+  for (const duplicate of uniqueReleases) {
     if (duplicate.id === canonicalReleaseId || !duplicate.draft || duplicate.assets.length > 0) {
       continue;
     }
@@ -760,14 +764,10 @@ async function canonicalizeCreatedRelease(
         );
       }
 
-      await cleanupDuplicateDraftReleases(
-        releaser,
-        owner,
-        repo,
-        tag,
-        canonicalRelease.id,
-        recentReleases,
-      );
+      await cleanupDuplicateDraftReleases(releaser, owner, repo, tag, canonicalRelease.id, [
+        createdRelease,
+        ...recentReleases,
+      ]);
       return canonicalRelease;
     }
 
