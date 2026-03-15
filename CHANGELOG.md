@@ -1,3 +1,21 @@
+## 2.5.1
+
+`2.5.1` is a patch release focused on regressions introduced in `2.5.0` and on release lookup reliability.
+It fixes `#713`, addresses `#703`, and fixes `#724`. Regression testing shows that
+current `master` no longer reproduces the finalize-race behavior reported in `#704` and `#709`.
+
+## What's Changed
+
+### Bug fixes 🐛
+
+* fix: fetch correct asset URL after finalization; test; some refactoring by @pzhlkj6612 in https://github.com/softprops/action-gh-release/pull/738
+* fix: release marked as 'latest' despite make_latest: false by @Boshen in https://github.com/softprops/action-gh-release/pull/715
+* fix: use getReleaseByTag API instead of iterating all releases by @kim-em in https://github.com/softprops/action-gh-release/pull/725
+
+### Other Changes 🔄
+
+* dependency updates, including the ESM/runtime compatibility refresh in https://github.com/softprops/action-gh-release/pull/731
+
 ## 2.5.0
 
 ## What's Changed
