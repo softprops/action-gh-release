@@ -2,6 +2,7 @@ import {
   asset,
   findTagFromReleases,
   finalizeRelease,
+  GitHubReleaser,
   mimeOrDefault,
   release,
   Release,
@@ -32,6 +33,7 @@ describe('github', () => {
     input_target_commitish: undefined,
     input_discussion_category_name: undefined,
     input_generate_release_notes: false,
+    input_previous_tag: undefined,
     input_append_body: false,
     input_make_latest: undefined,
   };
@@ -143,6 +145,86 @@ describe('github', () => {
       const result = await findTagFromReleases(releaser, owner, repo, emptyTag);
 
       assert.deepStrictEqual(result, targetRelease);
+    });
+  });
+
+  describe('GitHubReleaser', () => {
+    it('passes previous_tag_name to generateReleaseNotes and strips it from createRelease', async () => {
+      const generateReleaseNotes = vi.fn(async () => ({
+        data: {
+          name: 'Generated release',
+          body: "## What's Changed\n* Added support for previous_tag",
+        },
+      }));
+      const createRelease = vi.fn(async (params) => ({
+        data: {
+          id: 1,
+          upload_url: 'test',
+          html_url: 'test',
+          tag_name: params.tag_name,
+          name: params.name,
+          body: params.body,
+          target_commitish: params.target_commitish || 'main',
+          draft: params.draft ?? false,
+          prerelease: params.prerelease ?? false,
+          assets: [],
+        },
+      }));
+
+      const releaser = new GitHubReleaser({
+        rest: {
+          repos: {
+            generateReleaseNotes,
+            createRelease,
+            updateRelease: vi.fn(),
+            getReleaseByTag: vi.fn(),
+            listReleaseAssets: vi.fn(),
+            deleteReleaseAsset: vi.fn(),
+            deleteRelease: vi.fn(),
+            updateReleaseAsset: vi.fn(),
+            listReleases: {
+              endpoint: {
+                merge: vi.fn(),
+              },
+            },
+          },
+        },
+        paginate: {
+          iterator: vi.fn(),
+        },
+        request: vi.fn(),
+      } as any);
+
+      await releaser.createRelease({
+        owner: 'owner',
+        repo: 'repo',
+        tag_name: 'v1.0.0',
+        name: 'v1.0.0',
+        body: 'Intro',
+        draft: false,
+        prerelease: false,
+        target_commitish: 'abc123',
+        discussion_category_name: undefined,
+        generate_release_notes: true,
+        make_latest: undefined,
+        previous_tag_name: 'v0.9.0',
+      });
+
+      expect(generateReleaseNotes).toHaveBeenCalledWith({
+        owner: 'owner',
+        repo: 'repo',
+        tag_name: 'v1.0.0',
+        target_commitish: 'abc123',
+        previous_tag_name: 'v0.9.0',
+      });
+      expect(createRelease).toHaveBeenCalledWith(
+        expect.objectContaining({
+          tag_name: 'v1.0.0',
+          body: "Intro\n\n## What's Changed\n* Added support for previous_tag",
+          generate_release_notes: false,
+        }),
+      );
+      expect(createRelease.mock.calls[0][0]).not.toHaveProperty('previous_tag_name');
     });
   });
 
@@ -340,6 +422,101 @@ describe('github', () => {
   });
 
   describe('error handling', () => {
+    it('passes previous_tag_name through when creating a release with generated notes', async () => {
+      const createReleaseSpy = vi.fn(async () => ({
+        data: {
+          id: 1,
+          upload_url: 'test',
+          html_url: 'test',
+          tag_name: 'v1.0.0',
+          name: 'test',
+          body: 'generated notes',
+          target_commitish: 'main',
+          draft: true,
+          prerelease: false,
+          assets: [],
+        },
+      }));
+
+      await release(
+        {
+          ...config,
+          input_generate_release_notes: true,
+          input_previous_tag: 'v0.9.0',
+        },
+        {
+          getReleaseByTag: () => Promise.reject({ status: 404 }),
+          createRelease: createReleaseSpy,
+          updateRelease: () => Promise.reject('Not implemented'),
+          finalizeRelease: () => Promise.reject('Not implemented'),
+          allReleases: async function* () {
+            yield { data: [] };
+          },
+          listReleaseAssets: () => Promise.reject('Not implemented'),
+          deleteReleaseAsset: () => Promise.reject('Not implemented'),
+          deleteRelease: () => Promise.reject('Not implemented'),
+          updateReleaseAsset: () => Promise.reject('Not implemented'),
+          uploadReleaseAsset: () => Promise.reject('Not implemented'),
+        },
+        1,
+      );
+
+      expect(createReleaseSpy).toHaveBeenCalledWith(
+        expect.objectContaining({
+          tag_name: 'v1.0.0',
+          generate_release_notes: true,
+          previous_tag_name: 'v0.9.0',
+        }),
+      );
+    });
+
+    it('passes previous_tag_name through when updating a release with generated notes', async () => {
+      const existingRelease: Release = {
+        id: 1,
+        upload_url: 'test',
+        html_url: 'test',
+        tag_name: 'v1.0.0',
+        name: 'test',
+        body: 'existing body',
+        target_commitish: 'main',
+        draft: false,
+        prerelease: false,
+        assets: [],
+      };
+      const updateReleaseSpy = vi.fn(async () => ({ data: existingRelease }));
+
+      await release(
+        {
+          ...config,
+          input_generate_release_notes: true,
+          input_previous_tag: 'v0.9.0',
+        },
+        {
+          getReleaseByTag: () => Promise.resolve({ data: existingRelease }),
+          createRelease: () => Promise.reject('Not implemented'),
+          updateRelease: updateReleaseSpy,
+          finalizeRelease: () => Promise.reject('Not implemented'),
+          allReleases: async function* () {
+            yield { data: [existingRelease] };
+          },
+          listReleaseAssets: () => Promise.reject('Not implemented'),
+          deleteReleaseAsset: () => Promise.reject('Not implemented'),
+          deleteRelease: () => Promise.reject('Not implemented'),
+          updateReleaseAsset: () => Promise.reject('Not implemented'),
+          uploadReleaseAsset: () => Promise.reject('Not implemented'),
+        },
+        1,
+      );
+
+      expect(updateReleaseSpy).toHaveBeenCalledWith(
+        expect.objectContaining({
+          release_id: existingRelease.id,
+          generate_release_notes: true,
+          previous_tag_name: 'v0.9.0',
+        }),
+      );
+    });
+
     it('creates published prereleases without the forced draft-first path', async () => {
       const prereleaseConfig = {
         ...config,

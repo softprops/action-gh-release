@@ -173,6 +173,20 @@ jobs:
           token: ${{ secrets.CUSTOM_GITHUB_TOKEN }}
 ```
 
+When you use GitHub's built-in `generate_release_notes` support, you can optionally
+pin the comparison base explicitly with `previous_tag`. This is useful when the default
+comparison range does not match the release series you want to publish.
+
+```yaml
+- name: Release
+  uses: softprops/action-gh-release@v2
+  with:
+    tag_name: stage-2026-03-15
+    target_commitish: ${{ github.sha }}
+    previous_tag: prod-2026-03-01
+    generate_release_notes: true
+```
+
 ### 💅 Customizing
 
 #### inputs
@@ -196,6 +210,7 @@ The following are optional as `step.with` keys
 | `token`                    | String  | Authorized GitHub token or PAT. Defaults to `${{ github.token }}` when omitted. A non-empty explicit token overrides `GITHUB_TOKEN`. Passing `""` treats the token as explicitly unset, so omit the input entirely or use an expression such as `${{ inputs.token || github.token }}` when wrapping this action in a composite action.                                                                                                                                                  |
 | `discussion_category_name` | String  | If specified, a discussion of the specified category is created and linked to the release. The value must be a category that already exists in the repository. For more information, see ["Managing categories for discussions in your repository."](https://docs.github.com/en/discussions/managing-discussions-for-your-community/managing-categories-for-discussions-in-your-repository)                                                     |
 | `generate_release_notes`   | Boolean | Whether to automatically generate the name and body for this release. If name is specified, the specified name will be used; otherwise, a name will be automatically generated. If body is specified, the body will be pre-pended to the automatically generated notes. See the [GitHub docs for this feature](https://docs.github.com/en/repositories/releasing-projects-on-github/automatically-generated-release-notes) for more information |
+| `previous_tag`             | String  | Optional. When `generate_release_notes` is enabled, use this tag as GitHub's `previous_tag_name` comparison base. If omitted, GitHub chooses the comparison base automatically.                                                                                                                                                                                                               |
 | `append_body`              | Boolean | Append to existing body instead of overwriting it                                                                                                                                                                                                                                                                                                                                                                                               |
 | `make_latest`              | String  | Specifies whether this release should be set as the latest release for the repository. Drafts and prereleases cannot be set as latest. Can be `true`, `false`, or `legacy`. Uses GitHub api defaults if not provided                                                                                                                                                                                                                            |
 

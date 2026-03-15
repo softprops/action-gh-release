@@ -31,37 +31,40 @@ export interface ReleaseResult {
   created: boolean;
 }
 
+type ReleaseNotesParams = {
+  owner: string;
+  repo: string;
+  tag_name: string;
+  target_commitish: string | undefined;
+  previous_tag_name?: string;
+};
+
+type ReleaseMutationParams = {
+  owner: string;
+  repo: string;
+  tag_name: string;
+  name: string;
+  body: string | undefined;
+  draft: boolean | undefined;
+  prerelease: boolean | undefined;
+  target_commitish: string | undefined;
+  discussion_category_name: string | undefined;
+  generate_release_notes: boolean | undefined;
+  make_latest: 'true' | 'false' | 'legacy' | undefined;
+  previous_tag_name?: string;
+};
+
 export interface Releaser {
   getReleaseByTag(params: { owner: string; repo: string; tag: string }): Promise<{ data: Release }>;
 
-  createRelease(params: {
-    owner: string;
-    repo: string;
-    tag_name: string;
-    name: string;
-    body: string | undefined;
-    draft: boolean | undefined;
-    prerelease: boolean | undefined;
-    target_commitish: string | undefined;
-    discussion_category_name: string | undefined;
-    generate_release_notes: boolean | undefined;
-    make_latest: 'true' | 'false' | 'legacy' | undefined;
-  }): Promise<{ data: Release }>;
+  createRelease(params: ReleaseMutationParams): Promise<{ data: Release }>;
 
-  updateRelease(params: {
-    owner: string;
-    repo: string;
-    release_id: number;
-    tag_name: string;
-    target_commitish: string;
-    name: string;
-    body: string | undefined;
-    draft: boolean | undefined;
-    prerelease: boolean | undefined;
-    discussion_category_name: string | undefined;
-    generate_release_notes: boolean | undefined;
-    make_latest: 'true' | 'false' | 'legacy' | undefined;
-  }): Promise<{ data: Release }>;
+  updateRelease(
+    params: ReleaseMutationParams & {
+      release_id: number;
+      target_commitish: string;
+    },
+  ): Promise<{ data: Release }>;
 
   finalizeRelease(params: {
     owner: string;
@@ -113,12 +116,7 @@ export class GitHubReleaser implements Releaser {
     return this.github.rest.repos.getReleaseByTag(params);
   }
 
-  async getReleaseNotes(params: {
-    owner: string;
-    repo: string;
-    tag_name: string;
-    target_commitish: string | undefined;
-  }): Promise<{
+  async getReleaseNotes(params: ReleaseNotesParams): Promise<{
     data: {
       name: string;
       body: string;
@@ -127,75 +125,55 @@ export class GitHubReleaser implements Releaser {
     return await this.github.rest.repos.generateReleaseNotes(params);
   }
 
+  private async prepareReleaseMutation<T extends ReleaseMutationParams>(
+    params: T,
+  ): Promise<Omit<T, 'previous_tag_name'>> {
+    const { previous_tag_name, ...releaseParams } = params;
+
+    if (
+      typeof releaseParams.make_latest === 'string' &&
+      !['true', 'false', 'legacy'].includes(releaseParams.make_latest)
+    ) {
+      releaseParams.make_latest = undefined;
+    }
+    if (releaseParams.generate_release_notes) {
+      const releaseNotes = await this.getReleaseNotes({
+        owner: releaseParams.owner,
+        repo: releaseParams.repo,
+        tag_name: releaseParams.tag_name,
+        target_commitish: releaseParams.target_commitish,
+        previous_tag_name,
+      });
+      releaseParams.generate_release_notes = false;
+      if (releaseParams.body) {
+        releaseParams.body = `${releaseParams.body}\n\n${releaseNotes.data.body}`;
+      } else {
+        releaseParams.body = releaseNotes.data.body;
+      }
+    }
+    releaseParams.body = releaseParams.body
+      ? this.truncateReleaseNotes(releaseParams.body)
+      : undefined;
+    return releaseParams;
+  }
+
   truncateReleaseNotes(input: string): string {
     // release notes can be a maximum of 125000 characters
     const githubNotesMaxCharLength = 125000;
     return input.substring(0, githubNotesMaxCharLength - 1);
   }
 
-  async createRelease(params: {
-    owner: string;
-    repo: string;
-    tag_name: string;
-    name: string;
-    body: string | undefined;
-    draft: boolean | undefined;
-    prerelease: boolean | undefined;
-    target_commitish: string | undefined;
-    discussion_category_name: string | undefined;
-    generate_release_notes: boolean | undefined;
-    make_latest: 'true' | 'false' | 'legacy' | undefined;
-  }): Promise<{ data: Release }> {
-    if (
-      typeof params.make_latest === 'string' &&
-      !['true', 'false', 'legacy'].includes(params.make_latest)
-    ) {
-      params.make_latest = undefined;
-    }
-    if (params.generate_release_notes) {
-      const releaseNotes = await this.getReleaseNotes(params);
-      params.generate_release_notes = false;
-      if (params.body) {
-        params.body = `${params.body}\n\n${releaseNotes.data.body}`;
-      } else {
-        params.body = releaseNotes.data.body;
-      }
-    }
-    params.body = params.body ? this.truncateReleaseNotes(params.body) : undefined;
-    return this.github.rest.repos.createRelease(params);
+  async createRelease(params: ReleaseMutationParams): Promise<{ data: Release }> {
+    return this.github.rest.repos.createRelease(await this.prepareReleaseMutation(params));
   }
 
-  async updateRelease(params: {
-    owner: string;
-    repo: string;
-    release_id: number;
-    tag_name: string;
-    target_commitish: string;
-    name: string;
-    body: string | undefined;
-    draft: boolean | undefined;
-    prerelease: boolean | undefined;
-    discussion_category_name: string | undefined;
-    generate_release_notes: boolean | undefined;
-    make_latest: 'true' | 'false' | 'legacy' | undefined;
-  }): Promise<{ data: Release }> {
-    if (
-      typeof params.make_latest === 'string' &&
-      !['true', 'false', 'legacy'].includes(params.make_latest)
-    ) {
-      params.make_latest = undefined;
-    }
-    if (params.generate_release_notes) {
-      const releaseNotes = await this.getReleaseNotes(params);
-      params.generate_release_notes = false;
-      if (params.body) {
-        params.body = `${params.body}\n\n${releaseNotes.data.body}`;
-      } else {
-        params.body = releaseNotes.data.body;
-      }
-    }
-    params.body = params.body ? this.truncateReleaseNotes(params.body) : undefined;
-    return this.github.rest.repos.updateRelease(params);
+  async updateRelease(
+    params: ReleaseMutationParams & {
+      release_id: number;
+      target_commitish: string;
+    },
+  ): Promise<{ data: Release }> {
+    return this.github.rest.repos.updateRelease(await this.prepareReleaseMutation(params));
   }
 
   async finalizeRelease(params: {
@@ -425,6 +403,11 @@ export const release = async (
 
   const discussion_category_name = config.input_discussion_category_name;
   const generate_release_notes = config.input_generate_release_notes;
+  const previous_tag_name = config.input_previous_tag;
+
+  if (generate_release_notes && previous_tag_name) {
+    console.log(`📝 Generating release notes using previous tag ${previous_tag_name}`);
+  }
   try {
     const _release: Release | undefined = await findTagFromReleases(releaser, owner, repo, tag);
 
@@ -438,6 +421,7 @@ export const release = async (
         discussion_category_name,
         generate_release_notes,
         maxRetries,
+        previous_tag_name,
       );
     }
 
@@ -491,6 +475,7 @@ export const release = async (
       discussion_category_name,
       generate_release_notes,
       make_latest,
+      previous_tag_name,
     });
     return {
       release: release.data,
@@ -513,6 +498,7 @@ export const release = async (
       discussion_category_name,
       generate_release_notes,
       maxRetries,
+      previous_tag_name,
     );
   }
 };
@@ -796,6 +782,7 @@ async function createRelease(
   discussion_category_name: string | undefined,
   generate_release_notes: boolean | undefined,
   maxRetries: number,
+  previous_tag_name: string | undefined,
 ): Promise<ReleaseResult> {
   const tag_name = tag;
   const name = config.input_name || tag;
@@ -822,6 +809,7 @@ async function createRelease(
       discussion_category_name,
       generate_release_notes,
       make_latest,
+      previous_tag_name,
     });
     const canonicalRelease = await canonicalizeCreatedRelease(
       releaser,
