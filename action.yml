@@ -41,7 +41,7 @@ inputs:
     description: "Repository to make releases against, in <owner>/<repo> format"
     required: false
   token:
-    description: "Authorized secret GitHub Personal Access Token. Defaults to github.token"
+    description: "Authorized GitHub token or PAT. Defaults to github.token. A non-empty explicit token overrides GITHUB_TOKEN."
     required: false
     default: ${{ github.token }}
   target_commitish:
