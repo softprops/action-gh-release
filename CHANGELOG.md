@@ -1,3 +1,22 @@
+## 2.5.2
+
+`2.5.2` is a patch release focused on the remaining release-creation and prerelease regressions in the `2.5.x` bug-fix cycle.
+It fixes `#705`, fixes `#708`, fixes `#740`, fixes `#741`, and fixes `#722`.
+Regression testing covers the shared-tag race, prerelease event behavior, dotfile asset labels,
+same-filename concurrent uploads, and blocked-tag cleanup behavior.
+
+If you still hit an issue after upgrading, please open a report with the bug template and include a minimal repro or sanitized workflow snippet where possible.
+
+## What's Changed
+
+### Bug fixes 🐛
+
+* fix: canonicalize releases after concurrent create by @chenrui333 in https://github.com/softprops/action-gh-release/pull/746
+* fix: preserve prereleased events for prereleases by @chenrui333 in https://github.com/softprops/action-gh-release/pull/748
+* fix: restore dotfile asset labels by @chenrui333 in https://github.com/softprops/action-gh-release/pull/749
+* fix: handle upload already_exists races across workflows by @api2062 in https://github.com/softprops/action-gh-release/pull/745
+* fix: clean up orphan drafts when tag creation is blocked by @chenrui333 in https://github.com/softprops/action-gh-release/pull/750
+
 ## 2.5.1
 
 `2.5.1` is a patch release focused on regressions introduced in `2.5.0` and on release lookup reliability.
