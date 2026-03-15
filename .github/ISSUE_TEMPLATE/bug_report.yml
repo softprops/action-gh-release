@@ -1,0 +1,97 @@
+name: Bug report
+description: Report a bug or regression in action-gh-release
+title: "[Bug]: "
+labels:
+  - bug
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Before filing:
+        - confirm the problem still reproduces on the latest release or `master`
+        - search existing issues for the same behavior
+        - if the original repository is private, include a minimal public repro, a sanitized workflow snippet, or exact redacted steps a maintainer can follow
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Pre-flight checks
+      options:
+        - label: I searched existing issues and did not find a duplicate
+          required: true
+        - label: I reproduced this with the latest released version or current `master`
+          required: true
+        - label: I included a reproducible example or a sanitized/redacted reproduction path if the original repository is private
+          required: true
+  - type: input
+    id: action_version
+    attributes:
+      label: action-gh-release version
+      description: Tag, SHA, or ref used in your workflow
+      placeholder: v2.5.2
+    validations:
+      required: true
+  - type: dropdown
+    id: runner
+    attributes:
+      label: Runner operating system
+      options:
+        - ubuntu-latest
+        - windows-latest
+        - macos-latest
+        - other
+    validations:
+      required: true
+  - type: input
+    id: target_repository
+    attributes:
+      label: Release target repository
+      description: Fill this in if you set the `repository:` input
+      placeholder: owner/repo
+  - type: input
+    id: repro_reference
+    attributes:
+      label: Reproduction repo, gist, or artifact
+      description: Link a minimal repro repository, gist, run URL, or other shareable artifact if you have one
+      placeholder: https://github.com/owner/repro-repo
+  - type: textarea
+    id: workflow
+    attributes:
+      label: Workflow snippet
+      description: Include the relevant `uses:` step and inputs. If the original repo is private, paste a sanitized version here.
+      render: yaml
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Steps to reproduce
+      description: Include tags, matrix/concurrency details, and any repo rules involved. If the original repo is private, describe the smallest setup a maintainer can recreate locally or in a throwaway repo.
+      placeholder: |
+        1. Trigger workflow with ...
+        2. Action creates ...
+        3. Action fails with ...
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant logs
+      description: Paste the relevant error output or run URL
+      render: shell
+    validations:
+      required: true
+  - type: textarea
+    id: additional
+    attributes:
+      label: Additional context
+      description: Any extra environment, token, ruleset, or asset details

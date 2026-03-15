@@ -1,0 +1,50 @@
+name: Feature request
+description: Propose an enhancement or new capability for action-gh-release
+title: "[Feature]: "
+labels:
+  - enhancement
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this template for new capabilities, behavior changes, or ergonomics improvements.
+        If you are reporting something broken, use the bug report template instead.
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Pre-flight checks
+      options:
+        - label: I searched existing issues and did not find a duplicate request
+          required: true
+        - label: This is not a bug report for existing behavior
+          required: true
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem to solve
+      description: What workflow pain point or gap are you trying to address?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+      description: Describe the behavior, input, or output you want
+    validations:
+      required: true
+  - type: textarea
+    id: workflow
+    attributes:
+      label: Example workflow snippet
+      description: Show how you would expect to use this
+      render: yaml
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: Workarounds or other approaches you evaluated
+  - type: textarea
+    id: impact
+    attributes:
+      label: Why this belongs in action-gh-release
+      description: Explain the user impact or why this should live in the action rather than in workflow glue
