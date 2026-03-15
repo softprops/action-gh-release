@@ -197,7 +197,7 @@ The following are optional as `step.with` keys
 | -------------------------- | ------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `body`                     | String  | Text communicating notable changes in this release                                                                                                                                                                                                                                                                                                                                                                                              |
 | `body_path`                | String  | Path to load text communicating notable changes in this release                                                                                                                                                                                                                                                                                                                                                                                 |
-| `draft`                    | Boolean | Indicator of whether or not this release is a draft                                                                                                                                                                                                                                                                                                                                                                                             |
+| `draft`                    | Boolean | Keep the release as a draft. Defaults to false. When reusing an existing draft release, set this to true to keep it draft; omit it to publish after upload.                                                                                                                                                                                                                                                                                 |
 | `prerelease`               | Boolean | Indicator of whether or not is a prerelease                                                                                                                                                                                                                                                                                                                                                                                                     |
 | `preserve_order`           | Boolean | Upload assets sequentially in the provided order. This controls the action's upload behavior, but it does not control the final asset ordering that GitHub may display on the release page or return from the Releases API.                                                                                                                                                                                                                 |
 | `files`                    | String  | Newline-delimited globs of paths to assets to upload for release. Escape glob metacharacters when you need to match a literal filename that contains them, such as `[` or `]`. `~/...` expands to the runner home directory. On Windows, both `\` and `/` separators are accepted. GitHub may normalize raw asset filenames that contain special characters; the action restores the asset label when possible, but the final download name remains GitHub-controlled. |
@@ -217,9 +217,13 @@ The following are optional as `step.with` keys
 💡 When providing a `body` and `body_path` at the same time, `body_path` will be
 attempted first, then falling back on `body` if the path can not be read from.
 
-💡 When the release info keys (such as `name`, `body`, `draft`, `prerelease`, etc.)
-are not explicitly set and there is already an existing release for the tag, the
-release will retain its original info.
+💡 When the release info keys (such as `name`, `body`, `prerelease`, etc.) are not
+explicitly set and there is already an existing release for the tag, the release
+will retain its original info.
+
+💡 Draft status is handled separately during finalization. If the action reuses an
+existing draft release, set `draft: true` to keep it draft; if `draft` is omitted,
+the action will publish that draft after uploading assets.
 
 💡 `files` is glob-based, so literal filenames that contain glob metacharacters such as
 `[` or `]` must be escaped in the pattern.
