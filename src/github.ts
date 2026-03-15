@@ -727,6 +727,34 @@ async function cleanupDuplicateDraftReleases(
   }
 }
 
+async function cleanupCreatedDuplicateDraftRelease(
+  releaser: Releaser,
+  owner: string,
+  repo: string,
+  tag: string,
+  createdRelease: Release,
+  canonicalReleaseId: number,
+): Promise<void> {
+  if (
+    createdRelease.id === canonicalReleaseId ||
+    !createdRelease.draft ||
+    createdRelease.assets.length > 0
+  ) {
+    return;
+  }
+
+  try {
+    console.log(`🧹 Removing duplicate draft release ${createdRelease.id} for tag ${tag}...`);
+    await releaser.deleteRelease({
+      owner,
+      repo,
+      release_id: createdRelease.id,
+    });
+  } catch (error) {
+    console.warn(`error deleting duplicate release ${createdRelease.id}: ${error}`);
+  }
+}
+
 async function canonicalizeCreatedRelease(
   releaser: Releaser,
   owner: string,
@@ -760,6 +788,14 @@ async function canonicalizeCreatedRelease(
         );
       }
 
+      await cleanupCreatedDuplicateDraftRelease(
+        releaser,
+        owner,
+        repo,
+        tag,
+        createdRelease,
+        canonicalRelease.id,
+      );
       await cleanupDuplicateDraftReleases(
         releaser,
         owner,
