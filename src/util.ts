@@ -84,9 +84,17 @@ export const parseInputFiles = (files: string): string[] => {
     .filter((pat) => pat.trim() !== '');
 };
 
+const parseToken = (env: Env): string => {
+  const inputToken = env.INPUT_TOKEN?.trim();
+  if (inputToken) {
+    return inputToken;
+  }
+  return env.GITHUB_TOKEN?.trim() || '';
+};
+
 export const parseConfig = (env: Env): Config => {
   return {
-    github_token: env.GITHUB_TOKEN || env.INPUT_TOKEN || '',
+    github_token: parseToken(env),
     github_ref: env.GITHUB_REF || '',
     github_repository: env.INPUT_REPOSITORY || env.GITHUB_REPOSITORY || '',
     input_name: env.INPUT_NAME,

@@ -292,7 +292,7 @@ describe('util', () => {
       );
     });
 
-    it('prefers GITHUB_TOKEN over token input for backwards compatibility', () => {
+    it('prefers token input over GITHUB_TOKEN', () => {
       assert.deepStrictEqual(
         parseConfig({
           INPUT_DRAFT: 'false',
@@ -304,7 +304,7 @@ describe('util', () => {
         {
           github_ref: '',
           github_repository: '',
-          github_token: 'env-token',
+          github_token: 'input-token',
           input_working_directory: undefined,
           input_append_body: false,
           input_body: undefined,
@@ -312,6 +312,35 @@ describe('util', () => {
           input_draft: false,
           input_prerelease: true,
           input_preserve_order: true,
+          input_files: [],
+          input_overwrite_files: undefined,
+          input_name: undefined,
+          input_tag_name: undefined,
+          input_fail_on_unmatched_files: false,
+          input_target_commitish: undefined,
+          input_discussion_category_name: undefined,
+          input_generate_release_notes: false,
+          input_make_latest: undefined,
+        },
+      );
+    });
+    it('falls back to GITHUB_TOKEN when token input is empty', () => {
+      assert.deepStrictEqual(
+        parseConfig({
+          GITHUB_TOKEN: 'env-token',
+          INPUT_TOKEN: '   ',
+        }),
+        {
+          github_ref: '',
+          github_repository: '',
+          github_token: 'env-token',
+          input_working_directory: undefined,
+          input_append_body: false,
+          input_body: undefined,
+          input_body_path: undefined,
+          input_draft: undefined,
+          input_prerelease: undefined,
+          input_preserve_order: undefined,
           input_files: [],
           input_overwrite_files: undefined,
           input_name: undefined,
