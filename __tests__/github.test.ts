@@ -6,8 +6,12 @@ import {
   release,
   Release,
   Releaser,
+  upload,
 } from '../src/github';
 
+import { mkdtempSync, rmSync, writeFileSync } from 'fs';
+import { tmpdir } from 'os';
+import { join } from 'path';
 import { assert, describe, expect, it, vi } from 'vitest';
 
 describe('github', () => {
@@ -78,6 +82,7 @@ describe('github', () => {
       listReleaseAssets: () => Promise.reject('Not implemented'),
       deleteReleaseAsset: () => Promise.reject('Not implemented'),
       deleteRelease: () => Promise.reject('Not implemented'),
+      updateReleaseAsset: () => Promise.reject('Not implemented'),
       uploadReleaseAsset: () => Promise.reject('Not implemented'),
     } as const;
 
@@ -201,6 +206,7 @@ describe('github', () => {
         listReleaseAssets: () => Promise.reject('Not implemented'),
         deleteReleaseAsset: () => Promise.reject('Not implemented'),
         deleteRelease: () => Promise.reject('Not implemented'),
+        updateReleaseAsset: () => Promise.reject('Not implemented'),
         uploadReleaseAsset: () => Promise.reject('Not implemented'),
       };
 
@@ -258,6 +264,7 @@ describe('github', () => {
         listReleaseAssets: () => Promise.reject('Not implemented'),
         deleteReleaseAsset: () => Promise.reject('Not implemented'),
         deleteRelease: () => Promise.reject('Not implemented'),
+        updateReleaseAsset: () => Promise.reject('Not implemented'),
         uploadReleaseAsset: () => Promise.reject('Not implemented'),
       } as const;
 
@@ -377,6 +384,7 @@ describe('github', () => {
         listReleaseAssets: () => Promise.reject('Not implemented'),
         deleteReleaseAsset: () => Promise.reject('Not implemented'),
         deleteRelease: deleteReleaseSpy,
+        updateReleaseAsset: () => Promise.reject('Not implemented'),
         uploadReleaseAsset: () => Promise.reject('Not implemented'),
       };
 
@@ -428,6 +436,7 @@ describe('github', () => {
         listReleaseAssets: () => Promise.reject('Not implemented'),
         deleteReleaseAsset: () => Promise.reject('Not implemented'),
         deleteRelease: deleteReleaseSpy,
+        updateReleaseAsset: () => Promise.reject('Not implemented'),
         uploadReleaseAsset: () => Promise.reject('Not implemented'),
       };
 
@@ -439,6 +448,124 @@ describe('github', () => {
         repo: 'repo',
         release_id: duplicateRelease.id,
       });
+    });
+  });
+
+  describe('upload', () => {
+    it('restores a dotfile label when GitHub normalizes the uploaded asset name', async () => {
+      const tempDir = mkdtempSync(join(tmpdir(), 'gh-release-dotfile-'));
+      const dotfilePath = join(tempDir, '.config');
+      writeFileSync(dotfilePath, 'config');
+
+      const updateReleaseAssetSpy = vi.fn(async () => ({
+        data: {
+          id: 1,
+          name: 'default.config',
+          label: '.config',
+        },
+      }));
+      const releaser: Releaser = {
+        getReleaseByTag: () => Promise.reject('Not implemented'),
+        createRelease: () => Promise.reject('Not implemented'),
+        updateRelease: () => Promise.reject('Not implemented'),
+        finalizeRelease: () => Promise.reject('Not implemented'),
+        allReleases: async function* () {
+          throw new Error('Not implemented');
+        },
+        listReleaseAssets: () => Promise.reject('Not implemented'),
+        deleteReleaseAsset: () => Promise.reject('Not implemented'),
+        deleteRelease: () => Promise.reject('Not implemented'),
+        updateReleaseAsset: updateReleaseAssetSpy,
+        uploadReleaseAsset: () =>
+          Promise.resolve({
+            status: 201,
+            data: {
+              id: 1,
+              name: 'default.config',
+              label: '',
+            },
+          }),
+      };
+
+      try {
+        const result = await upload(
+          config,
+          releaser,
+          'https://uploads.example.test/assets',
+          dotfilePath,
+          [],
+        );
+
+        expect(updateReleaseAssetSpy).toHaveBeenCalledWith({
+          owner: 'owner',
+          repo: 'repo',
+          asset_id: 1,
+          name: 'default.config',
+          label: '.config',
+        });
+        expect(result).toEqual({
+          id: 1,
+          name: 'default.config',
+          label: '.config',
+        });
+      } finally {
+        rmSync(tempDir, { recursive: true, force: true });
+      }
+    });
+
+    it('matches an existing asset by label when overwriting a dotfile', async () => {
+      const tempDir = mkdtempSync(join(tmpdir(), 'gh-release-dotfile-'));
+      const dotfilePath = join(tempDir, '.config');
+      writeFileSync(dotfilePath, 'config');
+
+      const deleteReleaseAssetSpy = vi.fn(async () => undefined);
+      const releaser: Releaser = {
+        getReleaseByTag: () => Promise.reject('Not implemented'),
+        createRelease: () => Promise.reject('Not implemented'),
+        updateRelease: () => Promise.reject('Not implemented'),
+        finalizeRelease: () => Promise.reject('Not implemented'),
+        allReleases: async function* () {
+          throw new Error('Not implemented');
+        },
+        listReleaseAssets: () => Promise.reject('Not implemented'),
+        deleteReleaseAsset: deleteReleaseAssetSpy,
+        deleteRelease: () => Promise.reject('Not implemented'),
+        updateReleaseAsset: () =>
+          Promise.resolve({
+            data: {
+              id: 2,
+              name: 'default.config',
+              label: '.config',
+            },
+          }),
+        uploadReleaseAsset: () =>
+          Promise.resolve({
+            status: 201,
+            data: {
+              id: 2,
+              name: 'default.config',
+              label: '',
+            },
+          }),
+      };
+
+      try {
+        await upload(config, releaser, 'https://uploads.example.test/assets', dotfilePath, [
+          {
+            id: 1,
+            name: 'default.config',
+            label: '.config',
+          },
+        ]);
+
+        expect(deleteReleaseAssetSpy).toHaveBeenCalledWith({
+          asset_id: 1,
+          owner: 'owner',
+          repo: 'repo',
+        });
+      } finally {
+        rmSync(tempDir, { recursive: true, force: true });
+      }
     });
   });
 });

@@ -23,7 +23,7 @@ export interface Release {
   target_commitish: string;
   draft: boolean;
   prerelease: boolean;
-  assets: Array<{ id: number; name: string }>;
+  assets: Array<{ id: number; name: string; label?: string | null }>;
 }
 
 export interface Releaser {
@@ -71,11 +71,19 @@ export interface Releaser {
     owner: string;
     repo: string;
     release_id: number;
-  }): Promise<Array<{ id: number; name: string; [key: string]: any }>>;
+  }): Promise<Array<{ id: number; name: string; label?: string | null; [key: string]: any }>>;
 
   deleteReleaseAsset(params: { owner: string; repo: string; asset_id: number }): Promise<void>;
 
   deleteRelease(params: { owner: string; repo: string; release_id: number }): Promise<void>;
+
+  updateReleaseAsset(params: {
+    owner: string;
+    repo: string;
+    asset_id: number;
+    name: string;
+    label: string;
+  }): Promise<{ data: any }>;
 
   uploadReleaseAsset(params: {
     url: string;
@@ -211,7 +219,7 @@ export class GitHubReleaser implements Releaser {
     owner: string;
     repo: string;
     release_id: number;
-  }): Promise<Array<{ id: number; name: string; [key: string]: any }>> {
+  }): Promise<Array<{ id: number; name: string; label?: string | null; [key: string]: any }>> {
     return this.github.paginate(this.github.rest.repos.listReleaseAssets, {
       ...params,
       per_page: 100,
@@ -228,6 +236,16 @@ export class GitHubReleaser implements Releaser {
 
   async deleteRelease(params: { owner: string; repo: string; release_id: number }): Promise<void> {
     await this.github.rest.repos.deleteRelease(params);
+  }
+
+  async updateReleaseAsset(params: {
+    owner: string;
+    repo: string;
+    asset_id: number;
+    name: string;
+    label: string;
+  }): Promise<{ data: any }> {
+    return await this.github.rest.repos.updateReleaseAsset(params);
   }
 
   async uploadReleaseAsset(params: {
@@ -267,7 +285,7 @@ export const upload = async (
   releaser: Releaser,
   url: string,
   path: string,
-  currentAssets: Array<{ id: number; name: string }>,
+  currentAssets: Array<{ id: number; name: string; label?: string | null }>,
 ): Promise<any> => {
   const [owner, repo] = config.github_repository.split('/');
   const { name, mime, size } = asset(path);
@@ -275,7 +293,8 @@ export const upload = async (
     // note: GitHub renames asset filenames that have special characters, non-alphanumeric characters, and leading or trailing periods. The "List release assets" endpoint lists the renamed filenames.
     // due to this renaming we need to be mindful when we compare the file name we're uploading with a name github may already have rewritten for logical comparison
     // see https://docs.github.com/en/rest/releases/assets?apiVersion=2022-11-28#upload-a-release-asset
-    ({ name: currentName }) => currentName == alignAssetName(name),
+    ({ name: currentName, label: currentLabel }) =>
+      currentName === name || currentName === alignAssetName(name) || currentLabel === name,
   );
   if (currentAsset) {
     if (config.input_overwrite_files === false) {
@@ -309,6 +328,22 @@ export const upload = async (
           resp.status
         }\n${json.message}\n${JSON.stringify(json.errors)}`,
       );
+    }
+    if (json.name && json.name !== name && json.id) {
+      console.log(`✏️ Restoring asset label to ${name}...`);
+      try {
+        const { data } = await releaser.updateReleaseAsset({
+          owner,
+          repo,
+          asset_id: json.id,
+          name: json.name,
+          label: name,
+        });
+        console.log(`✅ Uploaded ${name}`);
+        return data;
+      } catch (error) {
+        console.warn(`error updating release asset label for ${name}: ${error}`);
+      }
     }
     console.log(`✅ Uploaded ${name}`);
     return json;
