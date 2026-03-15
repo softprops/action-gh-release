@@ -283,6 +283,21 @@ const isReleaseAssetUpdateNotFound = (error: any): boolean => {
   );
 };
 
+const isImmutableReleaseAssetUploadFailure = (error: any): boolean => {
+  const errorStatus = error?.status ?? error?.response?.status;
+  const errorMessage = error?.response?.data?.message ?? error?.message;
+
+  return errorStatus === 422 && /immutable release/i.test(String(errorMessage));
+};
+
+const immutableReleaseAssetUploadMessage = (
+  name: string,
+  prerelease: boolean | undefined,
+): string =>
+  prerelease
+    ? `Cannot upload asset ${name} to an immutable release. GitHub only allows asset uploads before a release is published, but draft prereleases publish with the release.published event instead of release.prereleased. If you need prereleases with assets on an immutable-release repository, keep the release as a draft with draft: true, then publish it later from that draft and subscribe downstream workflows to release.published.`
+    : `Cannot upload asset ${name} to an immutable release. GitHub only allows asset uploads before a release is published, so upload assets to a draft release before you publish it.`;
+
 export const upload = async (
   config: Config,
   releaser: Releaser,
@@ -422,6 +437,10 @@ export const upload = async (
   } catch (error: any) {
     const errorStatus = error?.status ?? error?.response?.status;
     const errorData = error?.response?.data;
+
+    if (isImmutableReleaseAssetUploadFailure(error)) {
+      throw new Error(immutableReleaseAssetUploadMessage(name, config.input_prerelease));
+    }
 
     if (releaseId !== undefined && isReleaseAssetUpdateNotFound(error)) {
       try {
@@ -875,8 +894,7 @@ async function createRelease(
   const name = config.input_name || tag;
   const body = releaseBody(config);
   const prerelease = config.input_prerelease;
-  const draft =
-    config.input_draft === true || prerelease !== true || (config.input_files?.length ?? 0) > 0;
+  const draft = prerelease === true ? config.input_draft === true : true;
   const target_commitish = config.input_target_commitish;
   const make_latest = config.input_make_latest;
   let commitMessage: string = '';

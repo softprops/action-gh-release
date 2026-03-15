@@ -240,10 +240,11 @@ will retain its original info.
 existing draft release, set `draft: true` to keep it draft; if `draft` is omitted,
 the action will publish that draft after uploading assets.
 
-💡 When the action creates a new release that uploads assets, it stages the release
-as a draft first, uploads the assets, and then publishes it unless `draft: true`
-keeps it as a draft. This keeps new prereleases compatible with GitHub immutable
-releases.
+💡 GitHub immutable releases lock assets after publication. Standard releases in this
+action already upload assets before publishing, but prereleases stay published by
+default so `release.prereleased` workflows keep firing. On an immutable-release
+repository, use `draft: true` for prereleases that upload assets, then publish that
+draft later and subscribe downstream workflows to `release.published`.
 
 💡 `files` is glob-based, so literal filenames that contain glob metacharacters such as
 `[` or `]` must be escaped in the pattern.
