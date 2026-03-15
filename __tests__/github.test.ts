@@ -517,7 +517,7 @@ describe('github', () => {
       );
     });
 
-    it('creates published prereleases without the forced draft-first path', async () => {
+    it('creates published prereleases without the forced draft-first path when no assets are configured', async () => {
       const prereleaseConfig = {
         ...config,
         input_prerelease: true,
@@ -559,6 +559,54 @@ describe('github', () => {
       expect(createReleaseSpy).toHaveBeenCalledWith(
         expect.objectContaining({
           draft: false,
+          prerelease: true,
+        }),
+      );
+    });
+
+    it('creates draft prereleases when assets are configured so uploads can finish before publish', async () => {
+      const prereleaseConfig = {
+        ...config,
+        input_prerelease: true,
+        input_draft: false,
+        input_files: ['draft-false.txt'],
+      };
+      const createdRelease: Release = {
+        id: 1,
+        upload_url: 'test',
+        html_url: 'test',
+        tag_name: 'v1.0.0',
+        name: 'test',
+        body: 'test',
+        target_commitish: 'main',
+        draft: true,
+        prerelease: true,
+        assets: [],
+      };
+
+      const createReleaseSpy = vi.fn(async () => ({ data: createdRelease }));
+      const mockReleaser: Releaser = {
+        getReleaseByTag: () => Promise.reject({ status: 404 }),
+        createRelease: createReleaseSpy,
+        updateRelease: () => Promise.reject('Not implemented'),
+        finalizeRelease: () => Promise.reject('Not implemented'),
+        allReleases: async function* () {
+          yield { data: [createdRelease] };
+        },
+        listReleaseAssets: () => Promise.reject('Not implemented'),
+        deleteReleaseAsset: () => Promise.reject('Not implemented'),
+        deleteRelease: () => Promise.reject('Not implemented'),
+        updateReleaseAsset: () => Promise.reject('Not implemented'),
+        uploadReleaseAsset: () => Promise.reject('Not implemented'),
+      } as const;
+
+      const result = await release(prereleaseConfig, mockReleaser, 1);
+
+      assert.equal(result.release.id, createdRelease.id);
+      assert.equal(result.created, true);
+      expect(createReleaseSpy).toHaveBeenCalledWith(
+        expect.objectContaining({
+          draft: true,
           prerelease: true,
         }),
       );

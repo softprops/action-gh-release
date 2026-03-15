@@ -240,6 +240,11 @@ will retain its original info.
 existing draft release, set `draft: true` to keep it draft; if `draft` is omitted,
 the action will publish that draft after uploading assets.
 
+💡 When the action creates a new release that uploads assets, it stages the release
+as a draft first, uploads the assets, and then publishes it unless `draft: true`
+keeps it as a draft. This keeps new prereleases compatible with GitHub immutable
+releases.
+
 💡 `files` is glob-based, so literal filenames that contain glob metacharacters such as
 `[` or `]` must be escaped in the pattern.
 

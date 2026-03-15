@@ -16,7 +16,7 @@ inputs:
     description: "Gives a tag name. Defaults to github.ref_name. refs/tags/<name> values are normalized to <name>."
     required: false
   draft:
-    description: "Keeps the release as a draft. Defaults to false. When reusing an existing draft release, set this to true to keep it draft; omit it to publish after upload."
+    description: "Keeps the release as a draft. Defaults to false. New releases that upload assets are staged as drafts first; set this to true to keep the release draft instead of publishing it after upload."
     required: false
   prerelease:
     description: "Identify the release as a prerelease. Defaults to false"

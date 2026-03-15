@@ -875,7 +875,8 @@ async function createRelease(
   const name = config.input_name || tag;
   const body = releaseBody(config);
   const prerelease = config.input_prerelease;
-  const draft = prerelease === true ? config.input_draft === true : true;
+  const draft =
+    config.input_draft === true || prerelease !== true || (config.input_files?.length ?? 0) > 0;
   const target_commitish = config.input_target_commitish;
   const make_latest = config.input_make_latest;
   let commitMessage: string = '';
