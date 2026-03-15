@@ -230,6 +230,113 @@ describe('github', () => {
         });
       }
     });
+
+    it('deletes a newly created draft when tag creation is blocked by repository rules', async () => {
+      const finalizeReleaseSpy = vi.fn(async () => {
+        throw {
+          status: 422,
+          response: {
+            data: {
+              errors: [
+                {
+                  field: 'pre_receive',
+                  message:
+                    'pre_receive Repository rule violations found\n\nCannot create ref due to creations being restricted.\n\n',
+                },
+              ],
+            },
+          },
+        };
+      });
+      const deleteReleaseSpy = vi.fn(async () => undefined);
+
+      const releaser: Releaser = {
+        getReleaseByTag: () => Promise.reject('Not implemented'),
+        createRelease: () => Promise.reject('Not implemented'),
+        updateRelease: () => Promise.reject('Not implemented'),
+        finalizeRelease: finalizeReleaseSpy,
+        allReleases: async function* () {
+          throw new Error('Not implemented');
+        },
+        listReleaseAssets: () => Promise.reject('Not implemented'),
+        deleteReleaseAsset: () => Promise.reject('Not implemented'),
+        deleteRelease: deleteReleaseSpy,
+        updateReleaseAsset: () => Promise.reject('Not implemented'),
+        uploadReleaseAsset: () => Promise.reject('Not implemented'),
+      };
+
+      await expect(
+        finalizeRelease(
+          {
+            ...config,
+            input_draft: false,
+          },
+          releaser,
+          draftRelease,
+          true,
+        ),
+      ).rejects.toThrow(
+        'Tag creation for v1.0.0 is blocked by repository rules. Deleted draft release 1 to avoid leaving an orphaned draft release.',
+      );
+
+      expect(finalizeReleaseSpy).toHaveBeenCalledTimes(1);
+      expect(deleteReleaseSpy).toHaveBeenCalledWith({
+        owner: 'owner',
+        repo: 'repo',
+        release_id: draftRelease.id,
+      });
+    });
+
+    it('does not delete an existing draft release when tag creation is blocked by repository rules', async () => {
+      const finalizeReleaseSpy = vi.fn(async () => {
+        throw {
+          status: 422,
+          response: {
+            data: {
+              errors: [
+                {
+                  field: 'pre_receive',
+                  message:
+                    'pre_receive Repository rule violations found\n\nCannot create ref due to creations being restricted.\n\n',
+                },
+              ],
+            },
+          },
+        };
+      });
+      const deleteReleaseSpy = vi.fn(async () => undefined);
+
+      const releaser: Releaser = {
+        getReleaseByTag: () => Promise.reject('Not implemented'),
+        createRelease: () => Promise.reject('Not implemented'),
+        updateRelease: () => Promise.reject('Not implemented'),
+        finalizeRelease: finalizeReleaseSpy,
+        allReleases: async function* () {
+          throw new Error('Not implemented');
+        },
+        listReleaseAssets: () => Promise.reject('Not implemented'),
+        deleteReleaseAsset: () => Promise.reject('Not implemented'),
+        deleteRelease: deleteReleaseSpy,
+        updateReleaseAsset: () => Promise.reject('Not implemented'),
+        uploadReleaseAsset: () => Promise.reject('Not implemented'),
+      };
+
+      await expect(
+        finalizeRelease(
+          {
+            ...config,
+            input_draft: false,
+          },
+          releaser,
+          draftRelease,
+          false,
+          1,
+        ),
+      ).rejects.toThrow('Too many retries.');
+
+      expect(finalizeReleaseSpy).toHaveBeenCalledTimes(1);
+      expect(deleteReleaseSpy).not.toHaveBeenCalled();
+    });
   });
 
   describe('error handling', () => {
@@ -270,7 +377,8 @@ describe('github', () => {
 
       const result = await release(prereleaseConfig, mockReleaser, 1);
 
-      assert.equal(result.id, createdRelease.id);
+      assert.equal(result.release.id, createdRelease.id);
+      assert.equal(result.created, true);
       expect(createReleaseSpy).toHaveBeenCalledWith(
         expect.objectContaining({
           draft: false,
@@ -386,7 +494,8 @@ describe('github', () => {
 
       const result = await release(config, mockReleaser, 2);
       assert.ok(result);
-      assert.equal(result.id, 1);
+      assert.equal(result.release.id, 1);
+      assert.equal(result.created, false);
     });
 
     it('reuses a canonical release after concurrent create success and removes empty duplicates', async () => {
@@ -440,7 +549,8 @@ describe('github', () => {
 
       const result = await release(config, mockReleaser, 2);
 
-      assert.equal(result.id, canonicalRelease.id);
+      assert.equal(result.release.id, canonicalRelease.id);
+      assert.equal(result.created, false);
       expect(deleteReleaseSpy).toHaveBeenCalledWith({
         owner: 'owner',
         repo: 'repo',
@@ -492,7 +602,8 @@ describe('github', () => {
 
       const result = await release(config, mockReleaser, 1);
 
-      assert.equal(result.id, canonicalRelease.id);
+      assert.equal(result.release.id, canonicalRelease.id);
+      assert.equal(result.created, false);
       expect(deleteReleaseSpy).toHaveBeenCalledWith({
         owner: 'owner',
         repo: 'repo',

@@ -49,7 +49,9 @@ async function run() {
     });
     //);
     const releaser = new GitHubReleaser(gh);
-    let rel = await release(config, releaser);
+    const releaseResult = await release(config, releaser);
+    let rel = releaseResult.release;
+    const releaseWasCreated = releaseResult.created;
     let uploadedAssetIds: Set<number> = new Set();
     if (config.input_files && config.input_files.length > 0) {
       const files = paths(config.input_files, config.input_working_directory);
@@ -81,7 +83,7 @@ async function run() {
     }
 
     console.log('Finalizing release...');
-    rel = await finalizeRelease(config, releaser, rel);
+    rel = await finalizeRelease(config, releaser, rel, releaseWasCreated);
 
     // Draft releases use temporary "untagged-..." URLs for assets.
     // URLs will be changed to correct ones once the release is published.
