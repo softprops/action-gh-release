@@ -2,6 +2,7 @@ import {
   alignAssetName,
   isTag,
   normalizeGlobPattern,
+  normalizeTagName,
   parseConfig,
   parseInputFiles,
   paths,
@@ -469,6 +470,10 @@ describe('util', () => {
         },
       );
     });
+
+    it('normalizes refs/tags-prefixed input_tag_name values', () => {
+      expect(parseConfig({ INPUT_TAG_NAME: 'refs/tags/v1.2.3' }).input_tag_name).toBe('v1.2.3');
+    });
   });
   describe('isTag', () => {
     it('returns true for tags', async () => {
@@ -476,6 +481,16 @@ describe('util', () => {
     });
     it('returns false for other kinds of refs', async () => {
       assert.equal(isTag('refs/heads/master'), false);
+    });
+  });
+
+  describe('normalizeTagName', () => {
+    it('strips refs/tags/ from explicit tag names', () => {
+      assert.equal(normalizeTagName('refs/tags/v1.2.3'), 'v1.2.3');
+    });
+
+    it('leaves plain tag names unchanged', () => {
+      assert.equal(normalizeTagName('v1.2.3'), 'v1.2.3');
     });
   });
 

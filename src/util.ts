@@ -98,7 +98,7 @@ export const parseConfig = (env: Env): Config => {
     github_ref: env.GITHUB_REF || '',
     github_repository: env.INPUT_REPOSITORY || env.GITHUB_REPOSITORY || '',
     input_name: env.INPUT_NAME,
-    input_tag_name: env.INPUT_TAG_NAME?.trim(),
+    input_tag_name: normalizeTagName(env.INPUT_TAG_NAME?.trim()),
     input_body: env.INPUT_BODY,
     input_body_path: env.INPUT_BODY_PATH,
     input_files: parseInputFiles(env.INPUT_FILES || ''),
@@ -168,6 +168,13 @@ export const unmatchedPatterns = (patterns: string[], cwd?: string): string[] =>
 
 export const isTag = (ref: string): boolean => {
   return ref.startsWith('refs/tags/');
+};
+
+export const normalizeTagName = (tag: string | undefined): string | undefined => {
+  if (!tag) {
+    return tag;
+  }
+  return isTag(tag) ? tag.replace('refs/tags/', '') : tag;
 };
 
 export const alignAssetName = (assetName: string): string => {

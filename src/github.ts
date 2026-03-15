@@ -3,7 +3,7 @@ import { statSync } from 'fs';
 import { open } from 'fs/promises';
 import { lookup } from 'mime-types';
 import { basename } from 'path';
-import { alignAssetName, Config, isTag, releaseBody } from './util';
+import { alignAssetName, Config, isTag, normalizeTagName, releaseBody } from './util';
 
 type GitHub = InstanceType<typeof GitHub>;
 
@@ -420,7 +420,7 @@ export const release = async (
 
   const [owner, repo] = config.github_repository.split('/');
   const tag =
-    config.input_tag_name ||
+    normalizeTagName(config.input_tag_name) ||
     (isTag(config.github_ref) ? config.github_ref.replace('refs/tags/', '') : '');
 
   const discussion_category_name = config.input_discussion_category_name;

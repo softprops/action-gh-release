@@ -498,6 +498,58 @@ describe('github', () => {
       assert.equal(result.created, false);
     });
 
+    it('normalizes refs/tags-prefixed input_tag_name values before reusing an existing release', async () => {
+      const existingRelease: Release = {
+        id: 1,
+        upload_url: 'test',
+        html_url: 'test',
+        tag_name: 'v1.0.0',
+        name: 'test',
+        body: 'test',
+        target_commitish: 'main',
+        draft: false,
+        prerelease: false,
+        assets: [],
+      };
+
+      const updateReleaseSpy = vi.fn(async () => ({ data: existingRelease }));
+      const getReleaseByTagSpy = vi.fn(async () => ({ data: existingRelease }));
+      const result = await release(
+        {
+          ...config,
+          input_tag_name: 'refs/tags/v1.0.0',
+        },
+        {
+          getReleaseByTag: getReleaseByTagSpy,
+          createRelease: () => Promise.reject('Not implemented'),
+          updateRelease: updateReleaseSpy,
+          finalizeRelease: () => Promise.reject('Not implemented'),
+          allReleases: async function* () {
+            yield { data: [existingRelease] };
+          },
+          listReleaseAssets: () => Promise.reject('Not implemented'),
+          deleteReleaseAsset: () => Promise.reject('Not implemented'),
+          deleteRelease: () => Promise.reject('Not implemented'),
+          updateReleaseAsset: () => Promise.reject('Not implemented'),
+          uploadReleaseAsset: () => Promise.reject('Not implemented'),
+        },
+        1,
+      );
+
+      expect(getReleaseByTagSpy).toHaveBeenCalledWith({
+        owner: 'owner',
+        repo: 'repo',
+        tag: 'v1.0.0',
+      });
+      expect(updateReleaseSpy).toHaveBeenCalledWith(
+        expect.objectContaining({
+          tag_name: 'v1.0.0',
+        }),
+      );
+      assert.equal(result.release.id, existingRelease.id);
+      assert.equal(result.created, false);
+    });
+
     it('reuses a canonical release after concurrent create success and removes empty duplicates', async () => {
       const canonicalRelease: Release = {
         id: 1,
