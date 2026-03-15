@@ -159,21 +159,35 @@ describe('github', () => {
       ...draftRelease,
       draft: false,
     };
+    const publishedPrerelease: Release = {
+      ...draftRelease,
+      draft: false,
+      prerelease: true,
+    };
 
     it.each([
       {
         name: 'returns early when input_draft is true',
         input_draft: true,
+        release: draftRelease,
         expectedCalls: 0,
         expectedResult: draftRelease,
       },
       {
         name: 'finalizes release when input_draft is false',
         input_draft: false,
+        release: draftRelease,
         expectedCalls: 1,
         expectedResult: finalizedRelease,
       },
-    ])('$name', async ({ input_draft, expectedCalls, expectedResult }) => {
+      {
+        name: 'returns early when release is already published',
+        input_draft: false,
+        release: publishedPrerelease,
+        expectedCalls: 0,
+        expectedResult: publishedPrerelease,
+      },
+    ])('$name', async ({ input_draft, release, expectedCalls, expectedResult }) => {
       const finalizeReleaseSpy = vi.fn(async () => ({ data: finalizedRelease }));
 
       const releaser: Releaser = {
@@ -196,7 +210,7 @@ describe('github', () => {
           input_draft,
         },
         releaser,
-        draftRelease,
+        release,
       );
 
       expect(finalizeReleaseSpy).toHaveBeenCalledTimes(expectedCalls);
@@ -206,13 +220,58 @@ describe('github', () => {
         expect(finalizeReleaseSpy).toHaveBeenCalledWith({
           owner: 'owner',
           repo: 'repo',
-          release_id: draftRelease.id,
+          release_id: release.id,
         });
       }
     });
   });
 
   describe('error handling', () => {
+    it('creates published prereleases without the forced draft-first path', async () => {
+      const prereleaseConfig = {
+        ...config,
+        input_prerelease: true,
+        input_draft: false,
+      };
+      const createdRelease: Release = {
+        id: 1,
+        upload_url: 'test',
+        html_url: 'test',
+        tag_name: 'v1.0.0',
+        name: 'test',
+        body: 'test',
+        target_commitish: 'main',
+        draft: false,
+        prerelease: true,
+        assets: [],
+      };
+
+      const createReleaseSpy = vi.fn(async () => ({ data: createdRelease }));
+      const mockReleaser: Releaser = {
+        getReleaseByTag: () => Promise.reject({ status: 404 }),
+        createRelease: createReleaseSpy,
+        updateRelease: () => Promise.reject('Not implemented'),
+        finalizeRelease: () => Promise.reject('Not implemented'),
+        allReleases: async function* () {
+          yield { data: [createdRelease] };
+        },
+        listReleaseAssets: () => Promise.reject('Not implemented'),
+        deleteReleaseAsset: () => Promise.reject('Not implemented'),
+        deleteRelease: () => Promise.reject('Not implemented'),
+        uploadReleaseAsset: () => Promise.reject('Not implemented'),
+      } as const;
+
+      const result = await release(prereleaseConfig, mockReleaser, 1);
+
+      assert.equal(result.id, createdRelease.id);
+      expect(createReleaseSpy).toHaveBeenCalledWith(
+        expect.objectContaining({
+          draft: false,
+          prerelease: true,
+        }),
+      );
+    });
+
     it('handles 422 already_exists error gracefully', async () => {
       const existingRelease = {
         id: 1,

@@ -438,7 +438,7 @@ export const finalizeRelease = async (
   release: Release,
   maxRetries: number = 3,
 ): Promise<Release> => {
-  if (config.input_draft === true) {
+  if (config.input_draft === true || release.draft === false) {
     return release;
   }
 
@@ -680,6 +680,7 @@ async function createRelease(
   const name = config.input_name || tag;
   const body = releaseBody(config);
   const prerelease = config.input_prerelease;
+  const draft = prerelease === true ? config.input_draft === true : true;
   const target_commitish = config.input_target_commitish;
   const make_latest = config.input_make_latest;
   let commitMessage: string = '';
@@ -694,7 +695,7 @@ async function createRelease(
       tag_name,
       name,
       body,
-      draft: true,
+      draft,
       prerelease,
       target_commitish,
       discussion_category_name,
