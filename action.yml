@@ -41,7 +41,7 @@ inputs:
     description: "Repository to make releases against, in <owner>/<repo> format"
     required: false
   token:
-    description: "Authorized GitHub token or PAT. Defaults to github.token. A non-empty explicit token overrides GITHUB_TOKEN."
+    description: "Authorized GitHub token or PAT. Defaults to github.token when omitted. A non-empty explicit token overrides GITHUB_TOKEN. Passing an empty string treats the token as unset."
     required: false
     default: ${{ github.token }}
   target_commitish:
