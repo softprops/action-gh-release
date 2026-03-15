@@ -125,9 +125,19 @@ const parseMakeLatest = (value: string | undefined): 'true' | 'false' | 'legacy'
   return undefined;
 };
 
+export const normalizeGlobPattern = (
+  pattern: string,
+  platform: NodeJS.Platform = process.platform,
+): string => {
+  if (platform === 'win32') {
+    return pattern.replace(/\\/g, '/');
+  }
+  return pattern;
+};
+
 export const paths = (patterns: string[], cwd?: string): string[] => {
   return patterns.reduce((acc: string[], pattern: string): string[] => {
-    const matches = glob.sync(pattern, { cwd, dot: true, absolute: false });
+    const matches = glob.sync(normalizeGlobPattern(pattern), { cwd, dot: true, absolute: false });
     const resolved = matches
       .map((p) => (cwd ? pathLib.join(cwd, p) : p))
       .filter((p) => {
@@ -143,7 +153,7 @@ export const paths = (patterns: string[], cwd?: string): string[] => {
 
 export const unmatchedPatterns = (patterns: string[], cwd?: string): string[] => {
   return patterns.reduce((acc: string[], pattern: string): string[] => {
-    const matches = glob.sync(pattern, { cwd, dot: true, absolute: false });
+    const matches = glob.sync(normalizeGlobPattern(pattern), { cwd, dot: true, absolute: false });
     const files = matches.filter((p) => {
       try {
         const full = cwd ? pathLib.join(cwd, p) : p;
