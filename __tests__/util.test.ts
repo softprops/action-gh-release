@@ -1,6 +1,8 @@
 import {
   alignAssetName,
+  expandHomePattern,
   isTag,
+  normalizeFilePattern,
   normalizeGlobPattern,
   normalizeTagName,
   parseConfig,
@@ -537,6 +539,36 @@ describe('util', () => {
       assert.equal(
         normalizeGlobPattern('D:\\a\\repo\\build\\packages\\*', 'win32'),
         'D:/a/repo/build/packages/*',
+      );
+    });
+  });
+
+  describe('expandHomePattern', () => {
+    it('expands a bare tilde to the provided home directory', () => {
+      assert.equal(expandHomePattern('~', '/home/runner'), '/home/runner');
+    });
+
+    it('expands posix-style tilde paths', () => {
+      assert.equal(expandHomePattern('~/release.txt', '/home/runner'), '/home/runner/release.txt');
+    });
+
+    it('leaves non-tilde paths unchanged', () => {
+      assert.equal(expandHomePattern('./release.txt', '/home/runner'), './release.txt');
+    });
+  });
+
+  describe('normalizeFilePattern', () => {
+    it('expands tilde paths before globbing', () => {
+      assert.equal(
+        normalizeFilePattern('~/release-assets/*.tgz', 'linux', '/home/runner'),
+        '/home/runner/release-assets/*.tgz',
+      );
+    });
+
+    it('expands tilde paths and normalizes windows separators', () => {
+      assert.equal(
+        normalizeFilePattern('~\\release-assets\\*.zip', 'win32', 'C:\\Users\\runner'),
+        'C:/Users/runner/release-assets/*.zip',
       );
     });
   });
