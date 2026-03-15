@@ -1,3 +1,28 @@
+## 2.5.3
+
+`2.5.3` is a patch release focused on the remaining path-handling and release-selection bugs uncovered after `2.5.2`.
+It fixes `#639`, `#571`, `#280`, `#614`, `#311`, `#403`, and `#368`.
+It also adds documentation clarifications for `#541`, `#645`, `#542`, `#393`, and `#411`,
+where the current behavior is either usage-sensitive or constrained by GitHub platform limits rather than an action-side runtime bug.
+
+If you still hit an issue after upgrading, please open a report with the bug template and include a minimal repro or sanitized workflow snippet where possible.
+
+## What's Changed
+
+### Bug fixes 🐛
+
+* fix: prefer token input over GITHUB_TOKEN by @chenrui333 in https://github.com/softprops/action-gh-release/pull/751
+* fix: clean up duplicate drafts after canonicalization by @chenrui333 in https://github.com/softprops/action-gh-release/pull/753
+* fix: support Windows-style file globs by @chenrui333 in https://github.com/softprops/action-gh-release/pull/754
+* fix: normalize refs-tag inputs by @chenrui333 in https://github.com/softprops/action-gh-release/pull/755
+* fix: expand tilde file paths by @chenrui333 in https://github.com/softprops/action-gh-release/pull/756
+
+### Other Changes 🔄
+
+* docs: clarify token precedence by @chenrui333 in https://github.com/softprops/action-gh-release/pull/752
+* docs: clarify GitHub release limits by @chenrui333 in https://github.com/softprops/action-gh-release/pull/758
+* documentation clarifications for empty-token handling, `preserve_order`, and special-character asset filename behavior
+
 ## 2.5.2
 
 `2.5.2` is a patch release focused on the remaining release-creation and prerelease regressions in the `2.5.x` bug-fix cycle.
