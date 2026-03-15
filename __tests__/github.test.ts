@@ -614,6 +614,53 @@ describe('github', () => {
       expect(uploadReleaseAsset).toHaveBeenCalledTimes(2);
     });
 
+    it('surfaces an actionable immutable-release error for prerelease uploads', async () => {
+      const tempDir = mkdtempSync(join(tmpdir(), 'gh-release-immutable-'));
+      const assetPath = join(tempDir, 'draft-false.txt');
+      writeFileSync(assetPath, 'hello');
+
+      const uploadReleaseAsset = vi.fn().mockRejectedValue({
+        status: 422,
+        response: {
+          data: {
+            message: 'Cannot upload assets to an immutable release.',
+          },
+        },
+      });
+
+      const mockReleaser: Releaser = {
+        getReleaseByTag: () => Promise.reject('Not implemented'),
+        createRelease: () => Promise.reject('Not implemented'),
+        updateRelease: () => Promise.reject('Not implemented'),
+        finalizeRelease: () => Promise.reject('Not implemented'),
+        allReleases: async function* () {
+          throw new Error('Not implemented');
+        },
+        listReleaseAssets: () => Promise.resolve([]),
+        deleteReleaseAsset: () => Promise.reject('Not implemented'),
+        deleteRelease: () => Promise.reject('Not implemented'),
+        updateReleaseAsset: () => Promise.reject('Not implemented'),
+        uploadReleaseAsset,
+      };
+
+      await expect(
+        upload(
+          {
+            ...config,
+            input_prerelease: true,
+          },
+          mockReleaser,
+          'https://uploads.github.com/repos/owner/repo/releases/1/assets',
+          assetPath,
+          [],
+        ),
+      ).rejects.toThrow(
+        'Cannot upload asset draft-false.txt to an immutable release. GitHub only allows asset uploads before a release is published, but draft prereleases publish with the release.published event instead of release.prereleased.',
+      );
+
+      rmSync(tempDir, { recursive: true, force: true });
+    });
+
     it('retries upload after deleting a conflicting renamed asset matched by label', async () => {
       const tempDir = mkdtempSync(join(tmpdir(), 'gh-release-race-dotfile-'));
       const dotfilePath = join(tempDir, '.config');
