@@ -1,3 +1,30 @@
+## 2.6.0
+
+`2.6.0` is a minor release centered on `previous_tag` support for `generate_release_notes`,
+which lets workflows pin GitHub's comparison base explicitly instead of relying on the default range.
+It also includes the recent concurrent asset upload recovery fix, a `working_directory` docs sync,
+a checked-bundle freshness guard for maintainers, and clearer immutable-prerelease guidance where
+GitHub platform behavior imposes constraints on how prerelease asset uploads can be published.
+
+If you still hit an issue after upgrading, please open a report with the bug template and include a minimal repro or sanitized workflow snippet where possible.
+
+## What's Changed
+
+### Exciting New Features 🎉
+
+* feat: support previous_tag for generate_release_notes by @pocesar in https://github.com/softprops/action-gh-release/pull/372
+
+### Bug fixes 🐛
+
+* fix: recover concurrent asset metadata 404s by @chenrui333 in https://github.com/softprops/action-gh-release/pull/760
+
+### Other Changes 🔄
+
+* docs: clarify reused draft release behavior by @chenrui333 in https://github.com/softprops/action-gh-release/pull/759
+* docs: clarify working_directory input by @chenrui333 in https://github.com/softprops/action-gh-release/pull/761
+* ci: verify dist bundle freshness by @chenrui333 in https://github.com/softprops/action-gh-release/pull/762
+* fix: clarify immutable prerelease uploads by @chenrui333 in https://github.com/softprops/action-gh-release/pull/763
+
 ## 2.5.3
 
 `2.5.3` is a patch release focused on the remaining path-handling and release-selection bugs uncovered after `2.5.2`.
