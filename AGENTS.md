@@ -67,6 +67,7 @@ For behavior changes, also run the relevant external regression workflow(s) in `
   - docs-only changes: `documentation`
   - additive features: `feature` or `enhancement`
   - dependency updates: `dependencies`
+- Follow [RELEASE.md](RELEASE.md) for version bumps, changelog updates, tagging, and release publication.
 - Prefer manual issue/PR closeouts with a short rationale over implicit assumptions.
 - Do not auto-close old PRs or issues through unrelated docs PRs.
 
