@@ -28,7 +28,7 @@ inputs:
     description: "Newline-delimited list of path globs for asset files to upload. Escape glob metacharacters when matching literal filenames that contain them. `~/...` expands to the runner home directory. On Windows, both \\ and / path separators are accepted. GitHub may normalize raw asset filenames that contain special characters; the action restores the asset label when possible, but the final download name remains GitHub-controlled."
     required: false
   working_directory:
-    description: "Base directory to resolve 'files' globs against (defaults to job working-directory)"
+    description: "Base directory to resolve 'files' globs against. Defaults to the workspace root used by the action step."
     required: false
   overwrite_files:
     description: "Overwrite existing files with the same name. Defaults to true"

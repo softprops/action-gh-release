@@ -141,6 +141,20 @@ jobs:
 
 > **⚠️ Note for Windows:** Both `\` and `/` path separators are accepted in `files` globs. If you need to match a literal glob metacharacter such as `[` or `]`, keep escaping the metacharacter itself in the pattern.
 
+If your release assets are generated under a subdirectory, set `working_directory`
+and keep the `files` patterns relative to that directory.
+
+```yaml
+- name: Release
+  uses: softprops/action-gh-release@v2
+  if: github.ref_type == 'tag'
+  with:
+    working_directory: dist
+    files: |
+      Release.txt
+      checksums/*.txt
+```
+
 ### 📝 External release notes
 
 Many systems exist that can help generate release notes for you. This action supports
@@ -201,6 +215,7 @@ The following are optional as `step.with` keys
 | `prerelease`               | Boolean | Indicator of whether or not is a prerelease                                                                                                                                                                                                                                                                                                                                                                                                     |
 | `preserve_order`           | Boolean | Upload assets sequentially in the provided order. This controls the action's upload behavior, but it does not control the final asset ordering that GitHub may display on the release page or return from the Releases API.                                                                                                                                                                                                                 |
 | `files`                    | String  | Newline-delimited globs of paths to assets to upload for release. Escape glob metacharacters when you need to match a literal filename that contains them, such as `[` or `]`. `~/...` expands to the runner home directory. On Windows, both `\` and `/` separators are accepted. GitHub may normalize raw asset filenames that contain special characters; the action restores the asset label when possible, but the final download name remains GitHub-controlled. |
+| `working_directory`        | String  | Base directory to resolve `files` globs against. Use this when release assets live under a subdirectory. If omitted, the action resolves `files` from `${{ github.workspace }}`.                                                                                                                                                                                                                                                          |
 | `overwrite_files`          | Boolean | Indicator of whether files should be overwritten when they already exist. Defaults to true                                                                                                                                                                                                                                                                                                                                                      |
 | `name`                     | String  | Name of the release. defaults to tag name                                                                                                                                                                                                                                                                                                                                                                                                       |
 | `tag_name`                 | String  | Name of a tag. defaults to `github.ref_name`. `refs/tags/<name>` values are normalized to `<name>`.                                                                                                                                                                                                                                                                                                                                                |
