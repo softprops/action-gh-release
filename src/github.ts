@@ -26,6 +26,11 @@ export interface Release {
   assets: Array<{ id: number; name: string; label?: string | null }>;
 }
 
+export interface ReleaseResult {
+  release: Release;
+  created: boolean;
+}
+
 export interface Releaser {
   getReleaseByTag(params: { owner: string; repo: string; tag: string }): Promise<{ data: Release }>;
 
@@ -407,7 +412,7 @@ export const release = async (
   config: Config,
   releaser: Releaser,
   maxRetries: number = 3,
-): Promise<Release> => {
+): Promise<ReleaseResult> => {
   if (maxRetries <= 0) {
     console.log(`❌ Too many retries. Aborting...`);
     throw new Error('Too many retries.');
@@ -487,7 +492,10 @@ export const release = async (
       generate_release_notes,
       make_latest,
     });
-    return release.data;
+    return {
+      release: release.data,
+      created: false,
+    };
   } catch (error) {
     if (error.status !== 404) {
       console.log(
@@ -522,6 +530,7 @@ export const finalizeRelease = async (
   config: Config,
   releaser: Releaser,
   release: Release,
+  releaseWasCreated: boolean = false,
   maxRetries: number = 3,
 ): Promise<Release> => {
   if (config.input_draft === true || release.draft === false) {
@@ -545,8 +554,34 @@ export const finalizeRelease = async (
     return data;
   } catch (error) {
     console.warn(`error finalizing release: ${error}`);
+
+    if (releaseWasCreated && release.draft && isTagCreationBlockedError(error)) {
+      let deleted = false;
+
+      try {
+        console.log(
+          `🧹 Deleting draft release ${release.id} for tag ${release.tag_name} because tag creation is blocked by repository rules...`,
+        );
+        await releaser.deleteRelease({
+          owner,
+          repo,
+          release_id: release.id,
+        });
+        deleted = true;
+      } catch (cleanupError) {
+        console.warn(`error deleting orphan draft release ${release.id}: ${cleanupError}`);
+      }
+
+      const cleanupResult = deleted
+        ? `Deleted draft release ${release.id} to avoid leaving an orphaned draft release.`
+        : `Failed to delete draft release ${release.id}; manual cleanup may still be required.`;
+      throw new Error(
+        `Tag creation for ${release.tag_name} is blocked by repository rules. ${cleanupResult}`,
+      );
+    }
+
     console.log(`retrying... (${maxRetries - 1} retries remaining)`);
-    return finalizeRelease(config, releaser, release, maxRetries - 1);
+    return finalizeRelease(config, releaser, release, releaseWasCreated, maxRetries - 1);
   }
 };
 
@@ -761,7 +796,7 @@ async function createRelease(
   discussion_category_name: string | undefined,
   generate_release_notes: boolean | undefined,
   maxRetries: number,
-) {
+): Promise<ReleaseResult> {
   const tag_name = tag;
   const name = config.input_name || tag;
   const body = releaseBody(config);
@@ -775,7 +810,7 @@ async function createRelease(
   }
   console.log(`👩‍🏭 Creating new GitHub release for tag ${tag_name}${commitMessage}...`);
   try {
-    const release = await releaser.createRelease({
+    const createdRelease = await releaser.createRelease({
       owner,
       repo,
       tag_name,
@@ -788,14 +823,18 @@ async function createRelease(
       generate_release_notes,
       make_latest,
     });
-    return await canonicalizeCreatedRelease(
+    const canonicalRelease = await canonicalizeCreatedRelease(
       releaser,
       owner,
       repo,
       tag_name,
-      release.data,
+      createdRelease.data,
       maxRetries,
     );
+    return {
+      release: canonicalRelease,
+      created: canonicalRelease.id === createdRelease.data.id,
+    };
   } catch (error) {
     // presume a race with competing matrix runs
     console.log(`⚠️ GitHub release failed with status: ${error.status}`);
@@ -830,4 +869,18 @@ async function createRelease(
     console.log(`retrying... (${maxRetries - 1} retries remaining)`);
     return release(config, releaser, maxRetries - 1);
   }
+}
+
+function isTagCreationBlockedError(error: any): boolean {
+  const errors = error?.response?.data?.errors;
+  if (!Array.isArray(errors) || error?.status !== 422) {
+    return false;
+  }
+
+  return errors.some(
+    ({ field, message }: { field?: string; message?: string }) =>
+      field === 'pre_receive' &&
+      typeof message === 'string' &&
+      message.includes('creations being restricted'),
+  );
 }
