@@ -289,6 +289,8 @@ export const upload = async (
 ): Promise<any> => {
   const [owner, repo] = config.github_repository.split('/');
   const { name, mime, size } = asset(path);
+  const releaseIdMatch = url.match(/\/releases\/(\d+)\/assets/);
+  const releaseId = releaseIdMatch ? Number(releaseIdMatch[1]) : undefined;
   const currentAsset = currentAssets.find(
     // note: GitHub renames asset filenames that have special characters, non-alphanumeric characters, and leading or trailing periods. The "List release assets" endpoint lists the renamed filenames.
     // due to this renaming we need to be mindful when we compare the file name we're uploading with a name github may already have rewritten for logical comparison
@@ -312,15 +314,23 @@ export const upload = async (
   console.log(`⬆️ Uploading ${name}...`);
   const endpoint = new URL(url);
   endpoint.searchParams.append('name', name);
-  const fh = await open(path);
+  const uploadAsset = async () => {
+    const fh = await open(path);
+    try {
+      return await releaser.uploadReleaseAsset({
+        url: endpoint.toString(),
+        size,
+        mime,
+        token: config.github_token,
+        data: fh.readableWebStream({ type: 'bytes' }),
+      });
+    } finally {
+      await fh.close();
+    }
+  };
+
   try {
-    const resp = await releaser.uploadReleaseAsset({
-      url: endpoint.toString(),
-      size,
-      mime,
-      token: config.github_token,
-      data: fh.readableWebStream({ type: 'bytes' }),
-    });
+    const resp = await uploadAsset();
     const json = resp.data;
     if (resp.status !== 201) {
       throw new Error(
@@ -347,8 +357,47 @@ export const upload = async (
     }
     console.log(`✅ Uploaded ${name}`);
     return json;
-  } finally {
-    await fh.close();
+  } catch (error: any) {
+    const errorStatus = error?.status ?? error?.response?.status;
+    const errorData = error?.response?.data;
+
+    // Handle race conditions across concurrent workflows uploading the same asset.
+    if (
+      config.input_overwrite_files !== false &&
+      errorStatus === 422 &&
+      errorData?.errors?.[0]?.code === 'already_exists' &&
+      releaseId !== undefined
+    ) {
+      console.log(`⚠️ Asset ${name} already exists (race condition), refreshing assets and retrying once...`);
+      const latestAssets = await releaser.listReleaseAssets({
+        owner,
+        repo,
+        release_id: releaseId,
+      });
+      const latestAsset = latestAssets.find(
+        ({ name: currentName }) => currentName == alignAssetName(name),
+      );
+      if (latestAsset) {
+        await releaser.deleteReleaseAsset({
+          owner,
+          repo,
+          asset_id: latestAsset.id,
+        });
+        const retryResp = await uploadAsset();
+        const retryJson = retryResp.data;
+        if (retryResp.status !== 201) {
+          throw new Error(
+            `Failed to upload release asset ${name}. received status code ${
+              retryResp.status
+            }\n${retryJson.message}\n${JSON.stringify(retryJson.errors)}`,
+          );
+        }
+        console.log(`✅ Uploaded ${name}`);
+        return retryJson;
+      }
+    }
+
+    throw error;
   }
 };
 

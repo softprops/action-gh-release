@@ -279,6 +279,58 @@ describe('github', () => {
       );
     });
 
+    it('retries upload after deleting conflicting asset on 422 already_exists race', async () => {
+      const uploadReleaseAsset = vi
+        .fn()
+        .mockRejectedValueOnce({
+          status: 422,
+          response: { data: { errors: [{ code: 'already_exists' }] } },
+        })
+        .mockResolvedValueOnce({
+          status: 201,
+          data: { id: 123, name: 'release.txt' },
+        });
+
+      const listReleaseAssets = vi.fn().mockResolvedValue([
+        { id: 99, name: 'release.txt' },
+      ]);
+      const deleteReleaseAsset = vi.fn().mockResolvedValue(undefined);
+
+      const mockReleaser: Releaser = {
+        getReleaseByTag: () => Promise.reject('Not implemented'),
+        createRelease: () => Promise.reject('Not implemented'),
+        updateRelease: () => Promise.reject('Not implemented'),
+        finalizeRelease: () => Promise.reject('Not implemented'),
+        allReleases: async function* () {
+          throw new Error('Not implemented');
+        },
+        listReleaseAssets,
+        deleteReleaseAsset,
+        uploadReleaseAsset,
+      };
+
+      const result = await upload(
+        config,
+        mockReleaser,
+        'https://uploads.github.com/repos/owner/repo/releases/1/assets',
+        '__tests__/release.txt',
+        [],
+      );
+
+      expect(result).toStrictEqual({ id: 123, name: 'release.txt' });
+      expect(listReleaseAssets).toHaveBeenCalledWith({
+        owner: 'owner',
+        repo: 'repo',
+        release_id: 1,
+      });
+      expect(deleteReleaseAsset).toHaveBeenCalledWith({
+        owner: 'owner',
+        repo: 'repo',
+        asset_id: 99,
+      });
+      expect(uploadReleaseAsset).toHaveBeenCalledTimes(2);
+    });
+
     it('handles 422 already_exists error gracefully', async () => {
       const existingRelease = {
         id: 1,
