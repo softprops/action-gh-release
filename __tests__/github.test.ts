@@ -725,7 +725,7 @@ describe('github', () => {
   });
 
   describe('upload', () => {
-    it('restores a dotfile label when GitHub normalizes the uploaded asset name', async () => {
+    it('restores the original asset metadata when GitHub normalizes the uploaded asset name', async () => {
       const tempDir = mkdtempSync(join(tmpdir(), 'gh-release-dotfile-'));
       const dotfilePath = join(tempDir, '.config');
       writeFileSync(dotfilePath, 'config');
@@ -773,13 +773,74 @@ describe('github', () => {
           owner: 'owner',
           repo: 'repo',
           asset_id: 1,
-          name: 'default.config',
+          name: '.config',
           label: '.config',
         });
         expect(result).toEqual({
           id: 1,
           name: 'default.config',
           label: '.config',
+        });
+      } finally {
+        rmSync(tempDir, { recursive: true, force: true });
+      }
+    });
+
+    it('requests the original filename back for assets with parentheses', async () => {
+      const tempDir = mkdtempSync(join(tmpdir(), 'gh-release-paren-'));
+      const assetPath = join(tempDir, 'appName(x64)_1.0.0.msi');
+      writeFileSync(assetPath, 'config');
+
+      const updateReleaseAssetSpy = vi.fn(async () => ({
+        data: {
+          id: 2,
+          name: 'appName(x64)_1.0.0.msi',
+          label: 'appName(x64)_1.0.0.msi',
+        },
+      }));
+      const releaser: Releaser = {
+        getReleaseByTag: () => Promise.reject('Not implemented'),
+        createRelease: () => Promise.reject('Not implemented'),
+        updateRelease: () => Promise.reject('Not implemented'),
+        finalizeRelease: () => Promise.reject('Not implemented'),
+        allReleases: async function* () {
+          throw new Error('Not implemented');
+        },
+        listReleaseAssets: () => Promise.reject('Not implemented'),
+        deleteReleaseAsset: () => Promise.reject('Not implemented'),
+        deleteRelease: () => Promise.reject('Not implemented'),
+        updateReleaseAsset: updateReleaseAssetSpy,
+        uploadReleaseAsset: () =>
+          Promise.resolve({
+            status: 201,
+            data: {
+              id: 2,
+              name: 'appName.x64._1.0.0.msi',
+              label: '',
+            },
+          }),
+      };
+
+      try {
+        const result = await upload(
+          config,
+          releaser,
+          'https://uploads.example.test/assets',
+          assetPath,
+          [],
+        );
+
+        expect(updateReleaseAssetSpy).toHaveBeenCalledWith({
+          owner: 'owner',
+          repo: 'repo',
+          asset_id: 2,
+          name: 'appName(x64)_1.0.0.msi',
+          label: 'appName(x64)_1.0.0.msi',
+        });
+        expect(result).toEqual({
+          id: 2,
+          name: 'appName(x64)_1.0.0.msi',
+          label: 'appName(x64)_1.0.0.msi',
         });
       } finally {
         rmSync(tempDir, { recursive: true, force: true });

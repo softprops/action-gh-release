@@ -345,19 +345,19 @@ export const upload = async (
       );
     }
     if (json.name && json.name !== name && json.id) {
-      console.log(`✏️ Restoring asset label to ${name}...`);
+      console.log(`✏️ Restoring asset name and label to ${name}...`);
       try {
         const { data } = await releaser.updateReleaseAsset({
           owner,
           repo,
           asset_id: json.id,
-          name: json.name,
+          name,
           label: name,
         });
         console.log(`✅ Uploaded ${name}`);
         return data;
       } catch (error) {
-        console.warn(`error updating release asset label for ${name}: ${error}`);
+        console.warn(`error updating release asset metadata for ${name}: ${error}`);
       }
     }
     console.log(`✅ Uploaded ${name}`);
