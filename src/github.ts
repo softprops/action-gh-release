@@ -71,6 +71,7 @@ export interface Releaser {
     repo: string;
     release_id: number;
     make_latest: 'true' | 'false' | 'legacy' | undefined;
+    discussion_category_name: string | undefined;
   }): Promise<{ data: Release }>;
 
   allReleases(params: { owner: string; repo: string }): AsyncIterable<{ data: Release[] }>;
@@ -181,6 +182,7 @@ export class GitHubReleaser implements Releaser {
     repo: string;
     release_id: number;
     make_latest: 'true' | 'false' | 'legacy' | undefined;
+    discussion_category_name: string | undefined;
   }) {
     return await this.github.rest.repos.updateRelease({
       owner: params.owner,
@@ -188,6 +190,7 @@ export class GitHubReleaser implements Releaser {
       release_id: params.release_id,
       draft: false,
       make_latest: params.make_latest,
+      discussion_category_name: params.discussion_category_name,
     });
   }
 
@@ -641,6 +644,7 @@ export const finalizeRelease = async (
       repo,
       release_id: release.id,
       make_latest: config.input_make_latest,
+      discussion_category_name: config.input_discussion_category_name,
     });
 
     return data;
