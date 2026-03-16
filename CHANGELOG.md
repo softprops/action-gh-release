@@ -1,3 +1,17 @@
+## 2.6.1
+
+`2.6.1` is a patch release focused on restoring linked discussion thread creation when
+`discussion_category_name` is set. It fixes `#764`, where the draft-first publish flow
+stopped carrying the discussion category through the final publish step.
+
+If you still hit an issue after upgrading, please open a report with the bug template and include a minimal repro or sanitized workflow snippet where possible.
+
+## What's Changed
+
+### Bug fixes 🐛
+
+* fix: preserve discussion category on publish by @chenrui333 in https://github.com/softprops/action-gh-release/pull/765
+
 ## 2.6.0
 
 `2.6.0` is a minor release centered on `previous_tag` support for `generate_release_notes`,
