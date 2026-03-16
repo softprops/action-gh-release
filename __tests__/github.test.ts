@@ -226,6 +226,64 @@ describe('github', () => {
       );
       expect(createRelease.mock.calls[0][0]).not.toHaveProperty('previous_tag_name');
     });
+
+    it('passes discussion_category_name when finalizing a release', async () => {
+      const updateRelease = vi.fn(async () => ({
+        data: {
+          id: 1,
+          upload_url: 'test',
+          html_url: 'test',
+          tag_name: 'v1.0.0',
+          name: 'v1.0.0',
+          body: 'test',
+          target_commitish: 'main',
+          draft: false,
+          prerelease: false,
+          assets: [],
+        },
+      }));
+
+      const releaser = new GitHubReleaser({
+        rest: {
+          repos: {
+            generateReleaseNotes: vi.fn(),
+            createRelease: vi.fn(),
+            updateRelease,
+            getReleaseByTag: vi.fn(),
+            listReleaseAssets: vi.fn(),
+            deleteReleaseAsset: vi.fn(),
+            deleteRelease: vi.fn(),
+            updateReleaseAsset: vi.fn(),
+            listReleases: {
+              endpoint: {
+                merge: vi.fn(),
+              },
+            },
+          },
+        },
+        paginate: {
+          iterator: vi.fn(),
+        },
+        request: vi.fn(),
+      } as any);
+
+      await releaser.finalizeRelease({
+        owner: 'owner',
+        repo: 'repo',
+        release_id: 1,
+        make_latest: 'legacy',
+        discussion_category_name: 'Announcements',
+      });
+
+      expect(updateRelease).toHaveBeenCalledWith({
+        owner: 'owner',
+        repo: 'repo',
+        release_id: 1,
+        draft: false,
+        make_latest: 'legacy',
+        discussion_category_name: 'Announcements',
+      });
+    });
   });
 
   describe('finalizeRelease input_draft behavior', () => {
@@ -309,8 +367,47 @@ describe('github', () => {
           owner: 'owner',
           repo: 'repo',
           release_id: release.id,
+          make_latest: undefined,
+          discussion_category_name: undefined,
         });
       }
+    });
+
+    it('passes discussion_category_name through when finalizing a draft release', async () => {
+      const finalizeReleaseSpy = vi.fn(async () => ({ data: finalizedRelease }));
+
+      const releaser: Releaser = {
+        getReleaseByTag: () => Promise.reject('Not implemented'),
+        createRelease: () => Promise.reject('Not implemented'),
+        updateRelease: () => Promise.reject('Not implemented'),
+        finalizeRelease: finalizeReleaseSpy,
+        allReleases: async function* () {
+          throw new Error('Not implemented');
+        },
+        listReleaseAssets: () => Promise.reject('Not implemented'),
+        deleteReleaseAsset: () => Promise.reject('Not implemented'),
+        deleteRelease: () => Promise.reject('Not implemented'),
+        updateReleaseAsset: () => Promise.reject('Not implemented'),
+        uploadReleaseAsset: () => Promise.reject('Not implemented'),
+      };
+
+      await finalizeRelease(
+        {
+          ...config,
+          input_draft: false,
+          input_discussion_category_name: 'Announcements',
+        },
+        releaser,
+        draftRelease,
+      );
+
+      expect(finalizeReleaseSpy).toHaveBeenCalledWith({
+        owner: 'owner',
+        repo: 'repo',
+        release_id: draftRelease.id,
+        make_latest: undefined,
+        discussion_category_name: 'Announcements',
+      });
     });
 
     it('deletes a newly created draft when tag creation is blocked by repository rules', async () => {
