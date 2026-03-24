@@ -33,12 +33,12 @@
     "@types/glob": "^9.0.0",
     "@types/mime-types": "^3.0.1",
     "@types/node": "^20.19.37",
-    "@vitest/coverage-v8": "^4.1.0",
-    "esbuild": "^0.27.3",
+    "@vitest/coverage-v8": "^4.1.1",
+    "esbuild": "^0.27.4",
     "prettier": "3.8.1",
     "ts-node": "^10.9.2",
     "typescript": "^5.9.3",
     "typescript-formatter": "^7.2.2",
-    "vitest": "^4.0.4"
+    "vitest": "^4.1.1"
   }
 }
