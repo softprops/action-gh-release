@@ -23,7 +23,7 @@
   "author": "softprops",
   "dependencies": {
     "@actions/core": "^3.0.0",
-    "@actions/github": "^9.0.0",
+    "@actions/github": "^9.1.0",
     "@octokit/plugin-retry": "^8.1.0",
     "@octokit/plugin-throttling": "^11.0.3",
     "glob": "^13.0.6",
@@ -32,12 +32,12 @@
   "devDependencies": {
     "@types/glob": "^9.0.0",
     "@types/mime-types": "^3.0.1",
-    "@types/node": "^20.19.37",
-    "@vitest/coverage-v8": "^4.1.0",
-    "esbuild": "^0.27.3",
-    "prettier": "3.8.1",
+    "@types/node": "^20.19.39",
+    "@vitest/coverage-v8": "^4.1.4",
+    "esbuild": "^0.28.0",
+    "prettier": "3.8.2",
     "ts-node": "^10.9.2",
-    "typescript": "^5.9.3",
+    "typescript": "^6.0.2",
     "typescript-formatter": "^7.2.2",
     "vitest": "^4.0.4"
   }
