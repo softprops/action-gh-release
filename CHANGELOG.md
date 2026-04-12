@@ -1,3 +1,18 @@
+## 3.0.0
+
+`3.0.0` is a major release that moves the action runtime from Node 20 to Node 24.
+Use `v3` on GitHub-hosted runners and self-hosted fleets that already support the
+Node 24 Actions runtime. If you still need the last Node 20-compatible line, stay on
+`v2.6.2`.
+
+## What's Changed
+
+### Other Changes 🔄
+
+* Move the action runtime and bundle target to Node 24
+* Update `@types/node` to the Node 24 line and allow future Dependabot updates
+* Keep the floating major tag on `v3`; `v2` remains pinned to the latest `2.x` release
+
 ## 2.6.2
 
 ## What's Changed
@@ -151,12 +166,6 @@ current `master` no longer reproduces the finalize-race behavior reported in `#7
 ### Exciting New Features 🎉
 
 * feat(action): respect working_directory for files globs by @stephenway in https://github.com/softprops/action-gh-release/pull/667
-
-### Other Changes 🔄
-
-* Move action runtime to node24 and require Node >=24
-* Update @types/node to ^22 for Node 24 compatibility
-* Enable Dependabot updates for @types/node >=22
 
 ## 2.3.4
 

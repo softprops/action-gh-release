@@ -1,6 +1,6 @@
 {
   "name": "action-gh-release",
-  "version": "2.6.2",
+  "version": "3.0.0",
   "private": true,
   "description": "GitHub Action for creating GitHub Releases",
   "main": "lib/main.js",
@@ -11,7 +11,7 @@
     "test": "vitest --coverage",
     "fmt": "prettier --write \"src/**/*.ts\" \"__tests__/**/*.ts\"",
     "fmtcheck": "prettier --check \"src/**/*.ts\" \"__tests__/**/*.ts\"",
-    "updatetag": "git tag -d v2 && git push origin :v2 && git tag -a v2 -m '' && git push origin v2"
+    "updatetag": "git tag -d v3 >/dev/null 2>&1 || true; git push origin :v3 >/dev/null 2>&1 || true; git tag -a v3 -m '' && git push origin v3"
   },
   "repository": {
     "type": "git",
