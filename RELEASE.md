@@ -13,6 +13,7 @@ Use this checklist when cutting a new `action-gh-release` release.
 1. Update [package.json](package.json) to the new version.
 2. Add the new entry at the top of [CHANGELOG.md](CHANGELOG.md).
    - Summarize the release in 1 short paragraph.
+   - If the summary mentions issues, use plain `#123` references or full issue links; do not wrap issue numbers like `#123` in backticks.
    - Prefer user-facing fixes and features over internal churn.
    - Keep the merged PR list aligned with `.github/release.yml` categories.
 3. Run `npm i` to refresh [package-lock.json](package-lock.json).
