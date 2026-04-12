@@ -35,7 +35,7 @@
   "devDependencies": {
     "@types/glob": "^9.0.0",
     "@types/mime-types": "^3.0.1",
-    "@types/node": "^24",
+    "@types/node": "^25",
     "@vitest/coverage-v8": "^4.1.4",
     "esbuild": "^0.28.0",
     "prettier": "3.8.2",
