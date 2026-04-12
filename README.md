@@ -39,6 +39,9 @@ Typically usage of this action involves adding a step to a build that
 is gated pushes to git tags. You may find `step.if` field helpful in accomplishing this
 as it maximizes the reuse value of your workflow for non-tag pushes.
 
+`v3` requires a GitHub Actions runtime that supports Node 24. If you still need the
+last Node 20-compatible line, stay on `v2.6.2`.
+
 Below is a simple example of `step.if` tag gating
 
 ```yaml
@@ -53,7 +56,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v6
       - name: Release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         if: github.ref_type == 'tag'
 ```
 
@@ -74,7 +77,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v6
       - name: Release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
 ```
 
 ### ⬆️ Uploading release assets
@@ -105,7 +108,7 @@ jobs:
       - name: Test
         run: cat Release.txt
       - name: Release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         if: github.ref_type == 'tag'
         with:
           files: Release.txt
@@ -129,7 +132,7 @@ jobs:
       - name: Test
         run: cat Release.txt
       - name: Release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         if: github.ref_type == 'tag'
         with:
           files: |
@@ -146,7 +149,7 @@ and keep the `files` patterns relative to that directory.
 
 ```yaml
 - name: Release
-  uses: softprops/action-gh-release@v2
+  uses: softprops/action-gh-release@v3
   if: github.ref_type == 'tag'
   with:
     working_directory: dist
@@ -175,7 +178,7 @@ jobs:
       - name: Generate Changelog
         run: echo "# Good things have arrived" > ${{ github.workspace }}-CHANGELOG.txt
       - name: Release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         if: github.ref_type == 'tag'
         with:
           body_path: ${{ github.workspace }}-CHANGELOG.txt
@@ -193,7 +196,7 @@ comparison range does not match the release series you want to publish.
 
 ```yaml
 - name: Release
-  uses: softprops/action-gh-release@v2
+  uses: softprops/action-gh-release@v3
   with:
     tag_name: stage-2026-03-15
     target_commitish: ${{ github.sha }}

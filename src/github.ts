@@ -367,7 +367,7 @@ export const upload = async (
         size,
         mime,
         token: config.github_token,
-        data: fh.readableWebStream({ type: 'bytes' }),
+        data: fh.readableWebStream(),
       });
     } finally {
       await fh.close();

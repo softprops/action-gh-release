@@ -22,13 +22,14 @@ Use this checklist when cutting a new `action-gh-release` release.
    - `npm run build`
    - `npm test`
 5. Commit the release prep.
-   - Use a plain release commit message like `release 2.5.4`.
+   - Use a plain release commit message like `release 3.0.0`.
 6. Create the annotated tag for the release commit.
-   - Example: `git tag -a v2.5.4 -m "v2.5.4"`
+   - Example: `git tag -a v3.0.0 -m "v3.0.0"`
 7. Push the commit and tag.
-   - Example: `git push origin master && git push origin v2.5.4`
+   - Example: `git push origin master && git push origin v3.0.0`
 8. Move the floating major tag to the new release tag.
-   - For the current major line, either run `npm run updatetag` or update the script first if the major ever changes.
+   - For the current major line, run `npm run updatetag` to move `v3`.
+   - Keep `v2` pinned to the latest `2.x` release for consumers that still need the Node 20 runtime.
    - Verify the floating tag points at the same commit as the new full tag.
 9. Create the GitHub release from the new tag.
    - Prefer the release body from [CHANGELOG.md](CHANGELOG.md), then let GitHub append generated notes only if they add value.

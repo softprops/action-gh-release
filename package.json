@@ -1,17 +1,17 @@
 {
   "name": "action-gh-release",
-  "version": "2.6.2",
+  "version": "3.0.0",
   "private": true,
   "description": "GitHub Action for creating GitHub Releases",
   "main": "lib/main.js",
   "scripts": {
-    "build": "esbuild src/main.ts --bundle --platform=node --format=cjs --target=node20 --outfile=dist/index.js --minify",
-    "build-debug": "esbuild src/main.ts --bundle --platform=node --format=cjs --target=node20 --outfile=dist/index.js --sourcemap --keep-names",
+    "build": "esbuild src/main.ts --bundle --platform=node --format=cjs --target=node24 --outfile=dist/index.js --minify",
+    "build-debug": "esbuild src/main.ts --bundle --platform=node --format=cjs --target=node24 --outfile=dist/index.js --sourcemap --keep-names",
     "typecheck": "tsc --noEmit",
     "test": "vitest --coverage",
     "fmt": "prettier --write \"src/**/*.ts\" \"__tests__/**/*.ts\"",
     "fmtcheck": "prettier --check \"src/**/*.ts\" \"__tests__/**/*.ts\"",
-    "updatetag": "git tag -d v2 && git push origin :v2 && git tag -a v2 -m '' && git push origin v2"
+    "updatetag": "git tag -d v3 >/dev/null 2>&1 || true; git push origin :v3 >/dev/null 2>&1 || true; git tag -a v3 -m '' && git push origin v3"
   },
   "repository": {
     "type": "git",
@@ -21,6 +21,9 @@
     "actions"
   ],
   "author": "softprops",
+  "engines": {
+    "node": ">=24"
+  },
   "dependencies": {
     "@actions/core": "^3.0.0",
     "@actions/github": "^9.1.0",
@@ -32,7 +35,7 @@
   "devDependencies": {
     "@types/glob": "^9.0.0",
     "@types/mime-types": "^3.0.1",
-    "@types/node": "^20.19.39",
+    "@types/node": "^24",
     "@vitest/coverage-v8": "^4.1.4",
     "esbuild": "^0.28.0",
     "prettier": "3.8.2",
