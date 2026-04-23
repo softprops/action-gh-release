@@ -3,3 +3,4 @@ __tests__/runner/*
 # but its recommended not to check these in https://github.com/actions/toolkit/blob/master/docs/action-versioning.md#recommendations
 node_modules
 coverage
+.env

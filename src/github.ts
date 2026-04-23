@@ -55,6 +55,8 @@ type ReleaseMutationParams = {
 };
 
 export interface Releaser {
+  getLatestRelease(params: { owner: string; repo: string }): Promise<{ data: Release }>;
+
   getReleaseByTag(params: { owner: string; repo: string; tag: string }): Promise<{ data: Release }>;
 
   createRelease(params: ReleaseMutationParams): Promise<{ data: Release }>;
@@ -107,6 +109,10 @@ export class GitHubReleaser implements Releaser {
   github: GitHub;
   constructor(github: GitHub) {
     this.github = github;
+  }
+
+  getLatestRelease(params: { owner: string; repo: string }): Promise<{ data: Release }> {
+    return this.github.rest.repos.getLatestRelease(params);
   }
 
   getReleaseByTag(params: {
@@ -506,7 +512,7 @@ export const release = async (
   }
 
   const [owner, repo] = config.github_repository.split('/');
-  const tag =
+  let tag =
     normalizeTagName(config.input_tag_name) ||
     (isTag(config.github_ref) ? config.github_ref.replace('refs/tags/', '') : '');
 
@@ -518,7 +524,15 @@ export const release = async (
     console.log(`📝 Generating release notes using previous tag ${previous_tag_name}`);
   }
   try {
-    const _release: Release | undefined = await findTagFromReleases(releaser, owner, repo, tag);
+    let _release: Release | undefined;
+    if (config.input_latest) {
+      _release = await findLatestRelease(releaser, owner, repo);
+      if (_release !== undefined) {
+        tag = _release.tag_name;
+      }
+    } else {
+      _release = await findTagFromReleases(releaser, owner, repo, tag);
+    }
 
     if (_release === undefined) {
       return await createRelease(
@@ -716,6 +730,31 @@ export const listReleaseAssets = async (
   }
 };
 
+/**
+ * Find the latest release.
+ *
+ * @param releaser - The GitHub API wrapper for release operations
+ * @param owner - The owner of the repository
+ * @param repo - The name of the repository
+ * @returns The release with the given tag name, or undefined if no release with that tag name is found
+ */
+export async function findLatestRelease(
+  releaser: Releaser,
+  owner: string,
+  repo: string,
+): Promise<Release | undefined> {
+  try {
+    const { data: release } = await releaser.getLatestRelease({ owner, repo });
+    return release;
+  } catch (error) {
+    // Release not found (404) or other error - return undefined to allow creation
+    if (error.status === 404) {
+      return undefined;
+    }
+    // Re-throw unexpected errors
+    throw error;
+  }
+}
 /**
  * Finds a release by tag name.
  *
