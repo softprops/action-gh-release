@@ -26,6 +26,7 @@ export interface Config {
   input_previous_tag?: string;
   input_append_body?: boolean;
   input_make_latest: 'true' | 'false' | 'legacy' | undefined;
+  input_latest?: boolean;
 }
 
 export const uploadUrl = (url: string): string => {
@@ -118,6 +119,7 @@ export const parseConfig = (env: Env): Config => {
     input_previous_tag: env.INPUT_PREVIOUS_TAG?.trim() || undefined,
     input_append_body: env.INPUT_APPEND_BODY == 'true',
     input_make_latest: parseMakeLatest(env.INPUT_MAKE_LATEST),
+    input_latest: env.INPUT_LATEST == 'true',
   };
 };
 
