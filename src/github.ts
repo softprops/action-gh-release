@@ -579,7 +579,7 @@ export const release = async (
       target_commitish,
       name,
       body,
-      draft: existingRelease.draft,
+      draft: config.input_draft !== undefined ? config.input_draft : existingRelease.draft,
       prerelease,
       discussion_category_name,
       generate_release_notes,
