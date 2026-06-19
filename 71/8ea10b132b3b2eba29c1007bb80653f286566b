@@ -1,0 +1,28 @@
+CHANGELOG.md
+  s_377188d2273de0::t_24268e4b7cbe2b 1-4
+package.json
+  s_377188d2273de0::t_caa2d6440864c6 3
+package-lock.json
+  s_377188d2273de0::t_8524ccfdb0fb5c 3,9
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.8",
+  "base_commit_sha": "718ea10b132b3b2eba29c1007bb80653f286566b",
+  "prompts": {},
+  "humans": {
+    "h_9df9c32c3f321d": {
+      "author": "Rui Chen <rui@chenrui.dev>"
+    }
+  },
+  "sessions": {
+    "s_377188d2273de0": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019ee040-f360-74e3-88ed-33151d4b5bd5",
+        "model": "gpt-5.5"
+      },
+      "human_author": "Rui Chen <rui@chenrui.dev>"
+    }
+  }
+}
