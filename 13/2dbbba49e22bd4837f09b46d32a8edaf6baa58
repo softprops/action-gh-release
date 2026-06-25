@@ -1,0 +1,19 @@
+.tool-versions
+  s_2d53228e57e12e::t_e12864126b4113 1
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.1",
+  "base_commit_sha": "132dbbba49e22bd4837f09b46d32a8edaf6baa58",
+  "prompts": {},
+  "sessions": {
+    "s_2d53228e57e12e": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019eff8e-8b46-7e52-9908-6a353f161305",
+        "model": "gpt-5.5"
+      },
+      "human_author": "Rui Chen <rui@chenrui.dev>"
+    }
+  }
+}
