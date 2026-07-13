@@ -1,0 +1,32 @@
+CHANGELOG.md
+  s_781304debb879a::t_c435a3cfb4e2f6 41-42,50,54-55
+  s_b2ce6710e92514::t_7fefa65a545ec2 56
+RELEASE.md
+  s_781304debb879a::t_c435a3cfb4e2f6 39
+README.md
+  s_781304debb879a::t_c435a3cfb4e2f6 42-46
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.12",
+  "base_commit_sha": "91825b986696ecdb4910d68c3bfe2df2ac9a0599",
+  "prompts": {},
+  "sessions": {
+    "s_781304debb879a": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019f5904-3fac-7822-8d15-c1beb0507927",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "Rui Chen <rui@chenrui.dev>"
+    },
+    "s_b2ce6710e92514": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019f52de-e693-74d2-aefb-e8d96bda2cf9",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "Rui Chen <rui@chenrui.dev>"
+    }
+  }
+}
