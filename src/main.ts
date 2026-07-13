@@ -5,10 +5,15 @@ import { isTag, parseConfig, paths, unmatchedPatterns, uploadUrl } from './util'
 
 import { env } from 'process';
 
-async function run() {
+export async function run() {
   try {
     const config = parseConfig(env);
-    if (!config.input_tag_name && !isTag(config.github_ref) && !config.input_draft) {
+    if (
+      !config.input_latest &&
+      !config.input_tag_name &&
+      !isTag(config.github_ref) &&
+      !config.input_draft
+    ) {
       throw new Error(`⚠️ GitHub Releases requires a tag`);
     }
     if (config.input_files) {
@@ -110,5 +115,3 @@ async function run() {
     setFailed(error.message);
   }
 }
-
-run();
