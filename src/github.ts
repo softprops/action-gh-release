@@ -899,14 +899,19 @@ async function canonicalizeCreatedRelease(
         );
       }
 
-      await cleanupCreatedDuplicateDraftRelease(
-        releaser,
-        owner,
-        repo,
-        tag,
-        canonicalRelease.id,
-        createdRelease,
+      const refreshedCreatedRelease = recentReleases.find(
+        (release) => release.id === createdRelease.id,
       );
+      if (refreshedCreatedRelease) {
+        await cleanupCreatedDuplicateDraftRelease(
+          releaser,
+          owner,
+          repo,
+          tag,
+          canonicalRelease.id,
+          refreshedCreatedRelease,
+        );
+      }
       return canonicalRelease;
     }
 

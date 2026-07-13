@@ -1357,7 +1357,59 @@ describe('github', () => {
       });
     });
 
-    it('deletes the just-created duplicate draft even if recent release listing misses it', async () => {
+    it.each([
+      ['gains assets', { assets: [{ id: 9, name: 'concurrent.zip' }] }],
+      ['is published', { draft: false }],
+    ])('does not delete its created release when it %s concurrently', async (_name, patch) => {
+      const canonicalRelease: Release = {
+        id: 1,
+        upload_url: 'canonical-upload',
+        html_url: 'canonical-html',
+        tag_name: 'v1.0.0',
+        name: 'canonical',
+        body: 'test',
+        target_commitish: 'main',
+        draft: true,
+        prerelease: false,
+        assets: [],
+      };
+      const createdRelease: Release = {
+        ...canonicalRelease,
+        id: 2,
+        name: 'created duplicate',
+      };
+      const refreshedCreatedRelease: Release = { ...createdRelease, ...patch };
+      const releaseByTag = refreshedCreatedRelease.draft
+        ? canonicalRelease
+        : refreshedCreatedRelease;
+      let created = false;
+      const deleteRelease = vi.fn().mockResolvedValue(undefined);
+      const releaser = createReleaser({
+        getReleaseByTag: vi.fn(() =>
+          created ? Promise.resolve({ data: releaseByTag }) : Promise.reject({ status: 404 }),
+        ),
+        createRelease: vi.fn(async () => {
+          created = true;
+          return { data: createdRelease };
+        }),
+        allReleases: async function* () {
+          yield {
+            data: created ? [refreshedCreatedRelease, canonicalRelease] : [],
+          };
+        },
+        deleteRelease,
+      });
+
+      const result = await release(config, releaser, 1);
+
+      expect(result).toEqual({
+        release: releaseByTag,
+        created: releaseByTag.id === createdRelease.id,
+      });
+      expect(deleteRelease).not.toHaveBeenCalled();
+    });
+
+    it('does not delete the just-created duplicate when refreshed state is unavailable', async () => {
       const canonicalRelease: Release = {
         id: 1,
         upload_url: 'canonical-upload',
@@ -1413,11 +1465,7 @@ describe('github', () => {
 
       assert.equal(result.release.id, canonicalRelease.id);
       assert.equal(result.created, false);
-      expect(deleteReleaseSpy).toHaveBeenCalledWith({
-        owner: 'owner',
-        repo: 'repo',
-        release_id: duplicateRelease.id,
-      });
+      expect(deleteReleaseSpy).not.toHaveBeenCalled();
     });
   });
 
