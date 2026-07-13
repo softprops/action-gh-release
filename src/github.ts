@@ -531,23 +531,31 @@ export const release = async (
   if (generate_release_notes && previous_tag_name) {
     console.log(`📝 Generating release notes using previous tag ${previous_tag_name}`);
   }
+  let _release: Release | undefined;
   try {
-    const _release: Release | undefined = await findTagFromReleases(releaser, owner, repo, tag);
+    _release = await findTagFromReleases(releaser, owner, repo, tag, maxRetries);
+  } catch (error) {
+    console.log(
+      `⚠️ Unexpected error fetching GitHub release for tag ${config.github_ref}: ${error}`,
+    );
+    throw error;
+  }
 
-    if (_release === undefined) {
-      return await createRelease(
-        tag,
-        config,
-        releaser,
-        owner,
-        repo,
-        discussion_category_name,
-        generate_release_notes,
-        maxRetries,
-        previous_tag_name,
-      );
-    }
+  if (_release === undefined) {
+    return await createRelease(
+      tag,
+      config,
+      releaser,
+      owner,
+      repo,
+      discussion_category_name,
+      generate_release_notes,
+      maxRetries,
+      previous_tag_name,
+    );
+  }
 
+  try {
     let existingRelease: Release = _release!;
     console.log(`Found release ${existingRelease.name} (with id=${existingRelease.id})`);
 
@@ -593,7 +601,7 @@ export const release = async (
       target_commitish,
       name,
       body,
-      draft: config.input_draft !== undefined ? config.input_draft : existingRelease.draft,
+      draft: existingRelease.draft,
       prerelease,
       discussion_category_name,
       generate_release_notes,
@@ -733,14 +741,15 @@ export const listReleaseAssets = async (
 /**
  * Finds a release by tag name.
  *
- * Uses the direct getReleaseByTag API for O(1) lookup instead of iterating
- * through all releases. This also avoids GitHub's API pagination limit of
- * 10000 results which would cause failures for repositories with many releases.
+ * Uses the direct getReleaseByTag API for O(1) lookup. Because GitHub does not
+ * expose draft releases through that endpoint, a 404 falls back to paginated
+ * release listing and briefly retries in case the listing is not yet consistent.
  *
  * @param releaser - The GitHub API wrapper for release operations
  * @param owner - The owner of the repository
  * @param repo - The name of the repository
  * @param tag - The tag name to search for
+ * @param listingAttempts - The maximum number of listing attempts after a direct 404
  * @returns The release with the given tag name, or undefined if no release with that tag name is found
  */
 export async function findTagFromReleases(
@@ -748,18 +757,42 @@ export async function findTagFromReleases(
   owner: string,
   repo: string,
   tag: string,
+  listingAttempts: number = 1,
 ): Promise<Release | undefined> {
   try {
     const { data: release } = await releaser.getReleaseByTag({ owner, repo, tag });
     return release;
   } catch (error) {
-    // Release not found (404) or other error - return undefined to allow creation
-    if (error.status === 404) {
-      return undefined;
+    if (error.status !== 404) {
+      throw error;
     }
-    // Re-throw unexpected errors
-    throw error;
   }
+
+  if (listingAttempts <= 0) {
+    return undefined;
+  }
+
+  const attempts = Math.max(1, listingAttempts);
+  for (let attempt = 0; attempt < attempts; attempt += 1) {
+    let pages = 0;
+    for await (const page of releaser.allReleases({ owner, repo })) {
+      const match = page.data.find((release) => release.tag_name === tag);
+      if (match) {
+        return match;
+      }
+
+      pages += 1;
+      if (attempt > 0 && pages >= RECENT_RELEASE_SCAN_PAGES) {
+        break;
+      }
+    }
+
+    if (attempt < attempts - 1) {
+      await sleep(CREATED_RELEASE_DISCOVERY_RETRY_DELAY_MS);
+    }
+  }
+
+  return undefined;
 }
 
 const CREATED_RELEASE_DISCOVERY_RETRY_DELAY_MS = 1000;
@@ -854,7 +887,7 @@ async function canonicalizeCreatedRelease(
   for (let attempt = 1; attempt <= attempts; attempt += 1) {
     let releaseByTag: Release | undefined;
     try {
-      releaseByTag = await findTagFromReleases(releaser, owner, repo, tag);
+      releaseByTag = await findTagFromReleases(releaser, owner, repo, tag, 0);
     } catch (error) {
       console.warn(`error reloading release for tag ${tag}: ${error}`);
     }

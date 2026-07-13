@@ -256,6 +256,52 @@ describe('run', () => {
     await result;
   });
 
+  it('keeps an existing draft unpublished until its upload completes', async () => {
+    config = {
+      ...config,
+      input_draft: false,
+      input_prerelease: true,
+      input_files: ['asset.zip'],
+    };
+    mocks.release.mockResolvedValue({ release: initialRelease, created: false });
+    mocks.paths.mockReturnValue(['asset.zip']);
+    const pendingUpload = deferred<{ id: number }>();
+    mocks.upload.mockReturnValue(pendingUpload.promise);
+
+    const result = run();
+    await Promise.resolve();
+
+    expect(mocks.upload).toHaveBeenCalledOnce();
+    expect(mocks.finalizeRelease).not.toHaveBeenCalled();
+
+    pendingUpload.resolve({ id: 7 });
+    await result;
+
+    expect(mocks.finalizeRelease).toHaveBeenCalledWith(
+      config,
+      mocks.releaser,
+      initialRelease,
+      false,
+    );
+  });
+
+  it('leaves an existing draft recoverable when an upload fails', async () => {
+    config = {
+      ...config,
+      input_draft: false,
+      input_prerelease: true,
+      input_files: ['asset.zip'],
+    };
+    mocks.release.mockResolvedValue({ release: initialRelease, created: false });
+    mocks.paths.mockReturnValue(['asset.zip']);
+    mocks.upload.mockRejectedValue(new Error('upload failed'));
+
+    await run();
+
+    expect(mocks.finalizeRelease).not.toHaveBeenCalled();
+    expect(mocks.setFailed).toHaveBeenCalledWith('upload failed');
+  });
+
   it('finalizes after uploads and outputs only newly uploaded assets without uploader data', async () => {
     config = { ...config, input_files: ['one.zip', 'skipped.zip', 'two.zip'] };
     mocks.paths.mockReturnValue(['one.zip', 'skipped.zip', 'two.zip']);

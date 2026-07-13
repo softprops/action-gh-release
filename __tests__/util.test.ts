@@ -234,6 +234,10 @@ describe('util', () => {
       );
     });
 
+    it('treats an empty draft input as omitted', () => {
+      assert.strictEqual(parseConfig({ INPUT_DRAFT: '' }).input_draft, undefined);
+    });
+
     it('parses basic config with commitish', () => {
       assert.deepStrictEqual(
         parseConfig({
