@@ -858,6 +858,45 @@ describe('github', () => {
       );
     });
 
+    it('classifies a draft-listing 404 as a repository access failure', async () => {
+      const listingError = {
+        status: 404,
+        message: 'Not Found - list-releases',
+      };
+      const createRelease = vi.fn();
+      const releaser = createReleaser({
+        getReleaseByTag: vi.fn().mockRejectedValue({ status: 404 }),
+        allReleases: async function* () {
+          throw listingError;
+        },
+        createRelease,
+      });
+
+      const thrown = await release(
+        {
+          ...config,
+          github_repository: 'remote-owner/release-repo',
+          input_discussion_category_name: undefined,
+        },
+        releaser,
+        1,
+      ).catch((error) => error);
+
+      expect(thrown).toMatchObject({
+        name: 'ReleaseAccessError',
+        status: 404,
+        cause: listingError,
+      });
+      expect(thrown.message).toContain('GitHub returned 404 while checking existing releases');
+      expect(thrown.message).toContain('remote-owner/release-repo');
+      expect(thrown.message).toContain('the token can access it');
+      expect(thrown.message).toContain('fine-grained PAT');
+      expect(thrown.message).toContain('Contents: write');
+      expect(thrown.message).toContain('GitHub response: Not Found - list-releases');
+      expect(thrown.message).not.toContain('discussion category mismatch');
+      expect(createRelease).not.toHaveBeenCalled();
+    });
+
     it('reports a useful create error without assuming response data exists', async () => {
       const releaseError = {
         status: 403,

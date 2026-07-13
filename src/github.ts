@@ -77,19 +77,33 @@ class ReleaseCreationError extends Error {
   }
 }
 
+class ReleaseAccessError extends Error {
+  readonly status = 404;
+
+  constructor(message: string, cause: unknown) {
+    super(message, { cause });
+    this.name = 'ReleaseAccessError';
+  }
+}
+
+const repositoryAccessGuidance = (owner: string, repo: string): string =>
+  `Verify that ${owner}/${repo} exists under the expected owner, the token can access it, the repository is selected when using a fine-grained PAT, and the token has Contents: write permission.`;
+
 const releaseCreation404Message = (
   owner: string,
   repo: string,
   discussionCategory: string | undefined,
   error: unknown,
 ): string => {
-  const accessGuidance = `Verify that ${owner}/${repo} exists under the expected owner, the token can access it, the repository is selected when using a fine-grained PAT, and the token has Contents: write permission.`;
   const discussionGuidance = discussionCategory
     ? ` Also verify that Discussions and the requested category "${discussionCategory}" are enabled.`
     : '';
 
-  return `GitHub returned 404 while creating the release. ${accessGuidance}${discussionGuidance} GitHub response: ${errorMessage(error)}`;
+  return `GitHub returned 404 while creating the release. ${repositoryAccessGuidance(owner, repo)}${discussionGuidance} GitHub response: ${errorMessage(error)}`;
 };
+
+const releaseLookup404Message = (owner: string, repo: string, error: unknown): string =>
+  `GitHub returned 404 while checking existing releases. ${repositoryAccessGuidance(owner, repo)} GitHub response: ${errorMessage(error)}`;
 
 export interface Releaser {
   getReleaseByTag(params: { owner: string; repo: string; tag: string }): Promise<{ data: Release }>;
@@ -589,6 +603,11 @@ export const release = async (
   try {
     _release = await findTagFromReleases(releaser, owner, repo, tag, maxRetries);
   } catch (error) {
+    if (error.status === 404) {
+      const diagnostic = releaseLookup404Message(owner, repo, error);
+      console.log(`⚠️ ${diagnostic}`);
+      throw new ReleaseAccessError(diagnostic, error);
+    }
     console.log(
       `⚠️ Unexpected error fetching GitHub release for tag ${config.github_ref}: ${error}`,
     );
