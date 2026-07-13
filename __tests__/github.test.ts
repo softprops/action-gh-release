@@ -793,6 +793,71 @@ describe('github', () => {
   });
 
   describe('error handling', () => {
+    it.each([
+      {
+        name: 'a remote repository without a discussion category',
+        repository: 'remote-owner/release-repo',
+        category: undefined,
+      },
+      {
+        name: 'the current repository without a discussion category',
+        repository: 'owner/repo',
+        category: undefined,
+      },
+      {
+        name: 'a repository with a discussion category',
+        repository: 'owner/repo',
+        category: 'Announcements',
+      },
+    ])('classifies a create-release 404 for $name without retrying', async (testCase) => {
+      const releaseError = {
+        status: 404,
+        message: 'Not Found - create-a-release',
+      };
+      const log = vi.spyOn(console, 'log').mockImplementation(() => undefined);
+      const createRelease = vi.fn().mockRejectedValue(releaseError);
+      const releaser = createReleaser({
+        getReleaseByTag: vi.fn().mockRejectedValue({ status: 404 }),
+        createRelease,
+        allReleases: async function* () {
+          yield { data: [] };
+        },
+      });
+
+      const thrown = await release(
+        {
+          ...config,
+          github_repository: testCase.repository,
+          input_discussion_category_name: testCase.category,
+        },
+        releaser,
+        1,
+      ).catch((error) => error);
+
+      expect(thrown).toMatchObject({
+        name: 'ReleaseCreationError',
+        status: 404,
+        cause: releaseError,
+      });
+      expect(thrown.message).toContain(
+        `GitHub returned 404 while creating the release. Verify that ${testCase.repository} exists under the expected owner`,
+      );
+      expect(thrown.message).toContain('the token can access it');
+      expect(thrown.message).toContain('fine-grained PAT');
+      expect(thrown.message).toContain('Contents: write');
+      expect(thrown.message).toContain('GitHub response: Not Found - create-a-release');
+      if (testCase.category) {
+        expect(thrown.message).toContain('Discussions and the requested category "Announcements"');
+      } else {
+        expect(thrown.message).not.toContain('discussion category mismatch');
+        expect(thrown.message).not.toContain('requested category');
+      }
+      expect(createRelease).toHaveBeenCalledOnce();
+      expect(log).not.toHaveBeenCalledWith(
+        expect.stringContaining('Unexpected error fetching GitHub release'),
+      );
+    });
+
     it('reports a useful create error without assuming response data exists', async () => {
       const releaseError = {
         status: 403,

@@ -68,6 +68,29 @@ type ReleaseMutationParams = {
   previous_tag_name?: string;
 };
 
+class ReleaseCreationError extends Error {
+  readonly status = 404;
+
+  constructor(message: string, cause: unknown) {
+    super(message, { cause });
+    this.name = 'ReleaseCreationError';
+  }
+}
+
+const releaseCreation404Message = (
+  owner: string,
+  repo: string,
+  discussionCategory: string | undefined,
+  error: unknown,
+): string => {
+  const accessGuidance = `Verify that ${owner}/${repo} exists under the expected owner, the token can access it, the repository is selected when using a fine-grained PAT, and the token has Contents: write permission.`;
+  const discussionGuidance = discussionCategory
+    ? ` Also verify that Discussions and the requested category "${discussionCategory}" are enabled.`
+    : '';
+
+  return `GitHub returned 404 while creating the release. ${accessGuidance}${discussionGuidance} GitHub response: ${errorMessage(error)}`;
+};
+
 export interface Releaser {
   getReleaseByTag(params: { owner: string; repo: string; tag: string }): Promise<{ data: Release }>;
 
@@ -644,6 +667,9 @@ export const release = async (
       created: false,
     };
   } catch (error) {
+    if (error instanceof ReleaseCreationError) {
+      throw error;
+    }
     if (error.status !== 404) {
       console.log(
         `⚠️ Unexpected error fetching GitHub release for tag ${config.github_ref}: ${error}`,
@@ -1029,8 +1055,9 @@ async function createRelease(
         throw error;
 
       case 404:
-        console.log('Skip retry - discussion category mismatch');
-        throw error;
+        const diagnostic = releaseCreation404Message(owner, repo, discussion_category_name, error);
+        console.log(`Skip retry — ${diagnostic}`);
+        throw new ReleaseCreationError(diagnostic, error);
 
       case 422:
         // Check if this is a race condition with "already_exists" error
