@@ -1,0 +1,23 @@
+CHANGELOG.md
+  s_781304debb879a::t_3261f7fa6ad802 1-32
+package-lock.json
+  s_781304debb879a::t_77c73a41d659a0 3,9
+package.json
+  s_781304debb879a::t_a61c2a8aefa1df 3
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.12",
+  "base_commit_sha": "2d4ccee877d3a6ee7dd6de5b770044cb3ad2d54d",
+  "prompts": {},
+  "sessions": {
+    "s_781304debb879a": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019f5904-3fac-7822-8d15-c1beb0507927",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "Rui Chen <rui@chenrui.dev>"
+    }
+  }
+}
