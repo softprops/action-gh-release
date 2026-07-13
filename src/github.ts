@@ -778,14 +778,6 @@ export async function findTagFromReleases(
     const recentReleases = await recentReleasesByTag(releaser, owner, repo, tag);
     const canonicalRelease = pickCanonicalRelease(recentReleases, undefined);
     if (canonicalRelease) {
-      await cleanupDuplicateDraftReleases(
-        releaser,
-        owner,
-        repo,
-        tag,
-        canonicalRelease.id,
-        recentReleases,
-      );
       return canonicalRelease;
     }
 
@@ -846,33 +838,31 @@ function pickCanonicalRelease(
   })[0];
 }
 
-async function cleanupDuplicateDraftReleases(
+async function cleanupCreatedDuplicateDraftRelease(
   releaser: Releaser,
   owner: string,
   repo: string,
   tag: string,
   canonicalReleaseId: number,
-  releases: Release[],
+  createdRelease: Release,
 ): Promise<void> {
-  const uniqueReleases = Array.from(
-    new Map(releases.map((release) => [release.id, release])).values(),
-  );
+  if (
+    createdRelease.id === canonicalReleaseId ||
+    !createdRelease.draft ||
+    createdRelease.assets.length > 0
+  ) {
+    return;
+  }
 
-  for (const duplicate of uniqueReleases) {
-    if (duplicate.id === canonicalReleaseId || !duplicate.draft || duplicate.assets.length > 0) {
-      continue;
-    }
-
-    try {
-      console.log(`🧹 Removing duplicate draft release ${duplicate.id} for tag ${tag}...`);
-      await releaser.deleteRelease({
-        owner,
-        repo,
-        release_id: duplicate.id,
-      });
-    } catch (error) {
-      console.warn(`error deleting duplicate release ${duplicate.id}: ${error}`);
-    }
+  try {
+    console.log(`🧹 Removing duplicate draft release ${createdRelease.id} for tag ${tag}...`);
+    await releaser.deleteRelease({
+      owner,
+      repo,
+      release_id: createdRelease.id,
+    });
+  } catch (error) {
+    console.warn(`error deleting duplicate release ${createdRelease.id}: ${error}`);
   }
 }
 
@@ -909,10 +899,14 @@ async function canonicalizeCreatedRelease(
         );
       }
 
-      await cleanupDuplicateDraftReleases(releaser, owner, repo, tag, canonicalRelease.id, [
+      await cleanupCreatedDuplicateDraftRelease(
+        releaser,
+        owner,
+        repo,
+        tag,
+        canonicalRelease.id,
         createdRelease,
-        ...recentReleases,
-      ]);
+      );
       return canonicalRelease;
     }
 

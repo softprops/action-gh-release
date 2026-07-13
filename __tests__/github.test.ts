@@ -168,7 +168,7 @@ describe('github', () => {
       expect(pagesRead).toBe(2);
     });
 
-    it('preserves the canonical draft when a newer duplicate appears first', async () => {
+    it('selects the canonical draft without deleting a pre-existing duplicate', async () => {
       const canonicalDraft: Release = {
         ...mockRelease,
         id: 1,
@@ -178,6 +178,8 @@ describe('github', () => {
       const duplicateDraft: Release = {
         ...canonicalDraft,
         id: 2,
+        name: 'manually authored draft',
+        body: 'notes that must not be deleted',
         assets: [],
       };
       const deleteRelease = vi.fn().mockResolvedValue(undefined);
@@ -192,11 +194,7 @@ describe('github', () => {
       const result = await findTagFromReleases(releaser, owner, repo, canonicalDraft.tag_name);
 
       expect(result).toBe(canonicalDraft);
-      expect(deleteRelease).toHaveBeenCalledWith({
-        owner,
-        repo,
-        release_id: duplicateDraft.id,
-      });
+      expect(deleteRelease).not.toHaveBeenCalled();
     });
 
     it('retries draft discovery when GitHub release listing is briefly stale', async () => {
@@ -1259,6 +1257,47 @@ describe('github', () => {
         repo: 'repo',
         release_id: duplicateRelease.id,
       });
+    });
+
+    it('does not delete a pre-existing draft while canonicalizing its own create', async () => {
+      const createdRelease: Release = {
+        id: 1,
+        upload_url: 'created-upload',
+        html_url: 'created-html',
+        tag_name: 'v1.0.0',
+        name: 'created release',
+        body: 'created body',
+        target_commitish: 'main',
+        draft: true,
+        prerelease: false,
+        assets: [],
+      };
+      const manualDraft: Release = {
+        ...createdRelease,
+        id: 2,
+        name: 'manually authored draft',
+        body: 'notes that must not be deleted',
+      };
+      let created = false;
+      const deleteRelease = vi.fn().mockResolvedValue(undefined);
+      const releaser = createReleaser({
+        getReleaseByTag: vi.fn(() =>
+          created ? Promise.resolve({ data: createdRelease }) : Promise.reject({ status: 404 }),
+        ),
+        createRelease: vi.fn(async () => {
+          created = true;
+          return { data: createdRelease };
+        }),
+        allReleases: async function* () {
+          yield { data: created ? [createdRelease, manualDraft] : [] };
+        },
+        deleteRelease,
+      });
+
+      const result = await release(config, releaser, 1);
+
+      expect(result).toEqual({ release: createdRelease, created: true });
+      expect(deleteRelease).not.toHaveBeenCalled();
     });
 
     it('falls back to recent releases when tag lookup still lags after create', async () => {
