@@ -28,6 +28,24 @@ export interface Config {
   input_make_latest: 'true' | 'false' | 'legacy' | undefined;
 }
 
+export const errorMessage = (error: unknown): string => {
+  if (error instanceof Error) {
+    return error.message;
+  }
+  if (
+    typeof error === 'object' &&
+    error !== null &&
+    'message' in error &&
+    typeof error.message === 'string'
+  ) {
+    return error.message;
+  }
+  if (error === null || error === undefined) {
+    return 'Unknown error';
+  }
+  return String(error);
+};
+
 export const uploadUrl = (url: string): string => {
   const templateMarkerPos = url.indexOf('{');
   if (templateMarkerPos > -1) {

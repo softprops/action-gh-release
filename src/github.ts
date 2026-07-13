@@ -3,7 +3,7 @@ import { statSync } from 'fs';
 import { open } from 'fs/promises';
 import { lookup } from 'mime-types';
 import { basename } from 'path';
-import { alignAssetName, Config, isTag, normalizeTagName, releaseBody } from './util';
+import { alignAssetName, Config, errorMessage, isTag, normalizeTagName, releaseBody } from './util';
 
 type GitHub = InstanceType<typeof GitHub>;
 
@@ -933,12 +933,16 @@ async function createRelease(
       release: canonicalRelease,
       created: canonicalRelease.id === createdRelease.data.id,
     };
-  } catch (error) {
+  } catch (error: unknown) {
+    const githubError = error as {
+      status?: number;
+      response?: { data?: { errors?: Array<{ code?: string }> } };
+    };
     // presume a race with competing matrix runs
-    console.log(`⚠️ GitHub release failed with status: ${error.status}`);
-    console.log(`${JSON.stringify(error.response.data)}`);
+    console.log(`⚠️ GitHub release failed with status: ${githubError.status}`);
+    console.log(errorMessage(error));
 
-    switch (error.status) {
+    switch (githubError.status) {
       case 403:
         console.log(
           'Skip retry — your GitHub token/PAT does not have the required permission to create a release',
@@ -951,7 +955,7 @@ async function createRelease(
 
       case 422:
         // Check if this is a race condition with "already_exists" error
-        const errorData = error.response?.data;
+        const errorData = githubError.response?.data;
         if (errorData?.errors?.[0]?.code === 'already_exists') {
           console.log(
             '⚠️ Release already exists (race condition detected), retrying to find and update existing release...',

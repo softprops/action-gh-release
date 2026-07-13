@@ -1,5 +1,6 @@
 import {
   alignAssetName,
+  errorMessage,
   expandHomePattern,
   isTag,
   normalizeFilePattern,
@@ -24,6 +25,26 @@ describe('util', () => {
         ),
         'https://uploads.github.com/repos/octocat/Hello-World/releases/1/assets',
       );
+    });
+
+    it('leaves a URL without a template unchanged', () => {
+      assert.equal(
+        uploadUrl('https://uploads.github.com/repos/octocat/Hello-World/releases/1/assets'),
+        'https://uploads.github.com/repos/octocat/Hello-World/releases/1/assets',
+      );
+    });
+  });
+
+  describe('errorMessage', () => {
+    it.each([
+      [new Error('failed'), 'failed'],
+      [{ message: 'failed' }, 'failed'],
+      ['failed', 'failed'],
+      [42, '42'],
+      [null, 'Unknown error'],
+      [undefined, 'Unknown error'],
+    ])('normalizes unknown thrown values', (error, expected) => {
+      expect(errorMessage(error)).toBe(expected);
     });
   });
   describe('parseInputFiles', () => {
