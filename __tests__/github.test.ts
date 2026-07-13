@@ -1063,6 +1063,61 @@ describe('github', () => {
       );
     });
 
+    it('reuses a published prerelease found by listing after direct tag lookup returns 404', async () => {
+      const existingRelease: Release = {
+        id: 77,
+        upload_url: 'existing-upload',
+        html_url: 'existing-html',
+        tag_name: 'v1.0.0',
+        name: 'nightly',
+        body: 'previous nightly body',
+        target_commitish: 'old-commit',
+        draft: false,
+        prerelease: true,
+        assets: [{ id: 5, name: 'nightly.zip' }],
+      };
+      const updatedRelease: Release = {
+        ...existingRelease,
+        name: 'updated nightly',
+        body: 'updated nightly body',
+        target_commitish: 'new-commit',
+      };
+      const createRelease = unexpected('createRelease');
+      const updateRelease = vi.fn().mockResolvedValue({ data: updatedRelease });
+      const releaser = createReleaser({
+        getReleaseByTag: vi.fn().mockRejectedValue({ status: 404 }),
+        allReleases: async function* () {
+          yield { data: [existingRelease] };
+        },
+        createRelease,
+        updateRelease,
+      });
+
+      const result = await release(
+        {
+          ...config,
+          input_name: 'updated nightly',
+          input_body: 'updated nightly body',
+          input_prerelease: true,
+          input_draft: false,
+          input_target_commitish: 'new-commit',
+        },
+        releaser,
+      );
+
+      expect(result).toEqual({ release: updatedRelease, created: false });
+      expect(updateRelease).toHaveBeenCalledWith(
+        expect.objectContaining({
+          release_id: existingRelease.id,
+          tag_name: existingRelease.tag_name,
+          target_commitish: 'new-commit',
+          draft: false,
+          prerelease: true,
+        }),
+      );
+      expect(createRelease).not.toHaveBeenCalled();
+    });
+
     it.each([
       ['an omitted draft input', undefined],
       ['a null-expression draft input', undefined],

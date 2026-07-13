@@ -286,6 +286,54 @@ describe('run', () => {
     );
   });
 
+  it('uses the selected moving-tag release ID for upload, finalization, and outputs', async () => {
+    config = {
+      ...config,
+      input_tag_name: 'nightly',
+      input_draft: false,
+      input_prerelease: true,
+      input_files: ['nightly.zip'],
+    };
+    const selectedRelease: Release = {
+      ...initialRelease,
+      id: 77,
+      upload_url: 'https://uploads.example.test/releases/77/assets{?name,label}',
+      html_url: 'https://example.test/releases/77',
+      tag_name: 'nightly',
+      name: 'nightly',
+      prerelease: true,
+    };
+    const publishedRelease: Release = {
+      ...selectedRelease,
+      draft: false,
+    };
+    mocks.release.mockResolvedValue({ release: selectedRelease, created: false });
+    mocks.paths.mockReturnValue(['nightly.zip']);
+    mocks.upload.mockResolvedValue({ id: 9 });
+    mocks.finalizeRelease.mockResolvedValue(publishedRelease);
+    mocks.listReleaseAssets.mockResolvedValue([{ id: 9, name: 'nightly.zip' }]);
+
+    await run();
+
+    expect(mocks.upload).toHaveBeenCalledWith(
+      config,
+      mocks.releaser,
+      'https://uploads.example.test/releases/77/assets',
+      'nightly.zip',
+      selectedRelease.assets,
+      77,
+    );
+    expect(mocks.finalizeRelease).toHaveBeenCalledWith(
+      config,
+      mocks.releaser,
+      selectedRelease,
+      false,
+    );
+    expect(mocks.listReleaseAssets).toHaveBeenCalledWith(config, mocks.releaser, publishedRelease);
+    expect(mocks.setOutput).toHaveBeenCalledWith('id', '77');
+    expect(mocks.setOutput).toHaveBeenCalledWith('url', publishedRelease.html_url);
+  });
+
   it('leaves an existing draft recoverable when an upload fails', async () => {
     config = {
       ...config,
