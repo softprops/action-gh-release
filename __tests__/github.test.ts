@@ -3,6 +3,7 @@ import {
   findTagFromReleases,
   finalizeRelease,
   GitHubReleaser,
+  listReleaseAssets,
   mimeOrDefault,
   release,
   Release,
@@ -13,9 +14,33 @@ import {
 import { mkdtempSync, rmSync, writeFileSync } from 'fs';
 import { tmpdir } from 'os';
 import { join } from 'path';
-import { assert, describe, expect, it, vi } from 'vitest';
+import { afterEach, assert, describe, expect, it, vi } from 'vitest';
+
+const unexpected = (method: string) =>
+  vi.fn().mockRejectedValue(new Error(`Unexpected ${method} call`));
+
+const createReleaser = (overrides: Partial<Releaser> = {}): Releaser => ({
+  getReleaseByTag: unexpected('getReleaseByTag'),
+  createRelease: unexpected('createRelease'),
+  updateRelease: unexpected('updateRelease'),
+  finalizeRelease: unexpected('finalizeRelease'),
+  allReleases: async function* () {
+    throw new Error('Unexpected allReleases call');
+  },
+  listReleaseAssets: unexpected('listReleaseAssets'),
+  deleteReleaseAsset: unexpected('deleteReleaseAsset'),
+  deleteRelease: unexpected('deleteRelease'),
+  updateReleaseAsset: unexpected('updateReleaseAsset'),
+  uploadReleaseAsset: unexpected('uploadReleaseAsset'),
+  ...overrides,
+});
 
 describe('github', () => {
+  afterEach(() => {
+    vi.useRealTimers();
+    vi.restoreAllMocks();
+  });
+
   const config = {
     github_token: 'test-token',
     github_ref: 'refs/tags/v1.0.0',
@@ -145,6 +170,56 @@ describe('github', () => {
       const result = await findTagFromReleases(releaser, owner, repo, emptyTag);
 
       assert.deepStrictEqual(result, targetRelease);
+    });
+  });
+
+  describe('listReleaseAssets', () => {
+    const releaseToInspect: Release = {
+      id: 42,
+      upload_url: 'https://uploads.example.test/releases/42/assets',
+      html_url: 'https://example.test/releases/42',
+      tag_name: 'v1.0.0',
+      name: 'v1.0.0',
+      target_commitish: 'main',
+      draft: false,
+      prerelease: false,
+      assets: [],
+    };
+
+    it('returns assets with the repository and release parameters', async () => {
+      const assets = [{ id: 7, name: 'action.zip' }];
+      const listReleaseAssetsSpy = vi.fn().mockResolvedValue(assets);
+      const releaser = createReleaser({ listReleaseAssets: listReleaseAssetsSpy });
+
+      await expect(listReleaseAssets(config, releaser, releaseToInspect)).resolves.toBe(assets);
+      expect(listReleaseAssetsSpy).toHaveBeenCalledOnce();
+      expect(listReleaseAssetsSpy).toHaveBeenCalledWith({
+        owner: 'owner',
+        repo: 'repo',
+        release_id: 42,
+      });
+    });
+
+    it('retries a transient failure and then succeeds', async () => {
+      const assets = [{ id: 7, name: 'action.zip' }];
+      const listReleaseAssetsSpy = vi
+        .fn()
+        .mockRejectedValueOnce(new Error('temporary failure'))
+        .mockResolvedValueOnce(assets);
+      const releaser = createReleaser({ listReleaseAssets: listReleaseAssetsSpy });
+
+      await expect(listReleaseAssets(config, releaser, releaseToInspect, 2)).resolves.toBe(assets);
+      expect(listReleaseAssetsSpy).toHaveBeenCalledTimes(2);
+    });
+
+    it('stops after exhausting the configured attempts', async () => {
+      const listReleaseAssetsSpy = vi.fn().mockRejectedValue(new Error('persistent failure'));
+      const releaser = createReleaser({ listReleaseAssets: listReleaseAssetsSpy });
+
+      await expect(listReleaseAssets(config, releaser, releaseToInspect, 2)).rejects.toThrow(
+        'Too many retries.',
+      );
+      expect(listReleaseAssetsSpy).toHaveBeenCalledTimes(2);
     });
   });
 
@@ -519,6 +594,23 @@ describe('github', () => {
   });
 
   describe('error handling', () => {
+    it('reports a useful create error without assuming response data exists', async () => {
+      const releaseError = {
+        status: 403,
+        message: 'Resource not accessible by integration',
+      };
+      const log = vi.spyOn(console, 'log').mockImplementation(() => undefined);
+      const releaser = createReleaser({
+        getReleaseByTag: vi.fn().mockRejectedValue({ status: 404 }),
+        createRelease: vi.fn().mockRejectedValue(releaseError),
+      });
+
+      await expect(release(config, releaser, 1)).rejects.toBe(releaseError);
+      expect(log).toHaveBeenCalledWith('⚠️ GitHub release failed with status: 403');
+      expect(log).toHaveBeenCalledWith('Resource not accessible by integration');
+      expect(log).not.toHaveBeenCalledWith('undefined');
+    });
+
     it('passes previous_tag_name through when creating a release with generated notes', async () => {
       const createReleaseSpy = vi.fn(async () => ({
         data: {
@@ -1378,6 +1470,7 @@ describe('github', () => {
     });
 
     it('polls for a matching asset after update-a-release-asset 404 before failing', async () => {
+      vi.useFakeTimers();
       const tempDir = mkdtempSync(join(tmpdir(), 'gh-release-dotfile-'));
       const dotfilePath = join(tempDir, '.config');
       writeFileSync(dotfilePath, 'config');
@@ -1421,7 +1514,8 @@ describe('github', () => {
           [],
         );
 
-        await new Promise((resolve) => setTimeout(resolve, 1100));
+        await vi.waitFor(() => expect(listReleaseAssetsSpy).toHaveBeenCalledTimes(1));
+        await vi.advanceTimersByTimeAsync(1000);
 
         const result = await resultPromise;
 

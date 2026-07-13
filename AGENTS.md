@@ -15,7 +15,7 @@ Optimize for stability, reproducibility, and clear user value over broad rewrite
 
 ## Current Architecture
 
-- `src/main.ts` is the orchestration layer: parse config, validate inputs, create/update release, upload assets, finalize, set outputs.
+- `src/main.ts` is the action bootstrap; `src/run.ts` orchestrates config parsing, validation, release creation/update, asset uploads, finalization, and outputs.
 - `src/github.ts` owns release semantics: lookup, create/update/finalize, asset upload, race handling, and GitHub API interaction.
 - `src/util.ts` owns parsing and path normalization.
 - Keep behavior-specific logic in `src/github.ts` or `src/util.ts`; avoid growing `src/main.ts` with ad-hoc feature branches.

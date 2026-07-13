@@ -1,3 +1,7 @@
+## 3.0.1
+
+- maintenance release with updated dependencies
+
 ## 3.0.0
 
 `3.0.0` is a major release that moves the action runtime from Node 20 to Node 24.
