@@ -1,0 +1,45 @@
+AGENTS.md
+  s_781304debb879a::t_b7676cac805d49 18
+src/run.ts
+  s_781304debb879a::t_b7676cac805d49 1-97
+src/util.ts
+  s_781304debb879a::t_b7676cac805d49 31-48
+__tests__/main.test.ts
+  s_781304debb879a::t_1bf1c8aa15dfec 1-11
+vitest.config.ts
+  s_781304debb879a::t_a0afee37276981 9-14
+  s_781304debb879a::t_14edbb1fe9b002 7-8
+__tests__/run.test.ts
+  s_781304debb879a::t_ce9c53f69876bd 96
+  s_781304debb879a::t_1bf1c8aa15dfec 1-95,97-122,127-150,152-173,194-252,254-285,287-312,316-338
+  s_781304debb879a::t_5861cb061695a7 123-126,151,174-193,286,313-315
+  s_781304debb879a::t_a876a109ce2a1f 253
+src/main.ts
+  s_781304debb879a::t_b7676cac805d49 1,3
+__tests__/github.test.ts
+  s_781304debb879a::t_073b8f1db8f7fa 6,17,39-43,176-225,597-613,1473,1517-1518
+  s_781304debb879a::t_a876a109ce2a1f 18-36
+__tests__/util.test.ts
+  s_781304debb879a::t_7c914d62bea254 3,29-48
+src/github.ts
+  s_781304debb879a::t_070ed99f6ccfdc 6,943
+  s_781304debb879a::t_25d90ccc2d908a 936-940,942,945,958
+dist/index.js
+  s_781304debb879a::t_dc7394122ab365 1-5,14,16,20,22,27,29,40-41,45-46,48,50,52-55
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.12",
+  "base_commit_sha": "7059b34b51db2d793196a5a97f505374a76d8616",
+  "prompts": {},
+  "sessions": {
+    "s_781304debb879a": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019f5904-3fac-7822-8d15-c1beb0507927",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "Rui Chen <rui@chenrui.dev>"
+    }
+  }
+}
