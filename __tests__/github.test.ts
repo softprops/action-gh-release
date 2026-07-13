@@ -322,6 +322,107 @@ describe('github', () => {
   });
 
   describe('GitHubReleaser', () => {
+    it('uses GitHub standard asset deletion without adding the release ID', async () => {
+      const deleteReleaseAsset = vi.fn().mockResolvedValue(undefined);
+      const request = vi.fn();
+      const releaser = new GitHubReleaser({
+        rest: { repos: { deleteReleaseAsset } },
+        request,
+      } as any);
+
+      await releaser.deleteReleaseAsset({
+        owner: 'owner',
+        repo: 'repo',
+        release_id: 42,
+        asset_id: 99,
+      });
+
+      expect(deleteReleaseAsset).toHaveBeenCalledOnce();
+      expect(deleteReleaseAsset).toHaveBeenCalledWith({
+        owner: 'owner',
+        repo: 'repo',
+        asset_id: 99,
+      });
+      expect(request).not.toHaveBeenCalled();
+    });
+
+    it('falls back to release-scoped asset deletion after a standard 404', async () => {
+      const deleteReleaseAsset = vi.fn().mockRejectedValue({
+        status: 404,
+        message: 'standard route not found',
+      });
+      const request = vi.fn().mockResolvedValue({ status: 204 });
+      const releaser = new GitHubReleaser({
+        rest: { repos: { deleteReleaseAsset } },
+        request,
+      } as any);
+
+      await releaser.deleteReleaseAsset({
+        owner: 'owner',
+        repo: 'repo',
+        release_id: 42,
+        asset_id: 99,
+      });
+
+      expect(request).toHaveBeenCalledOnce();
+      expect(request).toHaveBeenCalledWith(
+        'DELETE /repos/{owner}/{repo}/releases/{release_id}/assets/{asset_id}',
+        {
+          owner: 'owner',
+          repo: 'repo',
+          release_id: 42,
+          asset_id: 99,
+        },
+      );
+    });
+
+    it('does not mask non-404 asset deletion failures', async () => {
+      const deletionError = { status: 403, message: 'forbidden' };
+      const request = vi.fn();
+      const releaser = new GitHubReleaser({
+        rest: {
+          repos: { deleteReleaseAsset: vi.fn().mockRejectedValue(deletionError) },
+        },
+        request,
+      } as any);
+
+      await expect(
+        releaser.deleteReleaseAsset({
+          owner: 'owner',
+          repo: 'repo',
+          release_id: 42,
+          asset_id: 99,
+        }),
+      ).rejects.toBe(deletionError);
+      expect(request).not.toHaveBeenCalled();
+    });
+
+    it('reports both failures when release-scoped deletion also fails', async () => {
+      const releaser = new GitHubReleaser({
+        rest: {
+          repos: {
+            deleteReleaseAsset: vi
+              .fn()
+              .mockRejectedValue({ status: 404, message: 'standard route not found' }),
+          },
+        },
+        request: vi
+          .fn()
+          .mockRejectedValue({ status: 404, message: 'release-scoped route not found' }),
+      } as any);
+
+      await expect(
+        releaser.deleteReleaseAsset({
+          owner: 'owner',
+          repo: 'repo',
+          release_id: 42,
+          asset_id: 99,
+        }),
+      ).rejects.toThrow(
+        'Failed to delete release asset 99. GitHub endpoint: standard route not found; release-scoped endpoint: release-scoped route not found',
+      );
+    });
+
     it('passes previous_tag_name to generateReleaseNotes and strips it from createRelease', async () => {
       const generateReleaseNotes = vi.fn(async () => ({
         data: {
@@ -945,6 +1046,7 @@ describe('github', () => {
         'https://uploads.github.com/repos/owner/repo/releases/1/assets',
         '__tests__/release.txt',
         [],
+        1,
       );
 
       expect(result).toStrictEqual({ id: 123, name: 'release.txt' });
@@ -956,9 +1058,50 @@ describe('github', () => {
       expect(deleteReleaseAsset).toHaveBeenCalledWith({
         owner: 'owner',
         repo: 'repo',
+        release_id: 1,
         asset_id: 99,
       });
       expect(uploadReleaseAsset).toHaveBeenCalledTimes(2);
+    });
+
+    it('does not upload until deletion of an existing asset succeeds', async () => {
+      const deletionError = new Error('asset deletion failed');
+      const uploadReleaseAsset = vi.fn();
+      const releaser = createReleaser({
+        deleteReleaseAsset: vi.fn().mockRejectedValue(deletionError),
+        uploadReleaseAsset,
+      });
+
+      await expect(
+        upload(
+          config,
+          releaser,
+          'https://uploads.github.com/repos/owner/repo/releases/1/assets',
+          '__tests__/release.txt',
+          [{ id: 99, name: 'release.txt' }],
+          1,
+        ),
+      ).rejects.toBe(deletionError);
+      expect(uploadReleaseAsset).not.toHaveBeenCalled();
+    });
+
+    it('skips deletion and upload when overwrite_files is false', async () => {
+      const deleteReleaseAsset = vi.fn();
+      const uploadReleaseAsset = vi.fn();
+      const releaser = createReleaser({ deleteReleaseAsset, uploadReleaseAsset });
+
+      await expect(
+        upload(
+          { ...config, input_overwrite_files: false },
+          releaser,
+          'https://uploads.github.com/repos/owner/repo/releases/1/assets',
+          '__tests__/release.txt',
+          [{ id: 99, name: 'release.txt' }],
+          1,
+        ),
+      ).resolves.toBeNull();
+      expect(deleteReleaseAsset).not.toHaveBeenCalled();
+      expect(uploadReleaseAsset).not.toHaveBeenCalled();
     });
 
     it('surfaces an actionable immutable-release error for prerelease uploads', async () => {
@@ -1000,6 +1143,7 @@ describe('github', () => {
           'https://uploads.github.com/repos/owner/repo/releases/1/assets',
           assetPath,
           [],
+          1,
         ),
       ).rejects.toThrow(
         'Cannot upload asset draft-false.txt to an immutable release. GitHub only allows asset uploads before a release is published, but draft prereleases publish with the release.published event instead of release.prereleased.',
@@ -1054,6 +1198,7 @@ describe('github', () => {
           'https://uploads.github.com/repos/owner/repo/releases/1/assets',
           dotfilePath,
           [],
+          1,
         );
 
         expect(result).toStrictEqual({ id: 123, name: 'default.config', label: '.config' });
@@ -1065,6 +1210,7 @@ describe('github', () => {
         expect(deleteReleaseAsset).toHaveBeenCalledWith({
           owner: 'owner',
           repo: 'repo',
+          release_id: 1,
           asset_id: 99,
         });
         expect(updateReleaseAsset).toHaveBeenCalledWith({
@@ -1512,6 +1658,7 @@ describe('github', () => {
           'https://uploads.example.test/assets',
           dotfilePath,
           [],
+          1,
         );
 
         expect(updateReleaseAssetSpy).toHaveBeenCalledWith({
@@ -1583,6 +1730,7 @@ describe('github', () => {
           'https://uploads.github.com/repos/owner/repo/releases/1/assets',
           dotfilePath,
           [],
+          1,
         );
 
         expect(updateReleaseAssetSpy).toHaveBeenNthCalledWith(1, {
@@ -1653,6 +1801,7 @@ describe('github', () => {
           'https://uploads.github.com/repos/owner/repo/releases/1/assets',
           dotfilePath,
           [],
+          1,
         );
 
         expect(listReleaseAssetsSpy).toHaveBeenCalledWith({
@@ -1712,6 +1861,7 @@ describe('github', () => {
           'https://uploads.github.com/repos/owner/repo/releases/1/assets',
           dotfilePath,
           [],
+          1,
         );
 
         expect(listReleaseAssetsSpy).toHaveBeenCalledWith({
@@ -1772,6 +1922,7 @@ describe('github', () => {
           'https://uploads.github.com/repos/owner/repo/releases/1/assets',
           dotfilePath,
           [],
+          1,
         );
 
         await vi.waitFor(() => expect(listReleaseAssetsSpy).toHaveBeenCalledTimes(1));
@@ -1827,18 +1978,26 @@ describe('github', () => {
       };
 
       try {
-        await upload(config, releaser, 'https://uploads.example.test/assets', dotfilePath, [
-          {
-            id: 1,
-            name: 'default.config',
-            label: '.config',
-          },
-        ]);
+        await upload(
+          config,
+          releaser,
+          'https://uploads.example.test/assets',
+          dotfilePath,
+          [
+            {
+              id: 1,
+              name: 'default.config',
+              label: '.config',
+            },
+          ],
+          1,
+        );
 
         expect(deleteReleaseAssetSpy).toHaveBeenCalledWith({
           asset_id: 1,
           owner: 'owner',
           repo: 'repo',
+          release_id: 1,
         });
       } finally {
         rmSync(tempDir, { recursive: true, force: true });

@@ -211,6 +211,7 @@ describe('run', () => {
       'https://uploads.example.test/releases/41/assets',
       'fixture/dist/action.zip',
       initialRelease.assets,
+      initialRelease.id,
     );
   });
 

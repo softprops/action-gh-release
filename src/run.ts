@@ -52,7 +52,14 @@ export async function run(): Promise<void> {
       const currentAssets = rel.assets;
 
       const uploadFile = async (path: string) => {
-        const json = await upload(config, releaser, uploadUrl(rel.upload_url), path, currentAssets);
+        const json = await upload(
+          config,
+          releaser,
+          uploadUrl(rel.upload_url),
+          path,
+          currentAssets,
+          rel.id,
+        );
         return json ? (json.id as number) : undefined;
       };
 

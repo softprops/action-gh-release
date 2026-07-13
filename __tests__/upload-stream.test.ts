@@ -205,7 +205,7 @@ describe('release asset upload transport', () => {
       openFile.mockClear();
 
       try {
-        await expect(upload(config, releaser, uploadUrl, fixture.path, [])).resolves.toEqual({
+        await expect(upload(config, releaser, uploadUrl, fixture.path, [], 1)).resolves.toEqual({
           id: 123,
           name: fixture.name,
         });
@@ -243,7 +243,7 @@ describe('release asset upload transport', () => {
     openFile.mockClear();
 
     try {
-      await expect(upload(config, releaser, uploadUrl, fixture.path, [])).rejects.toThrow(
+      await expect(upload(config, releaser, uploadUrl, fixture.path, [], 1)).rejects.toThrow(
         'Validation Failed',
       );
       await expectLastFileHandleClosed();
@@ -275,7 +275,7 @@ describe('release asset upload transport', () => {
     });
 
     try {
-      await expect(upload(config, releaser, uploadUrl, fixture.path, [])).resolves.toEqual({
+      await expect(upload(config, releaser, uploadUrl, fixture.path, [], 1)).resolves.toEqual({
         id: 123,
         name: fixture.name,
       });
@@ -297,11 +297,13 @@ describe('release asset upload transport', () => {
     );
     const releaser = new GitHubReleaser(getOctokit(config.github_token));
     vi.spyOn(releaser, 'listReleaseAssets').mockResolvedValue([{ id: 9, name: fixture.name }]);
-    vi.spyOn(releaser, 'deleteReleaseAsset').mockResolvedValue(undefined);
+    const deleteReleaseAsset = vi
+      .spyOn(releaser, 'deleteReleaseAsset')
+      .mockResolvedValue(undefined);
     openFile.mockClear();
 
     try {
-      await expect(upload(config, releaser, uploadUrl, fixture.path, [])).resolves.toEqual({
+      await expect(upload(config, releaser, uploadUrl, fixture.path, [], 1)).resolves.toEqual({
         id: 123,
         name: fixture.name,
       });
@@ -309,10 +311,82 @@ describe('release asset upload transport', () => {
       expect(receipts.map(({ size }) => size)).toEqual([fixture.size, fixture.size]);
       expect(receipts.map(({ digest }) => digest)).toEqual([fixture.digest, fixture.digest]);
       expect(openFile).toHaveBeenCalledTimes(2);
+      expect(deleteReleaseAsset).toHaveBeenCalledWith({
+        owner: 'owner',
+        repo: 'repo',
+        release_id: 1,
+        asset_id: 9,
+      });
       for (const result of openFile.mock.results) {
         const fileHandle = await result.value;
         await expect(fileHandle.stat()).rejects.toMatchObject({ code: 'EBADF' });
       }
+    } finally {
+      await closeServer(server);
+    }
+  });
+
+  it('falls back to the release-scoped delete route through the real Octokit request path', async () => {
+    const requests: Array<{
+      method: string | undefined;
+      pathname: string;
+      authorization: string | undefined;
+    }> = [];
+    const server = createServer((request, response) => {
+      const url = new URL(request.url || '/', 'http://127.0.0.1');
+      requests.push({
+        method: request.method,
+        pathname: url.pathname,
+        authorization: request.headers.authorization,
+      });
+
+      if (url.pathname === '/repos/owner/repo/releases/assets/9') {
+        response.writeHead(404, { 'content-type': 'application/json' });
+        response.end(JSON.stringify({ message: 'page not found' }));
+        return;
+      }
+      if (url.pathname === '/repos/owner/repo/releases/1/assets/9') {
+        response.writeHead(204);
+        response.end();
+        return;
+      }
+
+      response.writeHead(500, { 'content-type': 'application/json' });
+      response.end(JSON.stringify({ message: 'unexpected route' }));
+    });
+
+    await new Promise<void>((resolve, reject) => {
+      server.once('error', reject);
+      server.listen(0, '127.0.0.1', resolve);
+    });
+    const address = server.address() as AddressInfo;
+    const releaser = new GitHubReleaser(
+      getOctokit(config.github_token, {
+        baseUrl: `http://127.0.0.1:${address.port}`,
+      }),
+    );
+
+    try {
+      await expect(
+        releaser.deleteReleaseAsset({
+          owner: 'owner',
+          repo: 'repo',
+          release_id: 1,
+          asset_id: 9,
+        }),
+      ).resolves.toBeUndefined();
+      expect(requests).toEqual([
+        {
+          method: 'DELETE',
+          pathname: '/repos/owner/repo/releases/assets/9',
+          authorization: 'token not-a-real-token',
+        },
+        {
+          method: 'DELETE',
+          pathname: '/repos/owner/repo/releases/1/assets/9',
+          authorization: 'token not-a-real-token',
+        },
+      ]);
     } finally {
       await closeServer(server);
     }

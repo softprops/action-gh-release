@@ -96,7 +96,12 @@ export interface Releaser {
     release_id: number;
   }): Promise<Array<{ id: number; name: string; label?: string | null; [key: string]: any }>>;
 
-  deleteReleaseAsset(params: { owner: string; repo: string; asset_id: number }): Promise<void>;
+  deleteReleaseAsset(params: {
+    owner: string;
+    repo: string;
+    release_id: number;
+    asset_id: number;
+  }): Promise<void>;
 
   deleteRelease(params: { owner: string; repo: string; release_id: number }): Promise<void>;
 
@@ -229,9 +234,34 @@ export class GitHubReleaser implements Releaser {
   async deleteReleaseAsset(params: {
     owner: string;
     repo: string;
+    release_id: number;
     asset_id: number;
   }): Promise<void> {
-    await this.github.rest.repos.deleteReleaseAsset(params);
+    const { release_id, ...githubParams } = params;
+    try {
+      await this.github.rest.repos.deleteReleaseAsset(githubParams);
+    } catch (error: unknown) {
+      const status =
+        (error as { status?: number; response?: { status?: number } })?.status ??
+        (error as { response?: { status?: number } })?.response?.status;
+      if (status !== 404) {
+        throw error;
+      }
+
+      try {
+        await this.github.request(
+          'DELETE /repos/{owner}/{repo}/releases/{release_id}/assets/{asset_id}',
+          params,
+        );
+      } catch (fallbackError: unknown) {
+        throw new AggregateError(
+          [error, fallbackError],
+          `Failed to delete release asset ${params.asset_id}. GitHub endpoint: ${errorMessage(
+            error,
+          )}; release-scoped endpoint: ${errorMessage(fallbackError)}`,
+        );
+      }
+    }
   }
 
   async deleteRelease(params: { owner: string; repo: string; release_id: number }): Promise<void> {
@@ -321,11 +351,10 @@ export const upload = async (
   url: string,
   path: string,
   currentAssets: Array<{ id: number; name: string; label?: string | null }>,
+  releaseId: number,
 ): Promise<any> => {
   const [owner, repo] = config.github_repository.split('/');
   const { name, mime, size } = asset(path);
-  const releaseIdMatch = url.match(/\/releases\/(\d+)\/assets/);
-  const releaseId = releaseIdMatch ? Number(releaseIdMatch[1]) : undefined;
   const currentAsset = currentAssets.find(
     // GitHub can rewrite uploaded asset names, so compare against both the raw name
     // GitHub returns and the restored label we set when available.
@@ -341,6 +370,7 @@ export const upload = async (
         asset_id: currentAsset.id || 1,
         owner,
         repo,
+        release_id: releaseId,
       });
     }
   }
@@ -499,6 +529,7 @@ export const upload = async (
         await releaser.deleteReleaseAsset({
           owner,
           repo,
+          release_id: releaseId,
           asset_id: latestAsset.id,
         });
         return await handleUploadedAsset(await uploadAsset());
