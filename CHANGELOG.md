@@ -38,8 +38,8 @@ claim a reproducible release-creation fix.
 
 `3.0.0` is a major release that moves the action runtime from Node 20 to Node 24.
 Use `v3` on GitHub-hosted runners and self-hosted fleets that already support the
-Node 24 Actions runtime. If you still need the last Node 20-compatible line, stay on
-`v2.6.2`.
+Node 24 Actions runtime. `v2.6.2` was the final Node 20-compatible release and is
+no longer maintained or supported.
 
 ## What's Changed
 
@@ -47,9 +47,12 @@ Node 24 Actions runtime. If you still need the last Node 20-compatible line, sta
 
 * Move the action runtime and bundle target to Node 24
 * Update `@types/node` to the Node 24 line and allow future Dependabot updates
-* Keep the floating major tag on `v3`; `v2` remains pinned to the latest `2.x` release
+* Keep the floating major tag on `v3`; freeze `v2` at the final `v2.6.2` release
 
 ## 2.6.2
+
+`2.6.2` is the final `v2` release and is no longer maintained or supported. Upgrade
+to `v3` for the supported Node 24 runtime and current fixes.
 
 ## What's Changed
 

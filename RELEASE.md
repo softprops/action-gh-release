@@ -36,7 +36,7 @@ Use this checklist when cutting a new `action-gh-release` release.
    - Push only the full version tag first, then wait for its tag-triggered CI to pass.
 9. Move the floating major tag to the same merged release commit.
    - For the current major line, run `npm run updatetag` to move `v3`.
-   - Keep `v2` pinned to the latest `2.x` release for consumers that still need the Node 20 runtime.
+   - Do not move `v2`; it is frozen at the final, unsupported `v2.6.2` release.
    - Verify `v3` and the full version tag are annotated and peel to the same commit.
    - Verify `v2` did not move, then wait for the separate `v3` tag-triggered CI run to pass.
 10. Create the GitHub release from the full version tag.

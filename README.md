@@ -39,8 +39,11 @@ Typically usage of this action involves adding a step to a build that
 is gated pushes to git tags. You may find `step.if` field helpful in accomplishing this
 as it maximizes the reuse value of your workflow for non-tag pushes.
 
-`v3` requires a GitHub Actions runtime that supports Node 24. If you still need the
-last Node 20-compatible line, stay on `v2.6.2`.
+`v2.6.2` is the final `v2` release and is no longer maintained or supported. It
+uses the [Node 20 runtime deprecated by GitHub Actions](https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/).
+Upgrade to `v3`, which runs on Node 24. If a problem still reproduces on the
+latest `v3`, open a new issue with the exact action ref, workflow run URL,
+runner, and relevant logs.
 
 Below is a simple example of `step.if` tag gating
 
