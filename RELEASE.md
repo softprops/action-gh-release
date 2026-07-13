@@ -23,21 +23,34 @@ Use this checklist when cutting a new `action-gh-release` release.
    - `npm run build`
    - `npm test`
 5. Commit the release prep.
-   - Use a plain release commit message like `release 3.0.0`.
-6. Create the annotated tag for the release commit.
-   - Example: `git tag -a v3.0.0 -m "v3.0.0"`
-7. Push the commit and tag.
-   - Example: `git push origin master && git push origin v3.0.0`
-8. Move the floating major tag to the new release tag.
+   - Use `git commit -s` so the release commit carries a DCO sign-off.
+   - Use a plain release commit message like `release X.Y.Z`.
+6. Push a release branch and open a pull request against `master`.
+   - Wait for required checks and reviews.
+   - Do not bypass branch protection or tag an unmerged release branch.
+7. After merge, fetch `origin/master` and resolve the exact merged release commit.
+   - Confirm that commit contains the expected package version and top changelog entry.
+   - When the PR is squash-merged, do not assume the release branch commit is the release commit.
+8. Create and push the full annotated version tag on the merged release commit.
+   - Example: `git tag -a vX.Y.Z -m "vX.Y.Z" <release-commit>`
+   - Push only the full version tag first, then wait for its tag-triggered CI to pass.
+9. Move the floating major tag to the same merged release commit.
    - For the current major line, run `npm run updatetag` to move `v3`.
    - Keep `v2` pinned to the latest `2.x` release for consumers that still need the Node 20 runtime.
-   - Verify the floating tag points at the same commit as the new full tag.
-9. Create the GitHub release from the new tag.
+   - Verify `v3` and the full version tag are annotated and peel to the same commit.
+   - Verify `v2` did not move, then wait for the separate `v3` tag-triggered CI run to pass.
+10. Create the GitHub release from the full version tag.
    - Prefer the release body from [CHANGELOG.md](CHANGELOG.md), then let GitHub append generated notes only if they add value.
-   - Verify the release shows the expected tag, title, notes, and attached artifacts.
+   - Verify the release shows the expected tag, title, notes, draft/prerelease state, and attached artifacts.
+11. Run post-release consumer verification in `ruitest2/action-gh-release-test`.
+   - Run the generic smoke against both the full version tag and `v3`.
+   - Run regression workflows relevant to the fixes in the release.
+   - Confirm that every disposable release, tag, discussion, container, volume, and temporary credential was cleaned up.
 
 ## Notes
 
 - Behavior changes should already have matching updates in [README.md](README.md), [action.yml](action.yml), tests, and `dist/index.js` before release prep begins.
 - Docs-only releases still need an intentional changelog entry and version bump decision.
 - If a release is mainly bug fixes, keep the title and summary patch-oriented; do not bury the actual fixes under dependency noise.
+- Do not move the floating major tag or publish the GitHub release until the full
+  version tag's CI passes.
