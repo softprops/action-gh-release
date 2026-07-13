@@ -149,6 +149,56 @@ describe('github', () => {
       expect(pageAfterMatch).not.toHaveBeenCalled();
     });
 
+    it('does not exhaust pagination while checking a brand-new tag', async () => {
+      let pagesRead = 0;
+      const releaser = {
+        ...mockReleaser,
+        allReleases: async function* () {
+          pagesRead += 1;
+          yield { data: [] };
+          pagesRead += 1;
+          yield { data: [] };
+          throw new Error('Only the first 10000 results are available');
+        },
+      };
+
+      const result = await findTagFromReleases(releaser, owner, repo, 'brand-new-tag');
+
+      expect(result).toBeUndefined();
+      expect(pagesRead).toBe(2);
+    });
+
+    it('preserves the canonical draft when a newer duplicate appears first', async () => {
+      const canonicalDraft: Release = {
+        ...mockRelease,
+        id: 1,
+        draft: true,
+        assets: [{ id: 99, name: 'existing.zip' }],
+      };
+      const duplicateDraft: Release = {
+        ...canonicalDraft,
+        id: 2,
+        assets: [],
+      };
+      const deleteRelease = vi.fn().mockResolvedValue(undefined);
+      const releaser = {
+        ...mockReleaser,
+        allReleases: async function* () {
+          yield { data: [duplicateDraft, canonicalDraft] };
+        },
+        deleteRelease,
+      };
+
+      const result = await findTagFromReleases(releaser, owner, repo, canonicalDraft.tag_name);
+
+      expect(result).toBe(canonicalDraft);
+      expect(deleteRelease).toHaveBeenCalledWith({
+        owner,
+        repo,
+        release_id: duplicateDraft.id,
+      });
+    });
+
     it('retries draft discovery when GitHub release listing is briefly stale', async () => {
       vi.useFakeTimers();
       const draftRelease = { ...mockRelease, draft: true };

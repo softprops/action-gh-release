@@ -742,8 +742,9 @@ export const listReleaseAssets = async (
  * Finds a release by tag name.
  *
  * Uses the direct getReleaseByTag API for O(1) lookup. Because GitHub does not
- * expose draft releases through that endpoint, a 404 falls back to paginated
- * release listing and briefly retries in case the listing is not yet consistent.
+ * expose draft releases through that endpoint, a 404 falls back to a bounded
+ * scan of recent releases and briefly retries in case the listing is not yet
+ * consistent.
  *
  * @param releaser - The GitHub API wrapper for release operations
  * @param owner - The owner of the repository
@@ -774,17 +775,18 @@ export async function findTagFromReleases(
 
   const attempts = Math.max(1, listingAttempts);
   for (let attempt = 0; attempt < attempts; attempt += 1) {
-    let pages = 0;
-    for await (const page of releaser.allReleases({ owner, repo })) {
-      const match = page.data.find((release) => release.tag_name === tag);
-      if (match) {
-        return match;
-      }
-
-      pages += 1;
-      if (attempt > 0 && pages >= RECENT_RELEASE_SCAN_PAGES) {
-        break;
-      }
+    const recentReleases = await recentReleasesByTag(releaser, owner, repo, tag);
+    const canonicalRelease = pickCanonicalRelease(recentReleases, undefined);
+    if (canonicalRelease) {
+      await cleanupDuplicateDraftReleases(
+        releaser,
+        owner,
+        repo,
+        tag,
+        canonicalRelease.id,
+        recentReleases,
+      );
+      return canonicalRelease;
     }
 
     if (attempt < attempts - 1) {
