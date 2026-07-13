@@ -1,0 +1,23 @@
+src/github.ts
+  s_781304debb879a::t_bb3c9c2355e9a5 80-91,102,105-107,606-610
+__tests__/github.test.ts
+  s_781304debb879a::t_bb3c9c2355e9a5 861-899
+dist/index.js
+  s_781304debb879a::t_1fd8fbda1a1e4f 1-5,14,16,22,27,29,40-41,45-46,48,50,52,54-55
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.12",
+  "base_commit_sha": "ccde30d2f16d101e49d849dea56f5340df6fe703",
+  "prompts": {},
+  "sessions": {
+    "s_781304debb879a": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019f5904-3fac-7822-8d15-c1beb0507927",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "Rui Chen <rui@chenrui.dev>"
+    }
+  }
+}
