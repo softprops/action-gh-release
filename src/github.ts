@@ -1,11 +1,25 @@
 import { GitHub } from '@actions/github/lib/utils';
 import { statSync } from 'fs';
-import { open } from 'fs/promises';
+import { open, type FileHandle } from 'fs/promises';
 import { lookup } from 'mime-types';
 import { basename } from 'path';
 import { alignAssetName, Config, errorMessage, isTag, normalizeTagName, releaseBody } from './util';
 
 type GitHub = InstanceType<typeof GitHub>;
+
+type UploadChunk = ArrayBuffer | Uint8Array<ArrayBufferLike>;
+type UploadBody = ReadableStream<Uint8Array<ArrayBufferLike>>;
+
+const fileUploadStream = (fileHandle: FileHandle): UploadBody => {
+  const source = fileHandle.readableWebStream() as ReadableStream<UploadChunk>;
+  return source.pipeThrough(
+    new TransformStream<UploadChunk, Uint8Array<ArrayBufferLike>>({
+      transform(chunk, controller) {
+        controller.enqueue(chunk instanceof Uint8Array ? chunk : new Uint8Array(chunk));
+      },
+    }),
+  );
+};
 
 export interface ReleaseAsset {
   name: string;
@@ -99,7 +113,7 @@ export interface Releaser {
     size: number;
     mime: string;
     token: string;
-    data: any;
+    data: UploadBody;
   }): Promise<{ status: number; data: any }>;
 }
 
@@ -239,7 +253,7 @@ export class GitHubReleaser implements Releaser {
     size: number;
     mime: string;
     token: string;
-    data: any;
+    data: UploadBody;
   }): Promise<{ status: number; data: any }> {
     return this.github.request({
       method: 'POST',
@@ -367,7 +381,7 @@ export const upload = async (
         size,
         mime,
         token: config.github_token,
-        data: fh.readableWebStream(),
+        data: fileUploadStream(fh),
       });
     } finally {
       await fh.close();
