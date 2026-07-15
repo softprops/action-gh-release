@@ -149,6 +149,55 @@ describe('github', () => {
       expect(pageAfterMatch).not.toHaveBeenCalled();
     });
 
+    it.each([
+      ['a top-level 404', { status: 404 }],
+      ['a nested response 404', { response: { status: 404 } }],
+      [
+        'an invalid top-level status with a nested response 404',
+        { status: '500', response: { status: 404 } },
+      ],
+    ])('uses release-list fallback for %s', async (_name, lookupError) => {
+      const draftRelease = { ...mockRelease, draft: true };
+      const allReleases = vi.fn(async function* () {
+        yield { data: [draftRelease] };
+      });
+      const releaser = {
+        ...mockReleaser,
+        getReleaseByTag: vi.fn().mockRejectedValue(lookupError),
+        allReleases,
+      };
+
+      await expect(findTagFromReleases(releaser, owner, repo, draftRelease.tag_name)).resolves.toBe(
+        draftRelease,
+      );
+      expect(allReleases).toHaveBeenCalledOnce();
+    });
+
+    it.each([
+      ['a nested response 500', { response: { status: 500 } }],
+      ['a string top-level status', { status: '404' }],
+      ['a string nested response status', { response: { status: '404' } }],
+      ['a status-less object', { reason: 'lookup failed' }],
+      [
+        'a numeric top-level 500 with a nested response 404',
+        { status: 500, response: { status: 404 } },
+      ],
+    ])('does not use release-list fallback for %s', async (_name, lookupError) => {
+      const allReleases = vi.fn(async function* () {
+        yield { data: [mockRelease] };
+      });
+      const releaser = {
+        ...mockReleaser,
+        getReleaseByTag: vi.fn().mockRejectedValue(lookupError),
+        allReleases,
+      };
+
+      await expect(findTagFromReleases(releaser, owner, repo, mockRelease.tag_name)).rejects.toBe(
+        lookupError,
+      );
+      expect(allReleases).not.toHaveBeenCalled();
+    });
+
     it('does not exhaust pagination while checking a brand-new tag', async () => {
       let pagesRead = 0;
       const releaser = {
@@ -855,6 +904,51 @@ describe('github', () => {
       expect(finalizeReleaseSpy).toHaveBeenCalledOnce();
       expect(deleteReleaseSpy).not.toHaveBeenCalled();
     });
+
+    it('finds a valid tag-rule violation after malformed validation entries', async () => {
+      const finalizeReleaseSpy = vi.fn().mockRejectedValue({
+        response: {
+          status: 422,
+          data: {
+            errors: [
+              null,
+              'invalid',
+              {
+                field: 'pre_receive',
+                message: 'Cannot create ref due to creations being restricted.',
+              },
+            ],
+          },
+        },
+      });
+      const deleteReleaseSpy = vi.fn().mockResolvedValue(undefined);
+      const releaser = createReleaser({
+        finalizeRelease: finalizeReleaseSpy,
+        deleteRelease: deleteReleaseSpy,
+      });
+
+      await expect(
+        finalizeRelease(
+          {
+            ...config,
+            input_draft: false,
+          },
+          releaser,
+          draftRelease,
+          true,
+          1,
+        ),
+      ).rejects.toThrow(
+        'Tag creation for v1.0.0 is blocked by repository rules. Deleted draft release 1 to avoid leaving an orphaned draft release.',
+      );
+
+      expect(finalizeReleaseSpy).toHaveBeenCalledOnce();
+      expect(deleteReleaseSpy).toHaveBeenCalledWith({
+        owner: 'owner',
+        repo: 'repo',
+        release_id: draftRelease.id,
+      });
+    });
   });
 
   describe('error handling', () => {
@@ -962,6 +1056,52 @@ describe('github', () => {
       expect(createRelease).not.toHaveBeenCalled();
     });
 
+    it.each([
+      {
+        name: 'a nested response 404 as repository access failure',
+        listingError: {
+          response: { status: 404 },
+          message: 'Not Found - list-releases',
+        },
+        expectAccessError: true,
+      },
+      {
+        name: 'a nested response 500 as the original error',
+        listingError: {
+          response: { status: 500 },
+          message: 'Server Error - list-releases',
+        },
+        expectAccessError: false,
+      },
+      {
+        name: 'a status-less object as the original error',
+        listingError: { reason: 'release listing failed' },
+        expectAccessError: false,
+      },
+    ])('classifies a release-list fallback error with $name', async (testCase) => {
+      const createRelease = vi.fn();
+      const releaser = createReleaser({
+        getReleaseByTag: vi.fn().mockRejectedValue({ status: 404 }),
+        allReleases: async function* () {
+          throw testCase.listingError;
+        },
+        createRelease,
+      });
+
+      const thrown = await release(config, releaser, 1).catch((error) => error);
+
+      if (testCase.expectAccessError) {
+        expect(thrown).toMatchObject({
+          name: 'ReleaseAccessError',
+          status: 404,
+          cause: testCase.listingError,
+        });
+      } else {
+        expect(thrown).toBe(testCase.listingError);
+      }
+      expect(createRelease).not.toHaveBeenCalled();
+    });
+
     it('reports a useful create error without assuming response data exists', async () => {
       const releaseError = {
         status: 403,
@@ -980,6 +1120,60 @@ describe('github', () => {
       expect(log).toHaveBeenCalledWith('⚠️ GitHub release failed with status: 403');
       expect(log).toHaveBeenCalledWith('Resource not accessible by integration');
       expect(log).not.toHaveBeenCalledWith('undefined');
+    });
+
+    it.each([
+      {
+        name: 'a nested response 403',
+        releaseError: {
+          response: { status: 403 },
+          message: 'Resource not accessible by integration',
+        },
+      },
+      {
+        name: 'a nested response 422 without already_exists',
+        releaseError: {
+          response: { status: 422, data: { errors: [{ code: 'invalid' }] } },
+          message: 'Validation Failed',
+        },
+      },
+    ])('does not retry release creation for $name', async (testCase) => {
+      const createRelease = vi.fn().mockRejectedValue(testCase.releaseError);
+      const releaser = createReleaser({
+        getReleaseByTag: vi.fn().mockRejectedValue({ status: 404 }),
+        createRelease,
+        allReleases: async function* () {
+          yield { data: [] };
+        },
+      });
+
+      await expect(release(config, releaser, 1)).rejects.toBe(testCase.releaseError);
+      expect(createRelease).toHaveBeenCalledOnce();
+    });
+
+    it('classifies a nested response 404 from release creation without retrying', async () => {
+      const releaseError = {
+        response: { status: 404 },
+        message: 'Not Found - create-a-release',
+      };
+      const createRelease = vi.fn().mockRejectedValue(releaseError);
+      const releaser = createReleaser({
+        getReleaseByTag: vi.fn().mockRejectedValue({ status: 404 }),
+        createRelease,
+        allReleases: async function* () {
+          yield { data: [] };
+        },
+      });
+
+      const thrown = await release(config, releaser, 1).catch((error) => error);
+
+      expect(thrown).toMatchObject({
+        name: 'ReleaseCreationError',
+        status: 404,
+        cause: releaseError,
+      });
+      expect(thrown.message).toContain('GitHub returned 404 while creating the release');
+      expect(createRelease).toHaveBeenCalledOnce();
     });
 
     it.each([
@@ -1004,19 +1198,23 @@ describe('github', () => {
       ['a string', 'transport failed'],
       ['null', null],
       ['an arbitrary object', { reason: 'transport failed' }],
-    ])('preserves retry handling when release creation throws %s', async (_name, releaseError) => {
-      const createRelease = vi.fn().mockRejectedValue(releaseError);
-      const releaser = createReleaser({
-        getReleaseByTag: vi.fn().mockRejectedValue({ status: 404 }),
-        createRelease,
-        allReleases: async function* () {
-          yield { data: [] };
-        },
-      });
+      ['a nested response 500', { response: { status: 500 } }],
+    ])(
+      'retries unclassified release creation failures without secondary TypeErrors when the error is %s',
+      async (_name, releaseError) => {
+        const createRelease = vi.fn().mockRejectedValue(releaseError);
+        const releaser = createReleaser({
+          getReleaseByTag: vi.fn().mockRejectedValue({ status: 404 }),
+          createRelease,
+          allReleases: async function* () {
+            yield { data: [] };
+          },
+        });
 
-      await expect(release(config, releaser, 1)).rejects.toThrow('Too many retries.');
-      expect(createRelease).toHaveBeenCalledOnce();
-    });
+        await expect(release(config, releaser, 1)).rejects.toThrow('Too many retries.');
+        expect(createRelease).toHaveBeenCalledOnce();
+      },
+    );
 
     it('passes previous_tag_name through when creating a release with generated notes', async () => {
       const createReleaseSpy = vi.fn(async () => ({
@@ -1218,6 +1416,99 @@ describe('github', () => {
       );
       expect(createRelease).not.toHaveBeenCalled();
     });
+
+    it('creates a replacement after an existing-release update returns a nested response 404', async () => {
+      const existingRelease: Release = {
+        id: 41,
+        upload_url: 'existing-upload',
+        html_url: 'existing-html',
+        tag_name: 'v1.0.0',
+        name: 'existing release',
+        body: 'existing body',
+        target_commitish: 'main',
+        draft: false,
+        prerelease: false,
+        assets: [],
+      };
+      const replacementRelease: Release = {
+        ...existingRelease,
+        id: 42,
+        upload_url: 'replacement-upload',
+        html_url: 'replacement-html',
+        name: 'v1.0.0',
+        body: undefined,
+        draft: true,
+      };
+      const updateError = { response: { status: 404 }, message: 'release disappeared' };
+      const getReleaseByTag = vi
+        .fn()
+        .mockResolvedValueOnce({ data: existingRelease })
+        .mockResolvedValue({ data: replacementRelease });
+      const updateRelease = vi.fn().mockRejectedValue(updateError);
+      const createRelease = vi.fn().mockResolvedValue({ data: replacementRelease });
+      const releaser = createReleaser({
+        getReleaseByTag,
+        updateRelease,
+        createRelease,
+        allReleases: async function* () {
+          yield { data: [replacementRelease] };
+        },
+      });
+
+      await expect(release(config, releaser, 1)).resolves.toEqual({
+        release: replacementRelease,
+        created: true,
+      });
+      expect(updateRelease).toHaveBeenCalledOnce();
+      expect(createRelease).toHaveBeenCalledOnce();
+      expect(createRelease).toHaveBeenCalledWith({
+        owner: 'owner',
+        repo: 'repo',
+        tag_name: 'v1.0.0',
+        name: 'v1.0.0',
+        body: undefined,
+        draft: true,
+        prerelease: undefined,
+        target_commitish: undefined,
+        discussion_category_name: undefined,
+        generate_release_notes: false,
+        make_latest: undefined,
+        previous_tag_name: undefined,
+      });
+      expect(getReleaseByTag).toHaveBeenCalledTimes(2);
+    });
+
+    it.each([
+      ['a nested response 403', { response: { status: 403 }, message: 'forbidden' }],
+      ['a nested response 500', { response: { status: 500 }, message: 'server error' }],
+    ])(
+      'does not create a replacement after an existing-release update returns %s',
+      async (_name, updateError) => {
+        const existingRelease: Release = {
+          id: 41,
+          upload_url: 'existing-upload',
+          html_url: 'existing-html',
+          tag_name: 'v1.0.0',
+          name: 'existing release',
+          body: 'existing body',
+          target_commitish: 'main',
+          draft: false,
+          prerelease: false,
+          assets: [],
+        };
+        const createRelease = vi.fn();
+        const updateRelease = vi.fn().mockRejectedValue(updateError);
+        const releaser = createReleaser({
+          getReleaseByTag: vi.fn().mockResolvedValue({ data: existingRelease }),
+          updateRelease,
+          createRelease,
+        });
+
+        await expect(release(config, releaser, 1)).rejects.toBe(updateError);
+        expect(updateRelease).toHaveBeenCalledOnce();
+        expect(createRelease).not.toHaveBeenCalled();
+      },
+    );
 
     it.each([
       ['an omitted draft input', undefined],
@@ -1504,7 +1795,24 @@ describe('github', () => {
       }
     });
 
-    it('handles 422 already_exists error gracefully', async () => {
+    it.each([
+      {
+        name: 'top-level status',
+        releaseError: {
+          status: 422,
+          response: { data: { errors: [{ code: 'already_exists' }] } },
+        },
+      },
+      {
+        name: 'nested response status',
+        releaseError: {
+          response: {
+            status: 422,
+            data: { errors: [{ code: 'already_exists' }] },
+          },
+        },
+      },
+    ])('retries a 422 already_exists race with $name', async (testCase) => {
       vi.useFakeTimers();
       const existingRelease = {
         id: 1,
@@ -1530,10 +1838,7 @@ describe('github', () => {
         },
         createRelease: () => {
           createAttempts++;
-          return Promise.reject({
-            status: 422,
-            response: { data: { errors: [{ code: 'already_exists' }] } },
-          });
+          return Promise.reject(testCase.releaseError);
         },
         updateRelease: () =>
           Promise.resolve({
@@ -1566,6 +1871,7 @@ describe('github', () => {
       assert.ok(result);
       assert.equal(result.release.id, 1);
       assert.equal(result.created, false);
+      expect(createAttempts).toBe(1);
     });
 
     it('normalizes refs/tags-prefixed input_tag_name values before reusing an existing release', async () => {

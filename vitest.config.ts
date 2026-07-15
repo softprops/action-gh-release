@@ -7,10 +7,10 @@ export default defineConfig({
       reporter: ['text', 'json-summary', 'lcov'],
       include: ['src/**/*.ts'],
       thresholds: {
-        statements: 93,
-        branches: 89,
+        statements: 94,
+        branches: 90,
         functions: 95,
-        lines: 93,
+        lines: 94,
       },
     },
     include: ['__tests__/**/*.ts'],
