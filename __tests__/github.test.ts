@@ -346,11 +346,20 @@ describe('github', () => {
       expect(request).not.toHaveBeenCalled();
     });
 
-    it('falls back to release-scoped asset deletion after a standard 404', async () => {
-      const deleteReleaseAsset = vi.fn().mockRejectedValue({
-        status: 404,
-        message: 'standard route not found',
-      });
+    it.each([
+      {
+        name: 'top-level status',
+        deletionError: { status: 404, message: 'standard route not found' },
+      },
+      {
+        name: 'nested response status',
+        deletionError: {
+          response: { status: 404 },
+          message: 'standard route not found',
+        },
+      },
+    ])('falls back to release-scoped asset deletion after a 404 with $name', async (testCase) => {
+      const deleteReleaseAsset = vi.fn().mockRejectedValue(testCase.deletionError);
       const request = vi.fn().mockResolvedValue({ status: 204 });
       const releaser = new GitHubReleaser({
         rest: { repos: { deleteReleaseAsset } },
@@ -374,6 +383,30 @@ describe('github', () => {
           asset_id: 99,
         },
       );
+    });
+
+    it.each([
+      ['a string', 'not found'],
+      ['null', null],
+      ['an arbitrary object', { response: { data: 'not found' } }],
+    ])('does not misclassify %s as a fallback 404', async (_name, deletionError) => {
+      const request = vi.fn();
+      const releaser = new GitHubReleaser({
+        rest: {
+          repos: { deleteReleaseAsset: vi.fn().mockRejectedValue(deletionError) },
+        },
+        request,
+      } as any);
+
+      await expect(
+        releaser.deleteReleaseAsset({
+          owner: 'owner',
+          repo: 'repo',
+          release_id: 42,
+          asset_id: 99,
+        }),
+      ).rejects.toBe(deletionError);
+      expect(request).not.toHaveBeenCalled();
     });
 
     it('does not mask non-404 asset deletion failures', async () => {
@@ -790,6 +823,38 @@ describe('github', () => {
       expect(finalizeReleaseSpy).toHaveBeenCalledTimes(1);
       expect(deleteReleaseSpy).not.toHaveBeenCalled();
     });
+
+    it('retries malformed tag-rule errors without deleting the draft', async () => {
+      const finalizeReleaseSpy = vi.fn().mockRejectedValue({
+        status: 422,
+        response: {
+          data: {
+            errors: [null, 'invalid', { field: 'pre_receive', message: 42 }],
+          },
+        },
+      });
+      const deleteReleaseSpy = vi.fn();
+      const releaser = createReleaser({
+        finalizeRelease: finalizeReleaseSpy,
+        deleteRelease: deleteReleaseSpy,
+      });
+
+      await expect(
+        finalizeRelease(
+          {
+            ...config,
+            input_draft: false,
+          },
+          releaser,
+          draftRelease,
+          true,
+          1,
+        ),
+      ).rejects.toThrow('Too many retries.');
+
+      expect(finalizeReleaseSpy).toHaveBeenCalledOnce();
+      expect(deleteReleaseSpy).not.toHaveBeenCalled();
+    });
   });
 
   describe('error handling', () => {
@@ -915,6 +980,42 @@ describe('github', () => {
       expect(log).toHaveBeenCalledWith('⚠️ GitHub release failed with status: 403');
       expect(log).toHaveBeenCalledWith('Resource not accessible by integration');
       expect(log).not.toHaveBeenCalledWith('undefined');
+    });
+
+    it.each([
+      ['non-object response data', { status: 422, response: { data: 'invalid' } }],
+      ['missing validation errors', { status: 422, response: { data: {} } }],
+      ['malformed validation errors', { status: 422, response: { data: { errors: [null] } } }],
+    ])('does not retry a permanent 422 with %s', async (_name, releaseError) => {
+      const createRelease = vi.fn().mockRejectedValue(releaseError);
+      const releaser = createReleaser({
+        getReleaseByTag: vi.fn().mockRejectedValue({ status: 404 }),
+        createRelease,
+        allReleases: async function* () {
+          yield { data: [] };
+        },
+      });
+
+      await expect(release(config, releaser, 1)).rejects.toBe(releaseError);
+      expect(createRelease).toHaveBeenCalledOnce();
+    });
+
+    it.each([
+      ['a string', 'transport failed'],
+      ['null', null],
+      ['an arbitrary object', { reason: 'transport failed' }],
+    ])('preserves retry handling when release creation throws %s', async (_name, releaseError) => {
+      const createRelease = vi.fn().mockRejectedValue(releaseError);
+      const releaser = createReleaser({
+        getReleaseByTag: vi.fn().mockRejectedValue({ status: 404 }),
+        createRelease,
+        allReleases: async function* () {
+          yield { data: [] };
+        },
+      });
+
+      await expect(release(config, releaser, 1)).rejects.toThrow('Too many retries.');
+      expect(createRelease).toHaveBeenCalledOnce();
     });
 
     it('passes previous_tag_name through when creating a release with generated notes', async () => {
@@ -1263,19 +1364,37 @@ describe('github', () => {
       expect(uploadReleaseAsset).not.toHaveBeenCalled();
     });
 
-    it('surfaces an actionable immutable-release error for prerelease uploads', async () => {
+    it.each([
+      {
+        name: 'standard release with a nested status',
+        prerelease: undefined,
+        uploadError: {
+          response: { status: 422 },
+          message: 'Cannot upload assets to an immutable release.',
+        },
+        expected:
+          'Cannot upload asset draft-false.txt to an immutable release. GitHub only allows asset uploads before a release is published, so upload assets to a draft release before you publish it.',
+      },
+      {
+        name: 'prerelease with response data',
+        prerelease: true,
+        uploadError: {
+          status: 422,
+          response: {
+            data: {
+              message: 'Cannot upload assets to an immutable release.',
+            },
+          },
+        },
+        expected:
+          'Cannot upload asset draft-false.txt to an immutable release. GitHub only allows asset uploads before a release is published, but draft prereleases publish with the release.published event instead of release.prereleased.',
+      },
+    ])('surfaces an actionable immutable-release error for a $name', async (testCase) => {
       const tempDir = mkdtempSync(join(tmpdir(), 'gh-release-immutable-'));
       const assetPath = join(tempDir, 'draft-false.txt');
       writeFileSync(assetPath, 'hello');
 
-      const uploadReleaseAsset = vi.fn().mockRejectedValue({
-        status: 422,
-        response: {
-          data: {
-            message: 'Cannot upload assets to an immutable release.',
-          },
-        },
-      });
+      const uploadReleaseAsset = vi.fn().mockRejectedValue(testCase.uploadError);
 
       const mockReleaser: Releaser = {
         getReleaseByTag: () => Promise.reject('Not implemented'),
@@ -1292,23 +1411,23 @@ describe('github', () => {
         uploadReleaseAsset,
       };
 
-      await expect(
-        upload(
-          {
-            ...config,
-            input_prerelease: true,
-          },
-          mockReleaser,
-          'https://uploads.github.com/repos/owner/repo/releases/1/assets',
-          assetPath,
-          [],
-          1,
-        ),
-      ).rejects.toThrow(
-        'Cannot upload asset draft-false.txt to an immutable release. GitHub only allows asset uploads before a release is published, but draft prereleases publish with the release.published event instead of release.prereleased.',
-      );
-
-      rmSync(tempDir, { recursive: true, force: true });
+      try {
+        await expect(
+          upload(
+            {
+              ...config,
+              input_prerelease: testCase.prerelease,
+            },
+            mockReleaser,
+            'https://uploads.github.com/repos/owner/repo/releases/1/assets',
+            assetPath,
+            [],
+            1,
+          ),
+        ).rejects.toThrow(testCase.expected);
+      } finally {
+        rmSync(tempDir, { recursive: true, force: true });
+      }
     });
 
     it('retries upload after deleting a conflicting renamed asset matched by label', async () => {

@@ -1,6 +1,6 @@
 {
   "compilerOptions": {
-    "useUnknownInCatchVariables": false,
+    "useUnknownInCatchVariables": true,
     /* Basic Options */
     // "incremental": true,                   /* Enable incremental compilation */
     "target": "es2022",
