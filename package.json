@@ -36,13 +36,13 @@
     "@types/node": "^24.13.3",
     "@vitest/coverage-v8": "^4.1.10",
     "esbuild": "^0.28.1",
-    "oxfmt": "^0.59.0",
-    "oxlint": "^1.74.0",
+    "oxfmt": "^0.60.0",
+    "oxlint": "^1.75.0",
     "typescript": "^7.0.2",
     "vitest": "^4.1.10"
   },
   "engines": {
     "node": ">=24"
   },
-  "packageManager": "pnpm@11.15.1"
+  "packageManager": "pnpm@11.17.0"
 }
