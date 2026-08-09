@@ -1,0 +1,19 @@
+dist/index.js
+  s_bfe575bfe637cb::t_9285c4cdaee3d9 1-5,7,10,13-14,16,18,22,27,29,40-41,45-46,48,50,52,54-55
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.21",
+  "base_commit_sha": "d8738450e345f87c70bcd5843c19ca731da30d6c",
+  "prompts": {},
+  "sessions": {
+    "s_bfe575bfe637cb": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "37607959-1e27-4278-b749-aebe52ea9808",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Rui Chen <rui@chenrui.dev>"
+    }
+  }
+}
