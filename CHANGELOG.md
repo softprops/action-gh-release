@@ -1,3 +1,18 @@
+## 3.0.3
+
+`3.0.3` is a maintenance release with updated dependencies. It also safely
+classifies malformed GitHub API errors to avoid secondary failures (#822).
+
+## What's Changed
+
+### Bug fixes 🐛
+
+* fix: safely classify GitHub API errors by @chenrui333 in https://github.com/softprops/action-gh-release/pull/822
+
+### Other Changes 🔄
+
+* dependency updates
+
 ## 3.0.2
 
 `3.0.2` is a patch release focused on release reliability and compatibility. It
