@@ -371,6 +371,165 @@ describe('github', () => {
   });
 
   describe('GitHubReleaser', () => {
+    it('avoids the REST release list when a tag does not exist', async () => {
+      const graphql = vi.fn().mockResolvedValue({
+        repository: {
+          releases: {
+            nodes: Array.from({ length: 100 }, (_, index) => ({
+              databaseId: index + 1,
+              tagName: `other-${index}`,
+            })),
+            pageInfo: { hasNextPage: false, endCursor: null },
+          },
+        },
+      });
+      const listReleases = {
+        endpoint: {
+          merge: vi.fn(() => {
+            throw new Error('large REST release list timed out');
+          }),
+        },
+      };
+      const getRelease = unexpected('getRelease');
+      const releaser = new GitHubReleaser({
+        graphql,
+        rest: {
+          repos: {
+            getReleaseByTag: vi.fn().mockRejectedValue({ status: 404 }),
+            getRelease,
+            listReleases,
+          },
+        },
+      } as any);
+
+      await expect(
+        findTagFromReleases(releaser, 'owner', 'repo', 'new-tag'),
+      ).resolves.toBeUndefined();
+
+      expect(graphql).toHaveBeenCalledWith(expect.stringContaining('databaseId'), {
+        owner: 'owner',
+        repo: 'repo',
+        cursor: null,
+      });
+      expect(graphql.mock.calls[0][0]).not.toContain('releaseAssets');
+      expect(listReleases.endpoint.merge).not.toHaveBeenCalled();
+      expect(getRelease).not.toHaveBeenCalled();
+    });
+
+    it('fetches full release data only for matching GraphQL metadata', async () => {
+      const draftRelease: Release = {
+        id: 42,
+        upload_url: 'draft-upload',
+        html_url: 'draft-html',
+        tag_name: 'target-tag',
+        name: 'draft release',
+        body: 'draft body',
+        target_commitish: 'main',
+        draft: true,
+        prerelease: false,
+        assets: [],
+      };
+      const graphql = vi
+        .fn()
+        .mockResolvedValueOnce({
+          repository: {
+            releases: {
+              nodes: [{ databaseId: 1, tagName: 'other-tag' }],
+              pageInfo: { hasNextPage: true, endCursor: 'page-2' },
+            },
+          },
+        })
+        .mockResolvedValueOnce({
+          repository: {
+            releases: {
+              nodes: [{ databaseId: draftRelease.id, tagName: draftRelease.tag_name }],
+              pageInfo: { hasNextPage: false, endCursor: null },
+            },
+          },
+        });
+      const getRelease = vi.fn().mockResolvedValue({ data: draftRelease });
+      const releaser = new GitHubReleaser({
+        graphql,
+        rest: {
+          repos: {
+            getReleaseByTag: vi.fn().mockRejectedValue({ status: 404 }),
+            getRelease,
+          },
+        },
+      } as any);
+
+      await expect(
+        findTagFromReleases(releaser, 'owner', 'repo', draftRelease.tag_name),
+      ).resolves.toBe(draftRelease);
+
+      expect(graphql).toHaveBeenNthCalledWith(2, expect.any(String), {
+        owner: 'owner',
+        repo: 'repo',
+        cursor: 'page-2',
+      });
+      expect(getRelease).toHaveBeenCalledOnce();
+      expect(getRelease).toHaveBeenCalledWith({
+        owner: 'owner',
+        repo: 'repo',
+        release_id: draftRelease.id,
+      });
+    });
+
+    it('falls back to REST pagination when GraphQL is unavailable', async () => {
+      const draftRelease: Release = {
+        id: 42,
+        upload_url: 'draft-upload',
+        html_url: 'draft-html',
+        tag_name: 'target-tag',
+        name: 'draft release',
+        target_commitish: 'main',
+        draft: true,
+        prerelease: false,
+        assets: [],
+      };
+      const merge = vi.fn().mockReturnValue({ route: 'list-releases' });
+      const iterator = vi.fn(async function* () {
+        yield { data: [draftRelease] };
+      });
+      const releaser = new GitHubReleaser({
+        graphql: vi.fn().mockRejectedValue({ status: 404 }),
+        paginate: { iterator },
+        rest: {
+          repos: {
+            getReleaseByTag: vi.fn().mockRejectedValue({ status: 404 }),
+            listReleases: { endpoint: { merge } },
+          },
+        },
+      } as any);
+
+      await expect(
+        findTagFromReleases(releaser, 'owner', 'repo', draftRelease.tag_name),
+      ).resolves.toBe(draftRelease);
+
+      expect(merge).toHaveBeenCalledWith({ owner: 'owner', repo: 'repo', per_page: 100 });
+      expect(iterator).toHaveBeenCalledWith({ route: 'list-releases' });
+    });
+
+    it('does not mask unexpected GraphQL failures with REST pagination', async () => {
+      const graphqlError = { status: 500, message: 'GraphQL failed' };
+      const merge = vi.fn();
+      const releaser = new GitHubReleaser({
+        graphql: vi.fn().mockRejectedValue(graphqlError),
+        paginate: { iterator: vi.fn() },
+        rest: {
+          repos: {
+            getReleaseByTag: vi.fn().mockRejectedValue({ status: 404 }),
+            listReleases: { endpoint: { merge } },
+          },
+        },
+      } as any);
+
+      await expect(findTagFromReleases(releaser, 'owner', 'repo', 'new-tag')).rejects.toBe(
+        graphqlError,
+      );
+      expect(merge).not.toHaveBeenCalled();
+    });
+
     it('uses GitHub standard asset deletion without adding the release ID', async () => {
       const deleteReleaseAsset = vi.fn().mockResolvedValue(undefined);
       const request = vi.fn();

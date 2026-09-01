@@ -82,6 +82,42 @@ export interface ReleaseResult {
   created: boolean;
 }
 
+type ReleaseMetadataPage = {
+  repository: {
+    releases: {
+      nodes: Array<{
+        databaseId: number | null;
+        tagName: string;
+      } | null>;
+      pageInfo: {
+        hasNextPage: boolean;
+        endCursor: string | null;
+      };
+    };
+  } | null;
+};
+
+const RECENT_RELEASES_QUERY = `
+  query RecentReleases($owner: String!, $repo: String!, $cursor: String) {
+    repository(owner: $owner, name: $repo) {
+      releases(
+        first: 100
+        after: $cursor
+        orderBy: { field: CREATED_AT, direction: DESC }
+      ) {
+        nodes {
+          databaseId
+          tagName
+        }
+        pageInfo {
+          hasNextPage
+          endCursor
+        }
+      }
+    }
+  }
+`;
+
 type ReleaseNotesParams = {
   owner: string;
   repo: string;
@@ -162,7 +198,11 @@ export interface Releaser {
     discussion_category_name: string | undefined;
   }): Promise<{ data: Release }>;
 
-  allReleases(params: { owner: string; repo: string }): AsyncIterable<{ data: Release[] }>;
+  allReleases(params: {
+    owner: string;
+    repo: string;
+    tag: string;
+  }): AsyncIterable<{ data: Release[] }>;
 
   listReleaseAssets(params: {
     owner: string;
@@ -287,11 +327,67 @@ export class GitHubReleaser implements Releaser {
     });
   }
 
-  allReleases(params: { owner: string; repo: string }): AsyncIterable<{ data: Release[] }> {
-    const updatedParams = { per_page: 100, ...params };
-    return this.github.paginate.iterator(
-      this.github.rest.repos.listReleases.endpoint.merge(updatedParams),
-    );
+  async *allReleases(params: {
+    owner: string;
+    repo: string;
+    tag: string;
+  }): AsyncIterable<{ data: Release[] }> {
+    let cursor: string | null = null;
+
+    do {
+      let result: ReleaseMetadataPage;
+      try {
+        result = await this.github.graphql<ReleaseMetadataPage>(RECENT_RELEASES_QUERY, {
+          owner: params.owner,
+          repo: params.repo,
+          cursor,
+        });
+      } catch (error) {
+        const status = getErrorStatus(error);
+        if (cursor !== null || ![404, 405, 501].includes(status ?? 0)) {
+          throw error;
+        }
+
+        const updatedParams = { owner: params.owner, repo: params.repo, per_page: 100 };
+        for await (const page of this.github.paginate.iterator(
+          this.github.rest.repos.listReleases.endpoint.merge(updatedParams),
+        )) {
+          yield { data: page.data as Release[] };
+        }
+        return;
+      }
+      const releases = result.repository?.releases;
+      if (!releases) {
+        throw new Error(`Unable to list releases for ${params.owner}/${params.repo}`);
+      }
+
+      const matchingIds = releases.nodes.flatMap((release) => {
+        if (!release || release.tagName !== params.tag) {
+          return [];
+        }
+        if (release.databaseId === null) {
+          throw new Error(`Release for tag ${params.tag} does not have a database ID`);
+        }
+        return [release.databaseId];
+      });
+      const data = await Promise.all(
+        matchingIds.map(async (release_id) => {
+          const response = await this.github.rest.repos.getRelease({
+            owner: params.owner,
+            repo: params.repo,
+            release_id,
+          });
+          return response.data;
+        }),
+      );
+
+      yield { data };
+
+      if (!releases.pageInfo.hasNextPage || !releases.pageInfo.endCursor) {
+        return;
+      }
+      cursor = releases.pageInfo.endCursor;
+    } while (true);
   }
 
   async listReleaseAssets(params: {
@@ -852,8 +948,9 @@ export const listReleaseAssets = async (
  *
  * Uses the direct getReleaseByTag API for O(1) lookup. Because GitHub does not
  * expose draft releases through that endpoint, a 404 falls back to a bounded
- * scan of recent releases and briefly retries in case the listing is not yet
- * consistent.
+ * GraphQL scan of recent release IDs and tags. Full REST release data is fetched
+ * only for exact tag matches, and the scan briefly retries in case the listing
+ * is not yet consistent.
  *
  * @param releaser - The GitHub API wrapper for release operations
  * @param owner - The owner of the repository
@@ -914,7 +1011,7 @@ async function recentReleasesByTag(
   const matches: Release[] = [];
   let pages = 0;
 
-  for await (const page of releaser.allReleases({ owner, repo })) {
+  for await (const page of releaser.allReleases({ owner, repo, tag })) {
     matches.push(...page.data.filter((release) => release.tag_name === tag));
     pages += 1;
 

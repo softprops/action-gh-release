@@ -43,6 +43,26 @@ describe('release creation transport', () => {
         return;
       }
 
+      if (request.method === 'POST' && url.pathname === '/graphql') {
+        response.writeHead(200, { 'content-type': 'application/json' });
+        response.end(
+          JSON.stringify({
+            data: {
+              repository: {
+                releases: {
+                  nodes: [...releases.values()].map((release) => ({
+                    databaseId: release.id,
+                    tagName: release.tag_name,
+                  })),
+                  pageInfo: { hasNextPage: false, endCursor: null },
+                },
+              },
+            },
+          }),
+        );
+        return;
+      }
+
       if (request.method === 'POST' && url.pathname === '/repos/owner/remote/releases') {
         const chunks: Buffer[] = [];
         for await (const chunk of request) {
