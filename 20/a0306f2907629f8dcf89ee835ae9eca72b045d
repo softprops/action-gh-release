@@ -1,0 +1,14 @@
+dist/index.js
+  h_9df9c32c3f321d 1-5,14,16,18,22,24,26-27,29,34,40-41,45-46,48,50,52,54-55
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "20a0306f2907629f8dcf89ee835ae9eca72b045d",
+  "prompts": {},
+  "humans": {
+    "h_9df9c32c3f321d": {
+      "author": "Rui Chen <rui@chenrui.dev>"
+    }
+  }
+}
