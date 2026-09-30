@@ -207,6 +207,10 @@ comparison range does not match the release series you want to publish.
     generate_release_notes: true
 ```
 
+When updating an existing release with `generate_release_notes: true` and
+`append_body: false` (the default), previously generated notes are replaced rather
+than reused. An explicit `body` or `body_path` is still prepended to the new notes.
+
 ### 💅 Customizing
 
 #### inputs
