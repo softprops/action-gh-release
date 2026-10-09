@@ -1311,6 +1311,63 @@ describe('github', () => {
       );
     });
 
+    it('continues with the found release when updateRelease is forbidden (#836)', async () => {
+      const existingRelease: Release = {
+        id: 184273939,
+        upload_url: 'https://uploads.example/assets{?name,label}',
+        html_url: 'https://github.com/example/repo/releases/tag/latest',
+        tag_name: 'latest',
+        name: 'latest',
+        body: 'existing',
+        target_commitish: 'bleeding',
+        draft: false,
+        prerelease: false,
+        assets: [],
+      };
+      const updateError = {
+        status: 403,
+        message: 'Resource not accessible by integration',
+      };
+      const updateRelease = vi.fn().mockRejectedValue(updateError);
+      const log = vi.spyOn(console, 'log').mockImplementation(() => undefined);
+
+      const result = await release(
+        {
+          ...config,
+          github_ref: 'refs/heads/bleeding',
+          input_tag_name: 'latest',
+        },
+        {
+          getReleaseByTag: () => Promise.resolve({ data: existingRelease }),
+          createRelease: () => Promise.reject('Not implemented'),
+          updateRelease,
+          finalizeRelease: () => Promise.reject('Not implemented'),
+          allReleases: async function* () {
+            yield { data: [existingRelease] };
+          },
+          listReleaseAssets: () => Promise.reject('Not implemented'),
+          deleteReleaseAsset: () => Promise.reject('Not implemented'),
+          deleteRelease: () => Promise.reject('Not implemented'),
+          updateReleaseAsset: () => Promise.reject('Not implemented'),
+          uploadReleaseAsset: () => Promise.reject('Not implemented'),
+        },
+        1,
+      );
+
+      expect(result).toEqual({ release: existingRelease, created: false });
+      expect(updateRelease).toHaveBeenCalledOnce();
+      expect(log).toHaveBeenCalledWith(
+        expect.stringContaining('Unable to update GitHub release for tag latest'),
+      );
+      expect(log).toHaveBeenCalledWith(
+        expect.stringContaining('Continuing with the existing release'),
+      );
+      // Must not mis-label the branch ref as the release tag (#836).
+      expect(log).not.toHaveBeenCalledWith(expect.stringContaining('refs/heads/bleeding'));
+
+      log.mockRestore();
+    });
+
     it('creates published prereleases without the forced draft-first path', async () => {
       const prereleaseConfig = {
         ...config,
@@ -1478,37 +1535,63 @@ describe('github', () => {
       expect(getReleaseByTag).toHaveBeenCalledTimes(2);
     });
 
-    it.each([
-      ['a nested response 403', { response: { status: 403 }, message: 'forbidden' }],
-      ['a nested response 500', { response: { status: 500 }, message: 'server error' }],
-    ])(
-      'does not create a replacement after an existing-release update returns %s',
-      async (_name, updateError) => {
-        const existingRelease: Release = {
-          id: 41,
-          upload_url: 'existing-upload',
-          html_url: 'existing-html',
-          tag_name: 'v1.0.0',
-          name: 'existing release',
-          body: 'existing body',
-          target_commitish: 'main',
-          draft: false,
-          prerelease: false,
-          assets: [],
-        };
-        const createRelease = vi.fn();
-        const updateRelease = vi.fn().mockRejectedValue(updateError);
-        const releaser = createReleaser({
-          getReleaseByTag: vi.fn().mockResolvedValue({ data: existingRelease }),
-          updateRelease,
-          createRelease,
-        });
+    it('continues with the found release when update returns nested response 403 (#836)', async () => {
+      const existingRelease: Release = {
+        id: 41,
+        upload_url: 'existing-upload',
+        html_url: 'existing-html',
+        tag_name: 'v1.0.0',
+        name: 'existing release',
+        body: 'existing body',
+        target_commitish: 'main',
+        draft: false,
+        prerelease: false,
+        assets: [],
+      };
+      const createRelease = vi.fn();
+      const updateRelease = vi
+        .fn()
+        .mockRejectedValue({ response: { status: 403 }, message: 'forbidden' });
+      const releaser = createReleaser({
+        getReleaseByTag: vi.fn().mockResolvedValue({ data: existingRelease }),
+        updateRelease,
+        createRelease,
+      });
 
-        await expect(release(config, releaser, 1)).rejects.toBe(updateError);
-        expect(updateRelease).toHaveBeenCalledOnce();
-        expect(createRelease).not.toHaveBeenCalled();
-      },
-    );
+      await expect(release(config, releaser, 1)).resolves.toEqual({
+        release: existingRelease,
+        created: false,
+      });
+      expect(updateRelease).toHaveBeenCalledOnce();
+      expect(createRelease).not.toHaveBeenCalled();
+    });
+
+    it('does not create a replacement after an existing-release update returns nested response 500', async () => {
+      const existingRelease: Release = {
+        id: 41,
+        upload_url: 'existing-upload',
+        html_url: 'existing-html',
+        tag_name: 'v1.0.0',
+        name: 'existing release',
+        body: 'existing body',
+        target_commitish: 'main',
+        draft: false,
+        prerelease: false,
+        assets: [],
+      };
+      const updateError = { response: { status: 500 }, message: 'server error' };
+      const createRelease = vi.fn();
+      const updateRelease = vi.fn().mockRejectedValue(updateError);
+      const releaser = createReleaser({
+        getReleaseByTag: vi.fn().mockResolvedValue({ data: existingRelease }),
+        updateRelease,
+        createRelease,
+      });
+
+      await expect(release(config, releaser, 1)).rejects.toBe(updateError);
+      expect(updateRelease).toHaveBeenCalledOnce();
+      expect(createRelease).not.toHaveBeenCalled();
+    });
 
     it.each([
       ['an omitted draft input', undefined],
