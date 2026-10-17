@@ -641,9 +641,7 @@ export const release = async (
       console.log(`⚠️ ${diagnostic}`);
       throw new ReleaseAccessError(diagnostic, error);
     }
-    console.log(
-      `⚠️ Unexpected error fetching GitHub release for tag ${config.github_ref}: ${error}`,
-    );
+    console.log(`⚠️ Unexpected error fetching GitHub release for tag ${tag}: ${error}`);
     throw error;
   }
 
@@ -661,10 +659,10 @@ export const release = async (
     );
   }
 
-  try {
-    let existingRelease: Release = _release!;
-    console.log(`Found release ${existingRelease.name} (with id=${existingRelease.id})`);
+  const existingRelease: Release = _release!;
+  console.log(`Found release ${existingRelease.name} (with id=${existingRelease.id})`);
 
+  try {
     const release_id = existingRelease.id;
     let target_commitish: string;
     if (
@@ -722,24 +720,35 @@ export const release = async (
     if (error instanceof ReleaseCreationError) {
       throw error;
     }
-    if (getErrorStatus(error) !== 404) {
-      console.log(
-        `⚠️ Unexpected error fetching GitHub release for tag ${config.github_ref}: ${error}`,
+    if (getErrorStatus(error) === 404) {
+      return await createRelease(
+        tag,
+        config,
+        releaser,
+        owner,
+        repo,
+        discussion_category_name,
+        generate_release_notes,
+        maxRetries,
+        previous_tag_name,
       );
-      throw error;
     }
 
-    return await createRelease(
-      tag,
-      config,
-      releaser,
-      owner,
-      repo,
-      discussion_category_name,
-      generate_release_notes,
-      maxRetries,
-      previous_tag_name,
-    );
+    // GITHUB_TOKEN can locate a release but lack permission to update it
+    // (common with floating tags on branch pushes). Keep the found release so
+    // asset uploads can still proceed. Fixes #836.
+    if (getErrorStatus(error) === 403) {
+      console.log(
+        `⚠️ Unable to update GitHub release for tag ${tag}: ${error}. Continuing with the existing release so assets can still be uploaded.`,
+      );
+      return {
+        release: existingRelease,
+        created: false,
+      };
+    }
+
+    console.log(`⚠️ Unexpected error updating GitHub release for tag ${tag}: ${error}`);
+    throw error;
   }
 };
 
