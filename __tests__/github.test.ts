@@ -1307,6 +1307,104 @@ describe('github', () => {
           release_id: existingRelease.id,
           generate_release_notes: true,
           previous_tag_name: 'v0.9.0',
+          // Existing notes must not be reused as the body seed (#827).
+          body: '',
+        }),
+      );
+    });
+
+    it('does not seed existing body when regenerating notes on update (append_body false)', async () => {
+      const existingRelease: Release = {
+        id: 1,
+        upload_url: 'test',
+        html_url: 'test',
+        tag_name: 'v1.0.0',
+        name: 'test',
+        body: 'previous generated notes',
+        target_commitish: 'main',
+        draft: false,
+        prerelease: false,
+        assets: [],
+      };
+      const updateReleaseSpy = vi.fn(async () => ({ data: existingRelease }));
+
+      await release(
+        {
+          ...config,
+          input_generate_release_notes: true,
+          input_append_body: false,
+          input_body: undefined,
+        },
+        {
+          getReleaseByTag: () => Promise.resolve({ data: existingRelease }),
+          createRelease: () => Promise.reject('Not implemented'),
+          updateRelease: updateReleaseSpy,
+          finalizeRelease: () => Promise.reject('Not implemented'),
+          allReleases: async function* () {
+            yield { data: [existingRelease] };
+          },
+          listReleaseAssets: () => Promise.reject('Not implemented'),
+          deleteReleaseAsset: () => Promise.reject('Not implemented'),
+          deleteRelease: () => Promise.reject('Not implemented'),
+          updateReleaseAsset: () => Promise.reject('Not implemented'),
+          uploadReleaseAsset: () => Promise.reject('Not implemented'),
+        },
+        1,
+      );
+
+      expect(updateReleaseSpy).toHaveBeenCalledWith(
+        expect.objectContaining({
+          release_id: existingRelease.id,
+          generate_release_notes: true,
+          body: '',
+        }),
+      );
+    });
+
+    it('keeps an explicit workflow body when regenerating notes on update', async () => {
+      const existingRelease: Release = {
+        id: 1,
+        upload_url: 'test',
+        html_url: 'test',
+        tag_name: 'v1.0.0',
+        name: 'test',
+        body: 'old generated notes',
+        target_commitish: 'main',
+        draft: false,
+        prerelease: false,
+        assets: [],
+      };
+      const updateReleaseSpy = vi.fn(async () => ({ data: existingRelease }));
+
+      await release(
+        {
+          ...config,
+          input_generate_release_notes: true,
+          input_append_body: false,
+          input_body: 'manual preface',
+        },
+        {
+          getReleaseByTag: () => Promise.resolve({ data: existingRelease }),
+          createRelease: () => Promise.reject('Not implemented'),
+          updateRelease: updateReleaseSpy,
+          finalizeRelease: () => Promise.reject('Not implemented'),
+          allReleases: async function* () {
+            yield { data: [existingRelease] };
+          },
+          listReleaseAssets: () => Promise.reject('Not implemented'),
+          deleteReleaseAsset: () => Promise.reject('Not implemented'),
+          deleteRelease: () => Promise.reject('Not implemented'),
+          updateReleaseAsset: () => Promise.reject('Not implemented'),
+          uploadReleaseAsset: () => Promise.reject('Not implemented'),
+        },
+        1,
+      );
+
+      expect(updateReleaseSpy).toHaveBeenCalledWith(
+        expect.objectContaining({
+          release_id: existingRelease.id,
+          generate_release_notes: true,
+          body: 'manual preface',
         }),
       );
     });
