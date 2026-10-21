@@ -1264,6 +1264,99 @@ describe('github', () => {
       );
     });
 
+    it('uploads to an existing floating release without a no-op metadata update', async () => {
+      const existingRelease: Release = {
+        id: 184273939,
+        upload_url: 'https://uploads.github.com/repos/owner/repo/releases/184273939/assets',
+        html_url: 'https://github.com/owner/repo/releases/tag/latest',
+        tag_name: 'latest',
+        name: 'Latest libraries',
+        body: 'Keep these release notes',
+        target_commitish: 'bleeding',
+        draft: false,
+        prerelease: false,
+        assets: [{ id: 9, name: 'archive.tar.bz2' }],
+      };
+      const updateRelease = vi.fn().mockRejectedValue({
+        status: 403,
+        message: 'Resource not accessible by integration',
+      });
+      const result = await release(
+        {
+          ...config,
+          github_ref: 'refs/heads/bleeding',
+          input_tag_name: 'latest',
+          input_draft: false,
+        },
+        createReleaser({
+          getReleaseByTag: vi.fn().mockResolvedValue({ data: existingRelease }),
+          updateRelease,
+        }),
+      );
+      expect(result).toEqual({ release: existingRelease, created: false });
+      expect(updateRelease).not.toHaveBeenCalled();
+    });
+
+    it.each([
+      { input_name: 'Updated title' },
+      { input_body: 'Updated notes' },
+      { input_body: 'Append notes', input_append_body: true },
+      { input_prerelease: true },
+      { input_target_commitish: 'new-commit' },
+      { input_generate_release_notes: true },
+      { input_make_latest: 'false' as const },
+      { input_discussion_category_name: 'Announcements' },
+    ])('still updates explicitly changed release metadata: %j', async (inputs) => {
+      const existingRelease: Release = {
+        id: 1,
+        upload_url: 'upload',
+        html_url: 'html',
+        tag_name: 'v1.0.0',
+        name: 'Existing title',
+        body: 'Existing notes',
+        target_commitish: 'main',
+        draft: false,
+        prerelease: false,
+        assets: [],
+      };
+      const updateRelease = vi.fn().mockResolvedValue({ data: existingRelease });
+      await release(
+        { ...config, ...inputs },
+        createReleaser({
+          getReleaseByTag: vi.fn().mockResolvedValue({ data: existingRelease }),
+          updateRelease,
+        }),
+      );
+      expect(updateRelease).toHaveBeenCalledOnce();
+    });
+
+    it.each([false, true])(
+      'retains an unnamed release and its draft state without a no-op PATCH (draft=%s)',
+      async (draft) => {
+        const existingRelease: Release = {
+          id: 1,
+          upload_url: 'upload',
+          html_url: 'html',
+          tag_name: 'v1.0.0',
+          name: null,
+          target_commitish: 'main',
+          draft,
+          prerelease: false,
+          assets: [],
+        };
+        const updateRelease = unexpected('updateRelease');
+        const result = await release(
+          { ...config, input_prerelease: false, input_target_commitish: 'main' },
+          createReleaser({
+            getReleaseByTag: vi.fn().mockResolvedValue({ data: existingRelease }),
+            updateRelease,
+          }),
+        );
+        expect(result.release).toBe(existingRelease);
+        expect(updateRelease).not.toHaveBeenCalled();
+      },
+    );
+
     it('passes previous_tag_name through when updating a release with generated notes', async () => {
       const existingRelease: Release = {
         id: 1,
@@ -1455,7 +1548,7 @@ describe('github', () => {
         },
       });
 
-      await expect(release(config, releaser, 1)).resolves.toEqual({
+      await expect(release({ ...config, input_name: 'v1.0.0' }, releaser, 1)).resolves.toEqual({
         release: replacementRelease,
         created: true,
       });
@@ -1504,7 +1597,9 @@ describe('github', () => {
           createRelease,
         });
 
-        await expect(release(config, releaser, 1)).rejects.toBe(updateError);
+        await expect(release({ ...config, input_name: 'v1.0.0' }, releaser, 1)).rejects.toBe(
+          updateError,
+        );
         expect(updateRelease).toHaveBeenCalledOnce();
         expect(createRelease).not.toHaveBeenCalled();
       },
@@ -1917,11 +2012,7 @@ describe('github', () => {
         repo: 'repo',
         tag: 'v1.0.0',
       });
-      expect(updateReleaseSpy).toHaveBeenCalledWith(
-        expect.objectContaining({
-          tag_name: 'v1.0.0',
-        }),
-      );
+      expect(updateReleaseSpy).not.toHaveBeenCalled();
       assert.equal(result.release.id, existingRelease.id);
       assert.equal(result.created, false);
     });

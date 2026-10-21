@@ -641,9 +641,7 @@ export const release = async (
       console.log(`⚠️ ${diagnostic}`);
       throw new ReleaseAccessError(diagnostic, error);
     }
-    console.log(
-      `⚠️ Unexpected error fetching GitHub release for tag ${config.github_ref}: ${error}`,
-    );
+    console.log(`⚠️ Unexpected error fetching GitHub release for tag ${tag}: ${error}`);
     throw error;
   }
 
@@ -699,6 +697,23 @@ export const release = async (
 
     const make_latest = config.input_make_latest;
 
+    // Asset-only runs must not PATCH a published release just to resend its
+    // existing metadata. Apart from redundant writes, GitHub can reject that
+    // operation even when the token is allowed to replace release assets.
+    const metadataChanged =
+      tag_name !== existingRelease.tag_name ||
+      (config.input_name !== undefined && name !== existingRelease.name) ||
+      body !== existingReleaseBody ||
+      target_commitish !== existingRelease.target_commitish ||
+      prerelease !== existingRelease.prerelease ||
+      !!generate_release_notes ||
+      make_latest !== undefined ||
+      !!discussion_category_name;
+    if (!metadataChanged) {
+      console.log(`Release ${tag} metadata is unchanged; continuing with asset uploads`);
+      return { release: existingRelease, created: false };
+    }
+
     const release = await releaser.updateRelease({
       owner,
       repo,
@@ -723,9 +738,7 @@ export const release = async (
       throw error;
     }
     if (getErrorStatus(error) !== 404) {
-      console.log(
-        `⚠️ Unexpected error fetching GitHub release for tag ${config.github_ref}: ${error}`,
-      );
+      console.log(`⚠️ Unexpected error fetching GitHub release for tag ${tag}: ${error}`);
       throw error;
     }
 

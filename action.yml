@@ -25,7 +25,7 @@ inputs:
     description: "Upload artifacts sequentially in the provided order. This does not control the final display order GitHub uses for release assets."
     required: false
   files:
-    description: "Newline-delimited list of path globs for asset files to upload. Escape glob metacharacters when matching literal filenames that contain them. `~/...` expands to the runner home directory. On Windows, both \\ and / path separators are accepted. GitHub may normalize raw asset filenames that contain special characters; the action restores the asset label when possible, but the final download name remains GitHub-controlled."
+    description: "Newline-delimited list of path globs for asset files to upload. Existing release metadata is not updated when its requested values are unchanged. Escape glob metacharacters when matching literal filenames that contain them. `~/...` expands to the runner home directory. On Windows, both \\ and / path separators are accepted. GitHub may normalize raw asset filenames that contain special characters; the action restores the asset label when possible, but the final download name remains GitHub-controlled."
     required: false
   working_directory:
     description: "Base directory to resolve 'files' globs against. Defaults to the workspace root used by the action step."

@@ -240,7 +240,9 @@ attempted first, then falling back on `body` if the path can not be read from.
 
 💡 When the release info keys (such as `name`, `body`, `prerelease`, etc.) are not
 explicitly set and there is already an existing release for the tag, the release
-will retain its original info.
+will retain its original info. Asset-only runs skip the release metadata update
+when the requested metadata is unchanged; existing assets are still replaced
+when `overwrite_files` is enabled. Draft finalization remains a separate step.
 
 💡 Draft status is handled separately during finalization. If the action reuses an
 existing draft release, set `draft: true` to keep it draft; if `draft` is omitted,
