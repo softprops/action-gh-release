@@ -416,6 +416,29 @@ const immutableReleaseAssetUploadMessage = (
     ? `Cannot upload asset ${name} to an immutable release. GitHub only allows asset uploads before a release is published, but draft prereleases publish with the release.published event instead of release.prereleased. If you need prereleases with assets on an immutable-release repository, keep the release as a draft with draft: true, then publish it later from that draft and subscribe downstream workflows to release.published.`
     : `Cannot upload asset ${name} to an immutable release. GitHub only allows asset uploads before a release is published, so upload assets to a draft release before you publish it.`;
 
+export const doClean = async (
+  config: Config,
+  releaser: Releaser,
+  url: string,
+  currentAssets: Array<{ id: number, name: string; label?: string | null }>,
+  releaseId: number,
+): Promise<any> => {
+  if (config.clean === false) {
+    return;
+  }
+  const [owner, repo] = config.github_repository.split('/');
+  console.log(`♻ Deleting all previously uploaded assets...`);
+  for (const currentAsset of currentAssets) {
+    console.log(`♻ Deleting previously uploaded asset ${name}...`);
+    await releaser.deleteReleaseAsset({
+      asset_id: currentAsset.id,
+      owner,
+      repo,
+      release_id: releaseId,
+    });
+  }
+}
+
 export const upload = async (
   config: Config,
   releaser: Releaser,
