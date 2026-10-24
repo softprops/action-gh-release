@@ -16,6 +16,7 @@ export interface Config {
   input_files?: string[];
   input_working_directory?: string;
   input_overwrite_files?: boolean;
+  input_clean?: boolean;
   input_draft?: boolean;
   input_preserve_order?: boolean;
   input_prerelease?: boolean;
@@ -126,6 +127,7 @@ export const parseConfig = (env: Env): Config => {
     input_overwrite_files: env.INPUT_OVERWRITE_FILES
       ? env.INPUT_OVERWRITE_FILES == 'true'
       : undefined,
+    input_clean: env.INPUT_CLEAN == 'true',
     input_draft: env.INPUT_DRAFT ? env.INPUT_DRAFT === 'true' : undefined,
     input_preserve_order: env.INPUT_PRESERVE_ORDER ? env.INPUT_PRESERVE_ORDER == 'true' : undefined,
     input_prerelease: env.INPUT_PRERELEASE ? env.INPUT_PRERELEASE == 'true' : undefined,
