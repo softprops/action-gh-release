@@ -51,6 +51,17 @@ export async function run(): Promise<void> {
       }
       const currentAssets = rel.assets;
 
+      if (config.input_clean === true) {
+        const json = await doClean(
+          config,
+          releaser,
+          uploadUrl(rel.upload_url),
+          currentAssets,
+          rel.id,
+        );
+	currentAssets = [];
+      }
+
       const uploadFile = async (path: string) => {
         const json = await upload(
           config,
