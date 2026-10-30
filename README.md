@@ -15,7 +15,7 @@
 
 <div align="center">
   <a href="https://github.com/softprops/action-gh-release/actions">
-		<img src="https://github.com/softprops/action-gh-release/workflows/Main/badge.svg"/>
+		<img src="https://github.com/softprops/action-gh-release/actions/workflows/main.yml/badge.svg"/>
 	</a>
 </div>
 
