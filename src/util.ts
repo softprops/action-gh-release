@@ -176,31 +176,30 @@ export const normalizeFilePattern = (
 
 export const paths = (patterns: string[], cwd?: string): string[] => {
   return patterns.reduce((acc: string[], pattern: string): string[] => {
-    const matches = glob.sync(normalizeFilePattern(pattern), { cwd, dot: true, absolute: false });
-    const resolved = matches
-      .map((p) => (cwd && !pathLib.isAbsolute(p) ? pathLib.join(cwd, p) : p))
-      .filter((p) => {
-        try {
-          return statSync(p).isFile();
-        } catch {
-          return false;
-        }
-      });
-    return acc.concat(resolved);
+    const resolved = resolvePatternFiles(pattern, cwd);
+    // Overlapping patterns are common (`dist/*.zip` plus `dist/**/*.zip`).
+    // Uploading a file once per matching pattern re-uploads the same asset,
+    // which is why a file is only resolved on the first pattern that finds it.
+    return acc.concat(resolved.filter((p) => !acc.includes(p)));
   }, []);
 };
 
-export const unmatchedPatterns = (patterns: string[], cwd?: string): string[] => {
-  return patterns.reduce((acc: string[], pattern: string): string[] => {
-    const matches = glob.sync(normalizeFilePattern(pattern), { cwd, dot: true, absolute: false });
-    const files = matches.filter((p) => {
+const resolvePatternFiles = (pattern: string, cwd?: string): string[] => {
+  const matches = glob.sync(normalizeFilePattern(pattern), { cwd, dot: true, absolute: false });
+  return matches
+    .map((p) => (cwd && !pathLib.isAbsolute(p) ? pathLib.join(cwd, p) : p))
+    .filter((p) => {
       try {
-        const full = cwd && !pathLib.isAbsolute(p) ? pathLib.join(cwd, p) : p;
-        return statSync(full).isFile();
+        return statSync(p).isFile();
       } catch {
         return false;
       }
     });
+};
+
+export const unmatchedPatterns = (patterns: string[], cwd?: string): string[] => {
+  return patterns.reduce((acc: string[], pattern: string): string[] => {
+    const files = resolvePatternFiles(pattern, cwd);
     return acc.concat(files.length == 0 ? [pattern] : []);
   }, []);
 };

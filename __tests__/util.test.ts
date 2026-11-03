@@ -14,6 +14,9 @@ import {
   uploadUrl,
 } from '../src/util';
 
+import { mkdtemp, rm, writeFile } from 'fs/promises';
+import { tmpdir } from 'os';
+import { join } from 'path';
 import { assert, describe, expect, it } from 'vitest';
 
 describe('util', () => {
@@ -398,6 +401,32 @@ describe('util', () => {
 
     it('resolves files relative to working_directory', async () => {
       assert.deepStrictEqual(paths(['data/**/*'], 'tests'), ['tests/data/foo/bar.txt']);
+    });
+
+    it('resolves a file once when overlapping patterns both match it', async () => {
+      const toPosix = (value: string) => value.replace(/\\/g, '/');
+
+      assert.deepStrictEqual(
+        paths(['tests/data/foo/bar.txt', 'tests/data/**/*', 'tests/data/foo/*']).map(toPosix),
+        ['tests/data/foo/bar.txt'],
+      );
+    });
+
+    it('keeps the order of the first pattern that matches each file', async () => {
+      const directory = await mkdtemp(join(tmpdir(), 'action-gh-release-paths-'));
+      try {
+        await writeFile(join(directory, 'a.txt'), 'a');
+        await writeFile(join(directory, 'b.txt'), 'b');
+
+        // `b.txt` is claimed by the first pattern only, `a.txt` by the third.
+        // `a.txt` must not be pulled back in a second time by `b.txt` repeating it.
+        assert.deepStrictEqual(paths(['b.txt', 'a.txt', 'b.txt'], directory), [
+          join(directory, 'b.txt'),
+          join(directory, 'a.txt'),
+        ]);
+      } finally {
+        await rm(directory, { recursive: true, force: true });
+      }
     });
   });
 
