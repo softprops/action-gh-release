@@ -1,3 +1,7 @@
+## 3.0.4
+
+- maintenance release with updated dependencies
+
 ## 3.0.3
 
 `3.0.3` is a maintenance release with updated dependencies. It also safely
