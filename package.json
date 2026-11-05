@@ -29,7 +29,7 @@
     "@actions/github": "^9.1.1",
     "@octokit/plugin-retry": "^8.1.1",
     "@octokit/plugin-throttling": "^11.0.5",
-    "glob": "^13.0.6",
+    "glob": "^14.0.2",
     "mime-types": "^3.0.2"
   },
   "devDependencies": {
