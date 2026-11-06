@@ -690,6 +690,12 @@ export const release = async (
     let body: string;
     if (config.input_append_body && workflowBody && existingReleaseBody) {
       body = existingReleaseBody + '\n' + workflowBody;
+    } else if (generate_release_notes && !config.input_append_body) {
+      // When regenerating notes on an existing release, do not seed the body
+      // from the previous release notes. prepareReleaseMutation appends the
+      // newly generated notes to whatever body we pass, so reusing the old
+      // body duplicates notes on every re-run (#827).
+      body = workflowBody;
     } else {
       body = workflowBody || existingReleaseBody;
     }
