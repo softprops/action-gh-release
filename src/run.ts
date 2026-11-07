@@ -1,7 +1,7 @@
 import { setFailed, setOutput } from '@actions/core';
 import { getOctokit } from '@actions/github';
 import { env } from 'process';
-import { GitHubReleaser, release, finalizeRelease, upload, listReleaseAssets } from './github';
+import { GitHubReleaser, release, finalizeRelease, upload, listReleaseAssets, doClean } from './github';
 import { errorMessage, isTag, parseConfig, paths, unmatchedPatterns, uploadUrl } from './util';
 
 export async function run(): Promise<void> {
@@ -49,7 +49,17 @@ export async function run(): Promise<void> {
           console.warn(`🤔 ${config.input_files} does not include a valid file.`);
         }
       }
-      const currentAssets = rel.assets;
+      let currentAssets = rel.assets;
+
+      if (config.input_clean) {
+        const json = await doClean(
+          config,
+          releaser,
+          currentAssets,
+          rel.id,
+        );
+	currentAssets = [];
+      }
 
       const uploadFile = async (path: string) => {
         const json = await upload(
