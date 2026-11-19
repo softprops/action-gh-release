@@ -156,12 +156,17 @@ export const normalizeGlobPattern = (
   return pattern;
 };
 
-export const expandHomePattern = (pattern: string, homeDirectory: string = homedir()): string => {
+export const expandHomePattern = (
+  pattern: string,
+  homeDirectory: string = homedir(),
+  platform: NodeJS.Platform = process.platform,
+): string => {
   if (pattern === '~') {
     return homeDirectory;
   }
   if (pattern.startsWith('~/') || pattern.startsWith('~\\')) {
-    return pathLib.join(homeDirectory, pattern.slice(2));
+    const path = platform === 'win32' ? pathLib.win32 : pathLib.posix;
+    return path.join(homeDirectory, pattern.slice(2));
   }
   return pattern;
 };
@@ -171,7 +176,7 @@ export const normalizeFilePattern = (
   platform: NodeJS.Platform = process.platform,
   homeDirectory: string = homedir(),
 ): string => {
-  return normalizeGlobPattern(expandHomePattern(pattern, homeDirectory), platform);
+  return normalizeGlobPattern(expandHomePattern(pattern, homeDirectory, platform), platform);
 };
 
 export const paths = (patterns: string[], cwd?: string): string[] => {
