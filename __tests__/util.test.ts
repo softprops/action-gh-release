@@ -14,6 +14,7 @@ import {
   uploadUrl,
 } from '../src/util';
 
+import { join } from 'path';
 import { assert, describe, expect, it } from 'vitest';
 
 describe('util', () => {
@@ -392,12 +393,14 @@ describe('util', () => {
   describe('paths', () => {
     it('resolves files given a set of paths', async () => {
       assert.deepStrictEqual(paths(['tests/data/**/*', 'tests/data/does/not/exist/*']), [
-        'tests/data/foo/bar.txt',
+        join('tests', 'data', 'foo', 'bar.txt'),
       ]);
     });
 
     it('resolves files relative to working_directory', async () => {
-      assert.deepStrictEqual(paths(['data/**/*'], 'tests'), ['tests/data/foo/bar.txt']);
+      assert.deepStrictEqual(paths(['data/**/*'], 'tests'), [
+        join('tests', 'data', 'foo', 'bar.txt'),
+      ]);
     });
   });
 
@@ -442,7 +445,10 @@ describe('util', () => {
     });
 
     it('expands posix-style tilde paths', () => {
-      assert.equal(expandHomePattern('~/release.txt', '/home/runner'), '/home/runner/release.txt');
+      assert.equal(
+        expandHomePattern('~/release.txt', '/home/runner', 'linux'),
+        '/home/runner/release.txt',
+      );
     });
 
     it('leaves non-tilde paths unchanged', () => {
